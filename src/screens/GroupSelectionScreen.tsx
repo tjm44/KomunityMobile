@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface GroupSelectionProps {
@@ -13,28 +13,37 @@ const GroupSelectionScreen = ({ onJoin, onCreate }: GroupSelectionProps) => {
             <View style={styles.content}>
                 <View style={styles.header}>
                     <Text style={styles.title}>You're almost there!</Text>
-                    <Text style={styles.subtitle}>Communities are the heart of Komunity. How would you like to get started?</Text>
+                    <Text style={styles.subtitle}>
+                        Communities are the heart of Komunity. How would you like to get started?
+                    </Text>
                 </View>
 
                 <View style={styles.options}>
+                    {/* Join existing */}
                     <TouchableOpacity style={styles.card} onPress={onJoin}>
                         <View style={[styles.iconContainer, { backgroundColor: '#eff6ff' }]}>
                             <Text style={styles.icon}>🔍</Text>
                         </View>
                         <View style={styles.cardText}>
                             <Text style={styles.cardTitle}>Join a Community</Text>
-                            <Text style={styles.cardSubtitle}>Find and join existing groups near you or with shared interests.</Text>
+                            <Text style={styles.cardSubtitle}>
+                                Find and join existing groups near you or with shared interests.
+                            </Text>
                         </View>
                         <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
 
+                    {/* Create new — now navigates to GroupPurposeScreen first */}
                     <TouchableOpacity style={styles.card} onPress={onCreate}>
                         <View style={[styles.iconContainer, { backgroundColor: '#ecfdf5' }]}>
                             <Text style={styles.icon}>➕</Text>
                         </View>
                         <View style={styles.cardText}>
                             <Text style={styles.cardTitle}>Create a Community</Text>
-                            <Text style={styles.cardSubtitle}>Start your own group for your family, friends, or neighborhood.</Text>
+                            <Text style={styles.cardSubtitle}>
+                                Start your own group — for bereavement support, insurance excess,
+                                emergency fundraising, or any custom purpose.
+                            </Text>
                         </View>
                         <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
@@ -62,11 +71,13 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#111827',
         marginBottom: 12,
+        fontFamily: 'Outfit-Bold',
     },
     subtitle: {
         fontSize: 18,
         color: '#6b7280',
         lineHeight: 28,
+        fontFamily: 'Outfit-Regular',
     },
     options: {
         gap: 20,
@@ -104,11 +115,13 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#111827',
         marginBottom: 4,
+        fontFamily: 'Outfit-Bold',
     },
     cardSubtitle: {
         fontSize: 14,
         color: '#6b7280',
         lineHeight: 20,
+        fontFamily: 'Outfit-Regular',
     },
     arrow: {
         fontSize: 24,

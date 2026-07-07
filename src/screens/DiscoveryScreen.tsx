@@ -194,6 +194,33 @@ const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: Discover
                                 )}
                                 <View style={styles.cardContent}>
                                     <Text style={styles.groupName}>{item.name}</Text>
+                                    {(item as any).purpose && (
+                                        <View style={[
+                                            styles.cardPurposePill,
+                                            {
+                                                backgroundColor:
+                                                    (item as any).purpose === 'excess' ? '#eff6ff' :
+                                                    (item as any).purpose === 'emergency' ? '#fef2f2' :
+                                                    (item as any).purpose === 'custom' ? '#f0fdf4' : '#f5f3ff',
+                                                borderColor:
+                                                    (item as any).purpose === 'excess' ? '#bfdbfe' :
+                                                    (item as any).purpose === 'emergency' ? '#fecaca' :
+                                                    (item as any).purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
+                                            }
+                                        ]}>
+                                            <Text style={[
+                                                styles.cardPurposeText,
+                                                {
+                                                    color:
+                                                        (item as any).purpose === 'excess' ? '#0284c7' :
+                                                        (item as any).purpose === 'emergency' ? '#dc2626' :
+                                                        (item as any).purpose === 'custom' ? '#059669' : '#7c3aed'
+                                                }
+                                            ]}>
+                                                {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom Fund'} as any)[(item as any).purpose] ?? (item as any).purpose}
+                                            </Text>
+                                        </View>
+                                    )}
                                     <Text style={styles.memberCount}>{item.total_members} members</Text>
                                     <Text style={styles.description} numberOfLines={3}>
                                         {item.description || 'Connecting community members together.'}
@@ -389,6 +416,18 @@ const styles = StyleSheet.create({
     },
     buttonLoading: {
         backgroundColor: '#93c5fd',
+    },
+    cardPurposePill: {
+        alignSelf: 'flex-start',
+        borderRadius: 8,
+        borderWidth: 1,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginVertical: 4,
+    },
+    cardPurposeText: {
+        fontSize: 11,
+        fontWeight: '700',
     },
     emptyContainer: {
         padding: 40,

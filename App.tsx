@@ -35,6 +35,10 @@ import CreateGroupScreen from "./src/screens/CreateGroupScreen";
 import ContributionsScreen from "./src/screens/ContributionsScreen";
 import EditGroupScreen from "./src/screens/EditGroupScreen";
 import ContactsScreen from "./src/screens/ContactsScreen";
+import GroupPurposeScreen, { type PurposeSelection } from "./src/screens/GroupPurposeScreen";
+import CreateCampaignScreen from "./src/screens/CreateCampaignScreen";
+import CampaignDetailScreen from "./src/screens/CampaignDetailScreen";
+import FundraisersScreen from "./src/screens/FundraisersScreen";
 import AnimatedScreen from "./src/components/AnimatedScreen";
 import BottomNavBar from "./src/components/BottomNavBar";
 import TopNavBar from "./src/components/TopNavBar";
@@ -68,15 +72,19 @@ export default function App() {
     React.useState<any>(null);
   const [viewingGroupWallet, setViewingGroupWallet] = React.useState<any>(null);
   const [isChoosingGroup, setIsChoosingGroup] = React.useState(false);
+  const [isChoosingGroupPurpose, setIsChoosingGroupPurpose] = React.useState(false);
+  const [groupPurposeSelection, setGroupPurposeSelection] = React.useState<PurposeSelection>({ purpose: 'bereavement', fund_description: '' });
   const [isCreatingGroup, setIsCreatingGroup] = React.useState(false);
   const [isViewingContributions, setIsViewingContributions] =
     React.useState(false);
   const [editingGroup, setEditingGroup] = React.useState<any>(null);
   const [isInviting, setIsInviting] = React.useState<any>(null); // Group to invite to
   const [previewingGroup, setPreviewingGroup] = React.useState<any>(null); // Discovery preview
-  const activeTab_ref = React.useRef<"home" | "discovery" | "wallet" | "profile">("home");
+  const [viewingCampaign, setViewingCampaign] = React.useState<any>(null); // For FundraisersScreen
+  const [isCreatingCampaign, setIsCreatingCampaign] = React.useState<any>(null); // group object
+  const activeTab_ref = React.useRef<"home" | "discovery" | "wallet" | "profile" | "fundraisers">("home");
   const [activeTab, setActiveTab] = React.useState<
-    "home" | "discovery" | "wallet" | "profile"
+    "home" | "discovery" | "wallet" | "profile" | "fundraisers"
   >("home");
 
   const url = Linking.useURL();
@@ -96,6 +104,8 @@ export default function App() {
     setIsViewingContributions(false);
     setEditingGroup(null);
     setPreviewingGroup(null);
+    setViewingCampaign(null);
+    setIsCreatingCampaign(null);
   }, []);
 
   const handleDeepLink = React.useCallback(
@@ -168,6 +178,9 @@ export default function App() {
 
       // Sub-screen navigation — mirrors getCurrentBackAction()
       if (isCreatingGroup) { setIsCreatingGroup(false); return true; }
+      if (isChoosingGroupPurpose) { setIsChoosingGroupPurpose(false); return true; }
+      if (viewingCampaign) { setViewingCampaign(null); return true; }
+      if (isCreatingCampaign) { setIsCreatingCampaign(null); return true; }
       if (isViewingContributions) { setIsViewingContributions(false); return true; }
       if (editingGroup) { setEditingGroup(null); return true; }
       if (viewingMemberProfile) { setViewingMemberProfile(null); return true; }
@@ -392,7 +405,27 @@ export default function App() {
             }}
             onCreate={() => {
               setIsChoosingGroup(false);
+              setIsChoosingGroupPurpose(true);
+            }}
+          />
+        </SafeAreaProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  if (isChoosingGroupPurpose) {
+    return (
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <GroupPurposeScreen
+            onSelect={(selection) => {
+              setGroupPurposeSelection(selection);
+              setIsChoosingGroupPurpose(false);
               setIsCreatingGroup(true);
+            }}
+            onBack={() => {
+              setIsChoosingGroupPurpose(false);
+              setIsChoosingGroup(true);
             }}
           />
         </SafeAreaProvider>
@@ -474,10 +507,31 @@ export default function App() {
             />
           )}
           <View style={{ flex: 1, marginBottom: 70 }}>
-            {isCreatingGroup ? (
+            {isCreatingCampaign ? (
+              <AnimatedScreen animation="slideUp">
+                <CreateCampaignScreen
+                  group={isCreatingCampaign}
+                  onBack={() => setIsCreatingCampaign(null)}
+                  onCreated={(campaign) => {
+                    setIsCreatingCampaign(null);
+                  }}
+                />
+              </AnimatedScreen>
+            ) : viewingCampaign ? (
+              <AnimatedScreen animation="slideRight">
+                <CampaignDetailScreen
+                  campaign={viewingCampaign}
+                  isAdmin={viewingCampaign?.group_detail?.is_admin ?? false}
+                  onBack={() => setViewingCampaign(null)}
+                  onUpdated={(updated) => setViewingCampaign(updated)}
+                />
+              </AnimatedScreen>
+            ) : isCreatingGroup ? (
               <AnimatedScreen animation="slideUp">
                 <CreateGroupScreen
                   onBack={() => setIsCreatingGroup(false)}
+                  purpose={groupPurposeSelection.purpose}
+                  fund_description={groupPurposeSelection.fund_description}
                   onGroupCreated={(group) => {
                     setIsCreatingGroup(false);
                     setSelectedGroup(group);
@@ -525,6 +579,9 @@ export default function App() {
                   }
                   onViewWallet={() => {
                     setViewingGroupWallet(isManagingGroup);
+                  }}
+                  onCreateCampaign={() => {
+                    setIsCreatingCampaign(isManagingGroup);
                   }}
                 />
               </AnimatedScreen>
@@ -663,6 +720,11 @@ export default function App() {
                     onBack={() => setActiveTab("home")}
                     onLogout={handleLogout}
                     onProfileUpdate={checkProfileStatus}
+                  />
+                )}
+                {activeTab === "fundraisers" && (
+                  <FundraisersScreen
+                    onSelectCampaign={(campaign) => setViewingCampaign(campaign)}
                   />
                 )}
               </View>

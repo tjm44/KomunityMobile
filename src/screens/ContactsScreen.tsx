@@ -100,7 +100,7 @@ const ContactsScreen = ({ onBack, groupId }: ContactsScreenProps) => {
 
             <FlatList
                 data={contacts}
-                keyExtractor={(item) => item.id || item.name || Math.random().toString()}
+                keyExtractor={(item) => (item as any).id || item.name || Math.random().toString()}
                 renderItem={({ item }) => (
                     <View style={styles.contactItem}>
                         <View style={styles.avatar}>

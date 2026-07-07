@@ -1,22 +1,37 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-
 import { Feather } from '@expo/vector-icons';
 
+type TabName = 'home' | 'discovery' | 'wallet' | 'fundraisers' | 'profile';
+
 interface BottomNavBarProps {
-    activeTab: 'home' | 'discovery' | 'wallet' | 'profile';
-    onTabPress: (tab: 'home' | 'discovery' | 'wallet' | 'profile') => void;
+    activeTab: TabName;
+    onTabPress: (tab: TabName) => void;
     onBack?: () => void;
     profilePicture?: string | null;
 }
 
+const TABS: Array<{
+    key: TabName;
+    label: string;
+    icon?: React.ComponentProps<typeof Feather>['name'];
+    emoji?: string;
+    color: string;
+}> = [
+    { key: 'home',        label: 'My Groups',   icon: 'users',       color: '#2563eb' },
+    { key: 'discovery',   label: 'Explore',     icon: 'search',      color: '#2563eb' },
+    { key: 'fundraisers', label: 'Fundraise',   emoji: '🆘',         color: '#dc2626' },
+    { key: 'wallet',      label: 'Wallet',      icon: 'credit-card', color: '#2563eb' },
+    { key: 'profile',     label: 'Profile',                          color: '#2563eb' },
+];
+
 const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture }: BottomNavBarProps) => {
     const insets = useSafeAreaInsets();
 
-    const handlePress = (tab: 'home' | 'discovery' | 'wallet' | 'profile') => {
+    const handlePress = (tab: TabName) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onTabPress(tab);
     };
@@ -29,78 +44,70 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture }: BottomN
     return (
         <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}>
             {onBack && (
-                <TouchableOpacity
-                    style={styles.navItem}
-                    onPress={handleBack}
-                >
+                <TouchableOpacity style={styles.navItem} onPress={handleBack}>
                     <Text style={styles.backIcon}>←</Text>
                     <Text style={styles.navText}>Back</Text>
                 </TouchableOpacity>
             )}
 
-            <TouchableOpacity
-                style={styles.navItem}
-                onPress={() => handlePress('home')}
-            >
-                <Feather 
-                    name="users" 
-                    size={22} 
-                    color={activeTab === 'home' ? '#2563eb' : '#9ca3af'} 
-                    style={{ marginBottom: 4 }} 
-                />
-                <Text style={[styles.navText, activeTab === 'home' && styles.activeText]}>My Groups</Text>
-            </TouchableOpacity>
+            {TABS.map((tab) => {
+                const isActive = activeTab === tab.key;
+                const tabColor = isActive ? tab.color : '#9ca3af';
 
-            <TouchableOpacity
-                style={styles.navItem}
-                onPress={() => handlePress('discovery')}
-            >
-                <Feather 
-                    name="search" 
-                    size={22} 
-                    color={activeTab === 'discovery' ? '#2563eb' : '#9ca3af'} 
-                    style={{ marginBottom: 4 }} 
-                />
-                <Text style={[styles.navText, activeTab === 'discovery' && styles.activeText]}>Explore</Text>
-            </TouchableOpacity>
+                if (tab.key === 'profile') {
+                    return (
+                        <TouchableOpacity
+                            key={tab.key}
+                            style={styles.navItem}
+                            onPress={() => handlePress('profile')}
+                        >
+                            {profilePicture ? (
+                                <Image
+                                    source={{ uri: profilePicture }}
+                                    style={[styles.profilePic, isActive && styles.activeProfilePic]}
+                                    transition={200}
+                                />
+                            ) : (
+                                <View style={[styles.profilePlaceholder, isActive && styles.activeProfilePlaceholder]}>
+                                    <Feather name="user" size={16} color={tabColor} />
+                                </View>
+                            )}
+                            <Text style={[styles.navText, isActive && { color: tab.color }]}>{tab.label}</Text>
+                        </TouchableOpacity>
+                    );
+                }
 
-            <TouchableOpacity
-                style={styles.navItem}
-                onPress={() => handlePress('wallet')}
-            >
-                <Feather 
-                    name="credit-card" 
-                    size={22} 
-                    color={activeTab === 'wallet' ? '#2563eb' : '#9ca3af'} 
-                    style={{ marginBottom: 4 }} 
-                />
-                <Text style={[styles.navText, activeTab === 'wallet' && styles.activeText]}>Wallet</Text>
-            </TouchableOpacity>
+                if (tab.key === 'fundraisers') {
+                    return (
+                        <TouchableOpacity
+                            key={tab.key}
+                            style={styles.navItem}
+                            onPress={() => handlePress('fundraisers')}
+                        >
+                            <View style={[styles.fundraiserIconWrap, isActive && { backgroundColor: '#fee2e2' }]}>
+                                <Text style={styles.fundraiserEmoji}>{tab.emoji}</Text>
+                            </View>
+                            <Text style={[styles.navText, isActive && { color: tab.color }]}>{tab.label}</Text>
+                        </TouchableOpacity>
+                    );
+                }
 
-            <TouchableOpacity
-                style={styles.navItem}
-                onPress={() => handlePress('profile')}
-            >
-                {profilePicture ? (
-                    <Image
-                        source={{ uri: profilePicture }}
-                        style={[styles.profilePic, activeTab === 'profile' && styles.activeProfilePic]}
-                        transition={200}
-                    />
-                ) : (
-                    <View style={[
-                        styles.profilePlaceholder,
-                        activeTab === 'profile' && styles.activeProfilePlaceholder
-                    ]}>
+                return (
+                    <TouchableOpacity
+                        key={tab.key}
+                        style={styles.navItem}
+                        onPress={() => handlePress(tab.key)}
+                    >
                         <Feather
-                            name="user"
-                            size={16}
-                            color={activeTab === 'profile' ? '#2563eb' : '#9ca3af'}
+                            name={tab.icon!}
+                            size={22}
+                            color={tabColor}
+                            style={{ marginBottom: 4 }}
                         />
-                    </View>
-                )}
-                <Text style={[styles.navText, activeTab === 'profile' && styles.activeText]}>Profile</Text>
-            </TouchableOpacity>
+                        <Text style={[styles.navText, isActive && { color: tab.color }]}>{tab.label}</Text>
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 };
@@ -127,56 +134,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    navIcon: {
-        fontSize: 22,
-        marginBottom: 4,
-        opacity: 0.5,
-    },
-    backIcon: {
-        fontSize: 22,
-        marginBottom: 4,
-        color: '#2563eb',
-        fontWeight: 'bold',
-    },
-    activeIcon: {
-        opacity: 1,
-    },
-    navText: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#6b7280',
-    },
-    activeText: {
-        color: '#2563eb',
-    },
-    profilePic: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        marginBottom: 4,
-        opacity: 0.6,
-        borderWidth: 2,
-        borderColor: '#e5e7eb',
-    },
-    activeProfilePic: {
-        opacity: 1,
-        borderColor: '#2563eb',
-    },
-    profilePlaceholder: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: '#f3f4f6',
-        borderWidth: 2,
-        borderColor: '#d1d5db',
+    backIcon: { fontSize: 22, marginBottom: 4, color: '#2563eb', fontWeight: 'bold' },
+    navText: { fontSize: 10, fontWeight: '600', color: '#6b7280' },
+    fundraiserIconWrap: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#fee2e230',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 2,
     },
-    activeProfilePlaceholder: {
-        backgroundColor: '#eff6ff',
-        borderColor: '#2563eb',
+    fundraiserEmoji: { fontSize: 18 },
+    profilePic: {
+        width: 28, height: 28, borderRadius: 14,
+        marginBottom: 4, opacity: 0.6,
+        borderWidth: 2, borderColor: '#e5e7eb',
     },
+    activeProfilePic: { opacity: 1, borderColor: '#2563eb' },
+    profilePlaceholder: {
+        width: 28, height: 28, borderRadius: 14,
+        backgroundColor: '#f3f4f6', borderWidth: 2,
+        borderColor: '#d1d5db', justifyContent: 'center',
+        alignItems: 'center', marginBottom: 4,
+    },
+    activeProfilePlaceholder: { backgroundColor: '#eff6ff', borderColor: '#2563eb' },
 });
 
 export default BottomNavBar;

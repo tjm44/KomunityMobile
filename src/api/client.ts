@@ -20,8 +20,8 @@ const LAN_API_URL = `http://${hostIp}:8000/api/v1/`;
 // Replace this with your new Railway production URL once deployed (e.g., https://komunity-production.up.railway.app/api/v1/)
 const PROD_API_URL = 'https://<your-railway-app>.up.railway.app/api/v1/';
 
-// Force Railway connection instead of local server
-const API_BASE_URL = PROD_API_URL;
+// Use LAN API URL for local development to connect to the Django backend
+const API_BASE_URL = LAN_API_URL;
 
 console.log('[Komunity API] Using base URL:', API_BASE_URL);
 

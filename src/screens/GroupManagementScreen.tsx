@@ -40,13 +40,14 @@ interface DeceasedMember {
 type ManagementItem = Member | DeceasedMember;
 
 interface GroupManagementProps {
-    group: { id: number; name: string };
+    group: { id: number; name: string; purpose?: string };
     onBack: () => void;
     onSelectMember: (membership: any) => void;
     onViewWallet: () => void;
+    onCreateCampaign?: () => void;
 }
 
-const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet }: GroupManagementProps) => {
+const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, onCreateCampaign }: GroupManagementProps) => {
     const insets = useSafeAreaInsets();
     const [pendingMembers, setPendingMembers] = useState<Member[]>([]);
     const [activeMembers, setActiveMembers] = useState<Member[]>([]);
@@ -322,6 +323,15 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet }: 
             <View style={styles.subHeader}>
                 <Text style={styles.groupName}>{group.name}</Text>
 
+                {onCreateCampaign && (
+                    <TouchableOpacity
+                        style={styles.campaignCreateBtn}
+                        onPress={onCreateCampaign}
+                    >
+                        <Text style={styles.campaignCreateBtnText}>💰 Create Fund Campaign</Text>
+                    </TouchableOpacity>
+                )}
+
                 <View style={styles.tabs}>
                     <TouchableOpacity
                         style={[styles.tab, activeTab === 'pending' && styles.activeTab]}
@@ -472,6 +482,19 @@ const styles = StyleSheet.create({
         color: '#2563eb',
         fontWeight: 'bold',
         marginBottom: 12,
+    },
+    campaignCreateBtn: {
+        backgroundColor: '#059669',
+        borderRadius: 10,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        alignSelf: 'flex-start',
+        marginBottom: 12,
+    },
+    campaignCreateBtnText: {
+        color: '#ffffff',
+        fontSize: 13,
+        fontWeight: '700',
     },
     tabs: {
         flexDirection: 'row',

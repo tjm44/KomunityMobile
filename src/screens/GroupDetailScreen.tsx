@@ -126,6 +126,13 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                     <View style={styles.groupInfoOverlay}>
                         <View style={styles.mainInfo}>
                             <Text style={styles.groupName}>{group.name}</Text>
+                            {(group as any).purpose && (
+                                <View style={styles.purposePill}>
+                                    <Text style={styles.purposePillText}>
+                                        {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom'} as any)[(group as any).purpose] ?? ''}
+                                    </Text>
+                                </View>
+                            )}
                             <Text style={styles.memberCountText}>{group.total_members} active members</Text>
                         </View>
 
@@ -314,6 +321,19 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         padding: 20,
+    },
+    purposePill: {
+        backgroundColor: 'rgba(255,255,255,0.25)',
+        borderRadius: 12,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        marginTop: 4,
+        alignSelf: 'flex-start',
+    },
+    purposePillText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: '700',
     },
     groupName: {
         fontSize: 24,
