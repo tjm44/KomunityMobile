@@ -65,6 +65,12 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate }: ProfileScreenProps
     const [profilePicture, setProfilePicture] = useState<string | null>(null);
     const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
     const [isReviewingImage, setIsReviewingImage] = useState(false);
+    
+    // KYC states
+    const [showKycModal, setShowKycModal] = useState(false);
+    const [idNumber, setIdNumber] = useState('');
+    const [idType, setIdType] = useState('national_id');
+    const [kycLoading, setKycLoading] = useState(false);
 
     const fetchProfile = React.useCallback(async () => {
         try {
@@ -209,6 +215,33 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate }: ProfileScreenProps
         }
     };
 
+    const handleKycVerify = async () => {
+        if (!profile?.profile?.id) return;
+        if (!idNumber.trim()) {
+            showAlert('Validation Error', 'ID Number is required.');
+            return;
+        }
+
+        setKycLoading(true);
+        try {
+            const response = await client.post(`profiles/${profile.profile.id}/verify-kyc/`, {
+                id_number: idNumber.trim(),
+                id_type: idType
+            });
+            showAlert('Verification Successful', response.data.message || 'Your identity has been verified.');
+            setShowKycModal(false);
+            setIdNumber('');
+            fetchProfile();
+            onProfileUpdate?.();
+        } catch (error: any) {
+            console.error('KYC Verification error:', error);
+            const errorMsg = error.response?.data?.error || 'Verification failed. Please try again.';
+            showAlert('Verification Failed', errorMsg);
+        } finally {
+            setKycLoading(false);
+        }
+    };
+
     const handleLogout = () => {
         if (Platform.OS === 'web') {
             const confirmed = window.confirm('Are you sure you want to logout?');
@@ -305,11 +338,22 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate }: ProfileScreenProps
                         {isEditing ? `${firstName} ${surname}`.trim() || 'New User' : profile?.profile?.full_name || 'No name set'}
                     </Text>
                     <Text style={styles.profileEmail}>{profile?.email}</Text>
-                    {profile?.profile?.active_role && (
-                        <View style={styles.roleBadge}>
-                            <Text style={styles.roleText}>{profile.profile.active_role.toUpperCase()}</Text>
-                        </View>
-                    )}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                        {profile?.profile?.is_verified ? (
+                            <View style={[styles.roleBadge, { backgroundColor: '#d1fae5' }]}>
+                                <Text style={[styles.roleText, { color: '#065f46' }]}>🛡️ VERIFIED</Text>
+                            </View>
+                        ) : (
+                            <View style={[styles.roleBadge, { backgroundColor: '#fee2e2' }]}>
+                                <Text style={[styles.roleText, { color: '#dc2626' }]}>⚠️ UNVERIFIED</Text>
+                            </View>
+                        )}
+                        {profile?.profile?.active_role && (
+                            <View style={styles.roleBadge}>
+                                <Text style={styles.roleText}>{profile.profile.active_role.toUpperCase()}</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
 
                 {/* Profile Details */}
@@ -488,6 +532,15 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate }: ProfileScreenProps
                 {/* Actions (only non-editing actions remain in ScrollView) */}
                 {!isEditing && (
                     <View style={styles.section}>
+                        {!profile?.profile?.is_verified && (
+                            <TouchableOpacity
+                                style={[styles.actionButton, { backgroundColor: '#10b981', marginBottom: 12 }]}
+                                onPress={() => setShowKycModal(true)}
+                            >
+                                <Text style={styles.actionButtonText}>Verify Profile (KYC) 🛡️</Text>
+                            </TouchableOpacity>
+                        )}
+
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => setIsEditing(true)}
@@ -570,6 +623,80 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate }: ProfileScreenProps
                     </TouchableOpacity>
                 </View>
             )}
+
+            {/* KYC Verification Modal */}
+            <Modal
+                visible={showKycModal}
+                transparent={true}
+                animationType="fade"
+            >
+                <View style={styles.kycOverlay}>
+                    <View style={styles.kycContent}>
+                        <Text style={styles.kycTitle}>ID Verification (KYC) 🛡️</Text>
+                        <Text style={styles.kycSubtitle}>
+                            To start emergency fundraisers or join verified-only communities, please verify your identity.
+                        </Text>
+
+                        {/* ID Type Selection */}
+                        <Text style={styles.kycLabel}>Select Document Type</Text>
+                        <View style={styles.kycTypeRow}>
+                            <TouchableOpacity
+                                style={[styles.kycTypePill, idType === 'national_id' && styles.kycTypePillActive]}
+                                onPress={() => setIdType('national_id')}
+                            >
+                                <Text style={[styles.kycTypePillText, idType === 'national_id' && styles.kycTypePillTextActive]}>
+                                    National ID
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.kycTypePill, idType === 'passport' && styles.kycTypePillActive]}
+                                onPress={() => setIdType('passport')}
+                            >
+                                <Text style={[styles.kycTypePillText, idType === 'passport' && styles.kycTypePillTextActive]}>
+                                    Passport
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* ID Number */}
+                        <Text style={styles.kycLabel}>Document ID Number</Text>
+                        <TextInput
+                            style={styles.kycInput}
+                            placeholder="Enter document ID number..."
+                            value={idNumber}
+                            onChangeText={setIdNumber}
+                            placeholderTextColor="#9ca3af"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+
+                        {/* Actions */}
+                        <View style={styles.kycActions}>
+                            <TouchableOpacity
+                                style={[styles.kycButton, styles.kycCancelButton]}
+                                onPress={() => {
+                                    setShowKycModal(false);
+                                    setIdNumber('');
+                                }}
+                                disabled={kycLoading}
+                            >
+                                <Text style={styles.kycCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.kycButton, styles.kycVerifyButton]}
+                                onPress={handleKycVerify}
+                                disabled={kycLoading}
+                            >
+                                {kycLoading ? (
+                                    <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                    <Text style={styles.kycVerifyText}>Verify</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -876,6 +1003,112 @@ const styles = StyleSheet.create({
         color: '#6b7280',
         fontWeight: '600',
         fontSize: 14,
+    },
+    kycOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        padding: 24,
+    },
+    kycContent: {
+        backgroundColor: '#ffffff',
+        borderRadius: 20,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+        elevation: 10,
+    },
+    kycTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#111827',
+        textAlign: 'center',
+        marginBottom: 8,
+        fontFamily: 'Outfit-Bold',
+    },
+    kycSubtitle: {
+        fontSize: 14,
+        color: '#6b7280',
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 20,
+        fontFamily: 'Outfit-Regular',
+    },
+    kycLabel: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#374151',
+        marginBottom: 8,
+        marginTop: 12,
+        fontFamily: 'Outfit-Bold',
+    },
+    kycTypeRow: {
+        flexDirection: 'row',
+        gap: 10,
+        marginBottom: 12,
+    },
+    kycTypePill: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        borderColor: '#e5e7eb',
+        alignItems: 'center',
+        backgroundColor: '#f9fafb',
+    },
+    kycTypePillActive: {
+        borderColor: '#2563eb',
+        backgroundColor: '#eff6ff',
+    },
+    kycTypePillText: {
+        fontSize: 14,
+        color: '#475569',
+        fontWeight: '600',
+        fontFamily: 'Outfit-Bold',
+    },
+    kycTypePillTextActive: {
+        color: '#2563eb',
+    },
+    kycInput: {
+        backgroundColor: '#f9fafb',
+        borderWidth: 1.5,
+        borderColor: '#e5e7eb',
+        borderRadius: 10,
+        padding: 14,
+        fontSize: 15,
+        color: '#111827',
+        marginBottom: 20,
+        fontFamily: 'Outfit-Regular',
+    },
+    kycActions: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    kycButton: {
+        flex: 1,
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    kycCancelButton: {
+        backgroundColor: '#f3f4f6',
+    },
+    kycVerifyButton: {
+        backgroundColor: '#2563eb',
+    },
+    kycCancelText: {
+        color: '#475569',
+        fontWeight: '600',
+        fontSize: 15,
+        fontFamily: 'Outfit-Bold',
+    },
+    kycVerifyText: {
+        color: '#ffffff',
+        fontWeight: 'bold',
+        fontSize: 15,
+        fontFamily: 'Outfit-Bold',
     },
 });
 

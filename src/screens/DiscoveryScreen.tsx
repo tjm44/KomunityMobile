@@ -16,6 +16,8 @@ interface Group {
     total_members: number;
     requires_approval: boolean;
     membership_status: 'active' | 'pending' | null;
+    verified_members_only?: boolean;
+    is_verified?: boolean;
 }
 
 interface DiscoveryScreenProps {
@@ -93,9 +95,10 @@ const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: Discover
                 Alert.alert('Request Sent', 'Your request to join has been sent to the community admins.');
                 fetchGroups();
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error joining group:', error);
-            Alert.alert('Error', 'Failed to join the community. Please try again.');
+            const msg = error.response?.data?.error || 'Failed to join the community. Please try again.';
+            Alert.alert('Join Failed', msg);
         } finally {
             setJoiningId(null);
         }
@@ -193,34 +196,60 @@ const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: Discover
                                     <View style={[styles.coverImage, { backgroundColor: '#e5e7eb' }]} />
                                 )}
                                 <View style={styles.cardContent}>
-                                    <Text style={styles.groupName}>{item.name}</Text>
-                                    {(item as any).purpose && (
-                                        <View style={[
-                                            styles.cardPurposePill,
-                                            {
-                                                backgroundColor:
-                                                    (item as any).purpose === 'excess' ? '#eff6ff' :
-                                                    (item as any).purpose === 'emergency' ? '#fef2f2' :
-                                                    (item as any).purpose === 'custom' ? '#f0fdf4' : '#f5f3ff',
-                                                borderColor:
-                                                    (item as any).purpose === 'excess' ? '#bfdbfe' :
-                                                    (item as any).purpose === 'emergency' ? '#fecaca' :
-                                                    (item as any).purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
-                                            }
-                                        ]}>
-                                            <Text style={[
-                                                styles.cardPurposeText,
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
+                                        <Text style={styles.groupName}>{item.name}</Text>
+                                        {item.is_verified && (
+                                            <View style={styles.verifiedBadge}>
+                                                <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    
+                                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginVertical: 4 }}>
+                                        {(item as any).purpose && (
+                                            <View style={[
+                                                styles.cardPurposePill,
                                                 {
-                                                    color:
-                                                        (item as any).purpose === 'excess' ? '#0284c7' :
-                                                        (item as any).purpose === 'emergency' ? '#dc2626' :
-                                                        (item as any).purpose === 'custom' ? '#059669' : '#7c3aed'
+                                                    backgroundColor:
+                                                        (item as any).purpose === 'excess' ? '#eff6ff' :
+                                                        (item as any).purpose === 'emergency' ? '#fef2f2' :
+                                                        (item as any).purpose === 'custom' ? '#f0fdf4' : '#f5f3ff',
+                                                    borderColor:
+                                                        (item as any).purpose === 'excess' ? '#bfdbfe' :
+                                                        (item as any).purpose === 'emergency' ? '#fecaca' :
+                                                        (item as any).purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
+                                                    marginVertical: 0,
                                                 }
                                             ]}>
-                                                {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom Fund'} as any)[(item as any).purpose] ?? (item as any).purpose}
-                                            </Text>
-                                        </View>
-                                    )}
+                                                <Text style={[
+                                                    styles.cardPurposeText,
+                                                    {
+                                                        color:
+                                                            (item as any).purpose === 'excess' ? '#0284c7' :
+                                                            (item as any).purpose === 'emergency' ? '#dc2626' :
+                                                            (item as any).purpose === 'custom' ? '#059669' : '#7c3aed'
+                                                    }
+                                                ]}>
+                                                    {({'bereavement': '🕊️ Bereavement', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom Fund'} as any)[(item as any).purpose] ?? (item as any).purpose}
+                                                </Text>
+                                            </View>
+                                        )}
+                                        {item.verified_members_only && (
+                                            <View style={[
+                                                styles.cardPurposePill,
+                                                {
+                                                    backgroundColor: '#fee2e2',
+                                                    borderColor: '#fecaca',
+                                                    marginVertical: 0,
+                                                }
+                                            ]}>
+                                                <Text style={[styles.cardPurposeText, { color: '#dc2626', fontWeight: 'bold' }]}>
+                                                    🛡️ Verified Only
+                                                </Text>
+                                            </View>
+                                        )}
+                                    </View>
+
                                     <Text style={styles.memberCount}>{item.total_members} members</Text>
                                     <Text style={styles.description} numberOfLines={3}>
                                         {item.description || 'Connecting community members together.'}
@@ -437,6 +466,19 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
         fontSize: 16,
         textAlign: 'center',
+    },
+    verifiedBadge: {
+        backgroundColor: '#d1fae5',
+        borderRadius: 20,
+        paddingHorizontal: 7,
+        paddingVertical: 1,
+        borderWidth: 1,
+        borderColor: '#6ee7b7',
+    },
+    verifiedBadgeText: {
+        color: '#065f46',
+        fontSize: 10,
+        fontWeight: '700',
     },
 });
 

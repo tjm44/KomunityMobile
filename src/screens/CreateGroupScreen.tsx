@@ -32,6 +32,7 @@ const CreateGroupScreen = ({
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [requiresApproval, setRequiresApproval] = useState(false);
+    const [verifiedMembersOnly, setVerifiedMembersOnly] = useState(false);
     const [loading, setLoading] = useState(false);
     const [nameError, setNameError] = useState<string | null>(null);
 
@@ -51,6 +52,7 @@ const CreateGroupScreen = ({
                 name: name.trim(),
                 description: description.trim(),
                 requires_approval: requiresApproval,
+                verified_members_only: verifiedMembersOnly,
                 purpose,
                 fund_description: purpose === 'custom' ? fund_description : '',
             });
@@ -120,6 +122,19 @@ const CreateGroupScreen = ({
                             onValueChange={setRequiresApproval}
                             trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
                             thumbColor={requiresApproval ? '#2563eb' : '#f4f3f4'}
+                        />
+                    </View>
+
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingText}>
+                            <Text style={styles.settingLabel}>Verified Members Only 🛡️</Text>
+                            <Text style={styles.settingDescription}>Only allow verified user profiles to join this community.</Text>
+                        </View>
+                        <Switch
+                            value={verifiedMembersOnly}
+                            onValueChange={setVerifiedMembersOnly}
+                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+                            thumbColor={verifiedMembersOnly ? '#2563eb' : '#f4f3f4'}
                         />
                     </View>
 

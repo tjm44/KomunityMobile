@@ -19,6 +19,8 @@ interface Group {
     requires_approval: boolean;
     membership_status: 'active' | 'pending' | null;
     created_at?: string;
+    verified_members_only?: boolean;
+    is_verified?: boolean;
 }
 
 interface GroupPreviewScreenProps {
@@ -66,9 +68,10 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined }: GroupPreviewScreen
                 setMembershipStatus('pending');
                 Alert.alert('Request Sent', 'Your request to join has been sent to the community admins.');
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error joining group:', error);
-            Alert.alert('Error', 'Failed to join the community. Please try again.');
+            const msg = error.response?.data?.error || 'Failed to join the community. Please try again.';
+            Alert.alert('Join Failed', msg);
         } finally {
             setJoining(false);
         }
@@ -141,7 +144,14 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined }: GroupPreviewScreen
                     </TouchableOpacity>
 
                     <View style={styles.heroContent}>
-                        <Text style={styles.heroGroupName}>{group.name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                            <Text style={styles.heroGroupName}>{group.name}</Text>
+                            {group.is_verified && (
+                                <View style={styles.heroVerifiedBadge}>
+                                    <Text style={styles.heroVerifiedBadgeText}>✅ Verified</Text>
+                                </View>
+                            )}
+                        </View>
                         <View style={styles.heroMeta}>
                             <View style={styles.metaBadge}>
                                 <Text style={styles.metaBadgeText}>
@@ -153,11 +163,41 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined }: GroupPreviewScreen
                                     {group.requires_approval ? '🔒 Restricted' : '🌍 Public'}
                                 </Text>
                             </View>
+                            {group.verified_members_only && (
+                                <View style={[styles.metaBadge, { backgroundColor: '#fee2e2' }]}>
+                                    <Text style={[styles.metaBadgeText, { color: '#dc2626', fontWeight: 'bold' }]}>
+                                        🛡️ Verified Only
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     </View>
                 </View>
 
                 <View style={styles.contentArea}>
+                    {group.is_verified && (
+                        <View style={[styles.card, { borderColor: '#6ee7b7', backgroundColor: '#f0fdf4', borderWidth: 1 }]}>
+                            <View style={styles.cardHeader}>
+                                <Text style={styles.cardIcon}>✅</Text>
+                                <Text style={[styles.cardTitle, { color: '#065f46' }]}>Verified Community</Text>
+                            </View>
+                            <Text style={[styles.descriptionText, { color: '#14532d', marginTop: 4 }]}>
+                                This community has been officially verified by the Komunity team as a legitimate and trusted organisation.
+                            </Text>
+                        </View>
+                    )}
+                    {group.verified_members_only && (
+                        <View style={[styles.card, { borderColor: '#fecaca', backgroundColor: '#fef2f2', borderWidth: 1 }]}>
+                            <View style={styles.cardHeader}>
+                                <Text style={styles.cardIcon}>🛡️</Text>
+                                <Text style={[styles.cardTitle, { color: '#991b1b' }]}>Verified Members Only</Text>
+                            </View>
+                            <Text style={[styles.descriptionText, { color: '#7f1d1d', marginTop: 4 }]}>
+                                This community requires a verified user profile to join. Go to your Profile settings to complete KYC verification if you haven't already.
+                            </Text>
+                        </View>
+                    )}
+
                     {/* Description Card */}
                     <View style={styles.card}>
                         <View style={styles.cardHeader}>
@@ -531,6 +571,19 @@ const styles = StyleSheet.create({
     },
     buttonLoading: {
         backgroundColor: '#93c5fd',
+    },
+    heroVerifiedBadge: {
+        backgroundColor: 'rgba(209, 250, 229, 0.9)',
+        borderRadius: 20,
+        paddingHorizontal: 9,
+        paddingVertical: 3,
+        borderWidth: 1,
+        borderColor: '#6ee7b7',
+    },
+    heroVerifiedBadgeText: {
+        color: '#065f46',
+        fontSize: 12,
+        fontWeight: '700',
     },
 });
 

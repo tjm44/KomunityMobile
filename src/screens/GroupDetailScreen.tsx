@@ -28,6 +28,7 @@ interface Group {
     requires_approval: boolean;
     created_at: string;
     is_admin: boolean;
+    is_verified?: boolean;
 }
 
 interface GroupDetailProps {
@@ -125,7 +126,14 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                     )}
                     <View style={styles.groupInfoOverlay}>
                         <View style={styles.mainInfo}>
-                            <Text style={styles.groupName}>{group.name}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                                <Text style={styles.groupName}>{group.name}</Text>
+                                {group.is_verified && (
+                                    <View style={styles.verifiedBadge}>
+                                        <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+                                    </View>
+                                )}
+                            </View>
                             {(group as any).purpose && (
                                 <View style={styles.purposePill}>
                                     <Text style={styles.purposePillText}>
@@ -196,6 +204,12 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                             <View style={styles.statItem}>
                                 <Text style={styles.statLabel}>Privacy</Text>
                                 <Text style={styles.statValue}>{group.requires_approval ? 'Restricted' : 'Public'}</Text>
+                            </View>
+                            <View style={styles.statItem}>
+                                <Text style={styles.statLabel}>Status</Text>
+                                <Text style={[styles.statValue, { color: group.is_verified ? '#059669' : '#9ca3af' }]}>
+                                    {group.is_verified ? '✅ Verified' : 'Unverified'}
+                                </Text>
                             </View>
                         </View>
                     </View>
@@ -579,6 +593,34 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#6b7280',
         lineHeight: 18,
+    },
+    verifiedBadge: {
+        backgroundColor: '#d1fae5',
+        borderRadius: 20,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderWidth: 1,
+        borderColor: '#6ee7b7',
+    },
+    verifiedBadgeText: {
+        color: '#065f46',
+        fontSize: 11,
+        fontWeight: '700',
+    },
+    purposePill: {
+        alignSelf: 'flex-start',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 20,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        marginTop: 4,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
+    },
+    purposePillText: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: '600',
     },
 });
 

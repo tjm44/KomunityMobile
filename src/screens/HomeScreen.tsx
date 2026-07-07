@@ -23,6 +23,7 @@ interface Group {
   total_members: number;
   is_selected: boolean;
   unread_posts_count: number;
+  is_verified?: boolean;
 }
 
 interface HomeScreenProps {
@@ -175,7 +176,14 @@ const HomeScreen = ({
               <View style={styles.cardContent}>
                 <View style={styles.cardHeader}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.groupName}>{item.name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <Text style={styles.groupName}>{item.name}</Text>
+                      {item.is_verified && (
+                        <View style={styles.verifiedBadge}>
+                          <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.memberCount}>
                       {item.total_members} members
                     </Text>
@@ -396,6 +404,19 @@ const styles = StyleSheet.create({
   emptyText: {
     color: "#9ca3af",
     fontSize: 16,
+  },
+  verifiedBadge: {
+    backgroundColor: '#d1fae5',
+    borderRadius: 20,
+    paddingHorizontal: 7,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: '#6ee7b7',
+  },
+  verifiedBadgeText: {
+    color: '#065f46',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
 

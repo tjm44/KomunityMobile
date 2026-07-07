@@ -19,12 +19,14 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
     const [name, setName] = useState(group.name || '');
     const [description, setDescription] = useState(group.description || '');
     const [requiresApproval, setRequiresApproval] = useState(group.requires_approval || false);
+    const [verifiedMembersOnly, setVerifiedMembersOnly] = useState(group.verified_members_only || false);
     const [loading, setLoading] = useState(false);
     const [coverImage, setCoverImage] = useState<string | null>(group.cover_image || null);
     const [newCoverImage, setNewCoverImage] = useState<any>(null); // For the picked image
     const [removeCover, setRemoveCover] = useState(false);
     const [selectedReviewImage, setSelectedReviewImage] = useState<any>(null);
     const [isReviewingImage, setIsReviewingImage] = useState(false);
+    const [requestingVerification, setRequestingVerification] = useState(false);
 
     const pickCoverImage = async () => {
         Alert.alert(
@@ -103,6 +105,7 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             formData.append('name', name.trim());
             formData.append('description', description.trim());
             formData.append('requires_approval', requiresApproval.toString());
+            formData.append('verified_members_only', verifiedMembersOnly.toString());
 
             if (newCoverImage) {
                 const uri = newCoverImage.uri;
@@ -140,8 +143,37 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             name.trim() !== (group.name || '') ||
             description.trim() !== (group.description || '') ||
             requiresApproval !== (group.requires_approval || false) ||
+            verifiedMembersOnly !== (group.verified_members_only || false) ||
             newCoverImage !== null ||
             removeCover
+        );
+    };
+
+    const handleRequestVerification = async () => {
+        Alert.alert(
+            'Request Group Verification',
+            'Submitting a verification request will notify the Komunity team to review your group. This process typically takes 2–5 business days. Continue?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Submit Request',
+                    onPress: async () => {
+                        setRequestingVerification(true);
+                        try {
+                            const response = await client.post(`groups/${group.id}/request-verification/`);
+                            Alert.alert(
+                                'Request Submitted ✅',
+                                response.data.message || 'Your verification request has been submitted.'
+                            );
+                        } catch (error: any) {
+                            const msg = error.response?.data?.error || 'Failed to submit verification request.';
+                            Alert.alert('Error', msg);
+                        } finally {
+                            setRequestingVerification(false);
+                        }
+                    }
+                }
+            ]
         );
     };
 
@@ -217,6 +249,52 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                             trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
                             thumbColor={requiresApproval ? '#2563eb' : '#f4f3f4'}
                         />
+                    </View>
+
+                    {/* Verified Members Only */}
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingText}>
+                            <Text style={styles.settingLabel}>Verified Members Only 🛡️</Text>
+                            <Text style={styles.settingDescription}>
+                                Only allow verified user profiles to join this community.
+                            </Text>
+                        </View>
+                        <Switch
+                            value={verifiedMembersOnly}
+                            onValueChange={setVerifiedMembersOnly}
+                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+                            thumbColor={verifiedMembersOnly ? '#2563eb' : '#f4f3f4'}
+                        />
+                    </View>
+
+                    {/* Group Verification Status */}
+                    <View style={[
+                        styles.infoBox,
+                        group.is_verified
+                            ? { backgroundColor: '#f0fdf4', borderColor: '#6ee7b7', borderWidth: 1 }
+                            : { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1 }
+                    ]}>
+                        <Text style={[styles.infoText, { fontWeight: '700', marginBottom: 4, color: group.is_verified ? '#065f46' : '#92400e' }]}>
+                            {group.is_verified ? '✅ This community is Verified' : '⚠️ This community is not yet verified'}
+                        </Text>
+                        <Text style={[styles.infoText, { color: group.is_verified ? '#14532d' : '#78350f' }]}>
+                            {group.is_verified
+                                ? 'Your group has been officially verified by the Komunity team. A ✅ badge is shown on your community profile.'
+                                : 'Verified groups receive a trust badge and are eligible to run Emergency Fundraiser campaigns. Tap below to apply.'}
+                        </Text>
+                        {!group.is_verified && (
+                            <TouchableOpacity
+                                style={styles.verificationRequestBtn}
+                                onPress={handleRequestVerification}
+                                disabled={requestingVerification}
+                            >
+                                {requestingVerification ? (
+                                    <ActivityIndicator color="#ffffff" size="small" />
+                                ) : (
+                                    <Text style={styles.verificationRequestBtnText}>Request Verification →</Text>
+                                )}
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={styles.infoBox}>
@@ -522,6 +600,18 @@ const styles = StyleSheet.create({
     reviewCancelText: {
         color: '#6b7280',
         fontWeight: '600',
+        fontSize: 14,
+    },
+    verificationRequestBtn: {
+        backgroundColor: '#2563eb',
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginTop: 12,
+    },
+    verificationRequestBtnText: {
+        color: '#ffffff',
+        fontWeight: 'bold',
         fontSize: 14,
     },
 });
