@@ -112,13 +112,18 @@ const CreatePostScreen = ({ group, post, onBack, onPostCreated }: CreatePostProp
                     await client.delete(`post-images/${id}/`);
                 }
             } else {
-                // CREATE new post
-                const postResponse = await client.post('posts/', {
-                    group: group.id,
-                    content: content,
-                    approved: true
-                });
-                postId = postResponse.data.id;
+                 // CREATE new post
+                 const payload: any = {
+                     content: content,
+                     approved: true
+                 };
+                 if ((group as any).is_organisation) {
+                     payload.organisation = group.id;
+                 } else {
+                     payload.group = group.id;
+                 }
+                 const postResponse = await client.post('posts/', payload);
+                 postId = postResponse.data.id;
             }
 
             // Upload NEW images

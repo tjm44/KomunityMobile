@@ -27,9 +27,10 @@ interface GroupPreviewScreenProps {
     group: Group;
     onBack: () => void;
     onGroupJoined: () => void;
+    onGoToVerification?: () => void;
 }
 
-const GroupPreviewScreen = ({ group, onBack, onGroupJoined }: GroupPreviewScreenProps) => {
+const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }: GroupPreviewScreenProps) => {
     const insets = useSafeAreaInsets();
     const [joining, setJoining] = useState(false);
     const [membershipStatus, setMembershipStatus] = useState(group.membership_status);
@@ -70,8 +71,23 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined }: GroupPreviewScreen
             }
         } catch (error: any) {
             console.error('Error joining group:', error);
-            const msg = error.response?.data?.error || 'Failed to join the community. Please try again.';
-            Alert.alert('Join Failed', msg);
+            const msg = error.response?.data?.error || '';
+            if (msg.toLowerCase().includes('verified') || msg.toLowerCase().includes('restrict')) {
+                Alert.alert(
+                    'Verification Required',
+                    'This group requires verified members. Your account is not yet verified.',
+                    [
+                        { text: 'Maybe Later', style: 'cancel' },
+                        {
+                            text: 'Verify Now',
+                            style: 'default',
+                            onPress: () => onGoToVerification?.()
+                        }
+                    ]
+                );
+            } else {
+                Alert.alert('Join Failed', msg || 'Failed to join the community. Please try again.');
+            }
         } finally {
             setJoining(false);
         }

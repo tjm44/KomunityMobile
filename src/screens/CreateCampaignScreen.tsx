@@ -46,7 +46,9 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
     const selectedBeneficiary = members.find(m => m.member_detail.id === beneficiaryId);
 
     useEffect(() => {
-        fetchMembers();
+        if (!(group as any).is_organisation) {
+            fetchMembers();
+        }
     }, []);
 
     const fetchMembers = async () => {
@@ -74,11 +76,15 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
         setLoading(true);
         try {
             const payload: any = {
-                group: group.id,
                 campaign_type: campaignType,
                 title: title.trim(),
                 description: description.trim(),
             };
+            if ((group as any).is_organisation) {
+                payload.organisation = group.id;
+            } else {
+                payload.group = group.id;
+            }
             if (beneficiaryId) payload.beneficiary = beneficiaryId;
             if (targetAmount) payload.target_amount = parseFloat(targetAmount);
             if (deadline) payload.deadline = deadline;
@@ -104,7 +110,12 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                     {/* Campaign type selector */}
                     <Text style={styles.sectionLabel}>Campaign Type</Text>
                     <View style={styles.typeGrid}>
-                        {CAMPAIGN_TYPES.map(t => {
+                        {CAMPAIGN_TYPES.filter(t => {
+                            if ((group as any).is_organisation) {
+                                return t.key === 'emergency' || t.key === 'custom';
+                            }
+                            return t.key === group?.purpose;
+                        }).map(t => {
                             const active = campaignType === t.key;
                             return (
                                 <TouchableOpacity
@@ -119,11 +130,11 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                         })}
                     </View>
 
-                    {campaignType === 'emergency' && !group?.is_verified && (
+                    {campaignType === 'emergency' && !(group as any).is_verified && (
                         <View style={styles.warningBox}>
                             <Text style={styles.warningText}>
                                 ⚠️ Emergency Fundraisers require a verified NGO or Church account.
-                                Contact Komunity support to verify your organisation.
+                                Submit a verification request in settings.
                             </Text>
                         </View>
                     )}
@@ -152,46 +163,49 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                     />
 
                     {/* Beneficiary / Claimant */}
-                    <Text style={styles.sectionLabel}>
-                        {campaignType === 'excess' ? 'Claimant (Member)' : 'Beneficiary'}
-                        {(campaignType === 'excess' || campaignType === 'bereavement') ? ' *' : ' (optional)'}
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.pickerBtn}
-                        onPress={() => setShowMemberPicker(!showMemberPicker)}
-                    >
-                        <Text style={[styles.pickerBtnText, !selectedBeneficiary && { color: '#94a3b8' }]}>
-                            {selectedBeneficiary
-                                ? `👤 ${selectedBeneficiary.member_detail.full_name}`
-                                : 'Select a member...'}
-                        </Text>
-                        <Text style={styles.pickerArrow}>{showMemberPicker ? '▲' : '▼'}</Text>
-                    </TouchableOpacity>
+                    {(campaignType === 'excess' || campaignType === 'bereavement') && (
+                        <>
+                            <Text style={styles.sectionLabel}>
+                                {campaignType === 'excess' ? 'Claimant (Member) *' : 'Beneficiary *'}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.pickerBtn}
+                                onPress={() => setShowMemberPicker(!showMemberPicker)}
+                            >
+                                <Text style={[styles.pickerBtnText, !selectedBeneficiary && { color: '#94a3b8' }]}>
+                                    {selectedBeneficiary
+                                        ? `👤 ${selectedBeneficiary.member_detail.full_name}`
+                                        : 'Select a member...'}
+                                </Text>
+                                <Text style={styles.pickerArrow}>{showMemberPicker ? '▲' : '▼'}</Text>
+                            </TouchableOpacity>
 
-                    {showMemberPicker && (
-                        <View style={styles.memberList}>
-                            {loadingMembers
-                                ? <ActivityIndicator color="#2563eb" style={{ padding: 12 }} />
-                                : members.map(m => (
-                                    <TouchableOpacity
-                                        key={m.id}
-                                        style={[
-                                            styles.memberRow,
-                                            beneficiaryId === m.member_detail.id && styles.memberRowSelected,
-                                        ]}
-                                        onPress={() => {
-                                            setBeneficiaryId(m.member_detail.id);
-                                            setShowMemberPicker(false);
-                                        }}
-                                    >
-                                        <Text style={styles.memberName}>{m.member_detail.full_name}</Text>
-                                        {beneficiaryId === m.member_detail.id && (
-                                            <Text style={styles.memberCheck}>✓</Text>
-                                        )}
-                                    </TouchableOpacity>
-                                ))
-                            }
-                        </View>
+                            {showMemberPicker && (
+                                <View style={styles.memberList}>
+                                    {loadingMembers
+                                        ? <ActivityIndicator color="#2563eb" style={{ padding: 12 }} />
+                                        : members.map(m => (
+                                            <TouchableOpacity
+                                                key={m.id}
+                                                style={[
+                                                    styles.memberRow,
+                                                    beneficiaryId === m.member_detail.id && styles.memberRowSelected,
+                                                ]}
+                                                onPress={() => {
+                                                    setBeneficiaryId(m.member_detail.id);
+                                                    setShowMemberPicker(false);
+                                                }}
+                                            >
+                                                <Text style={styles.memberName}>{m.member_detail.full_name}</Text>
+                                                {beneficiaryId === m.member_detail.id && (
+                                                    <Text style={styles.memberCheck}>✓</Text>
+                                                )}
+                                            </TouchableOpacity>
+                                        ))
+                                    }
+                                </View>
+                            )}
+                        </>
                     )}
 
                     {/* Target amount */}

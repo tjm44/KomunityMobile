@@ -20,6 +20,9 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
     const [description, setDescription] = useState(group.description || '');
     const [requiresApproval, setRequiresApproval] = useState(group.requires_approval || false);
     const [verifiedMembersOnly, setVerifiedMembersOnly] = useState(group.verified_members_only || false);
+    const [registrationNumber, setRegistrationNumber] = useState(group.registration_number || '');
+    const [entityType, setEntityType] = useState(group.entity_type || 'ngo');
+    const isOrganisation = !!group.registration_number || !!group.entity_type;
     const [loading, setLoading] = useState(false);
     const [coverImage, setCoverImage] = useState<string | null>(group.cover_image || null);
     const [newCoverImage, setNewCoverImage] = useState<any>(null); // For the picked image
@@ -107,6 +110,12 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             formData.append('requires_approval', requiresApproval.toString());
             formData.append('verified_members_only', verifiedMembersOnly.toString());
 
+            const isOrganisation = !!group.registration_number || !!group.entity_type;
+            if (isOrganisation) {
+                formData.append('registration_number', registrationNumber.trim());
+                formData.append('entity_type', entityType);
+            }
+
             if (newCoverImage) {
                 const uri = newCoverImage.uri;
                 const filename = uri.split('/').pop() || 'cover.jpg';
@@ -144,6 +153,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             description.trim() !== (group.description || '') ||
             requiresApproval !== (group.requires_approval || false) ||
             verifiedMembersOnly !== (group.verified_members_only || false) ||
+            registrationNumber.trim() !== (group.registration_number || '') ||
+            entityType !== (group.entity_type || 'ngo') ||
             newCoverImage !== null ||
             removeCover
         );
@@ -211,10 +222,10 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
 
                     {/* Name */}
                     <View style={styles.formSection}>
-                        <Text style={styles.label}>Community Name *</Text>
+                        <Text style={styles.label}>{isOrganisation ? 'Organisation Name *' : 'Community Name *'}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. Sunnyvale Neighborhood"
+                            placeholder={isOrganisation ? 'e.g. Hope Foundation' : 'e.g. Sunnyvale Neighborhood'}
                             value={name}
                             onChangeText={setName}
                             placeholderTextColor="#9ca3af"
@@ -226,7 +237,7 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Text style={styles.label}>Description</Text>
                         <TextInput
                             style={[styles.input, styles.textArea]}
-                            placeholder="What is this community about?"
+                            placeholder={isOrganisation ? 'What is this organisation about?' : 'What is this community about?'}
                             value={description}
                             onChangeText={setDescription}
                             multiline
@@ -234,6 +245,45 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                             placeholderTextColor="#9ca3af"
                         />
                     </View>
+
+                    {isOrganisation && (
+                        <View style={{ marginBottom: 16 }}>
+                            <View style={styles.formSection}>
+                                <Text style={styles.label}>Organisation Type *</Text>
+                                <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                                    {[
+                                        { key: 'ngo', label: 'NGO' },
+                                        { key: 'church', label: 'Church' },
+                                        { key: 'npo', label: 'NPO/Charity' },
+                                        { key: 'corporate', label: 'Corporate' },
+                                        { key: 'other', label: 'Other' },
+                                    ].map((type) => (
+                                        <TouchableOpacity
+                                            key={type.key}
+                                            style={[styles.entityPill, entityType === type.key && styles.entityPillActive]}
+                                            onPress={() => setEntityType(type.key)}
+                                        >
+                                            <Text style={[styles.entityPillText, entityType === type.key && styles.entityPillTextActive]}>
+                                                {type.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View style={styles.formSection}>
+                                <Text style={styles.label}>Registration Number *</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="e.g. NPO-123-456 or REG-2026-99"
+                                    value={registrationNumber}
+                                    onChangeText={setRegistrationNumber}
+                                    autoCapitalize="characters"
+                                    autoCorrect={false}
+                                />
+                            </View>
+                        </View>
+                    )}
 
                     {/* Requires Approval */}
                     <View style={styles.settingRow}>
@@ -613,6 +663,30 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontWeight: 'bold',
         fontSize: 14,
+    },
+    entityPill: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        backgroundColor: '#f9fafb',
+        marginBottom: 8,
+        marginRight: 6,
+    },
+    entityPillActive: {
+        backgroundColor: '#eff6ff',
+        borderColor: '#2563eb',
+    },
+    entityPillText: {
+        fontSize: 13,
+        color: '#475569',
+        fontWeight: '500',
+        fontFamily: 'Outfit-Regular',
+    },
+    entityPillTextActive: {
+        color: '#2563eb',
+        fontWeight: '700',
     },
 });
 

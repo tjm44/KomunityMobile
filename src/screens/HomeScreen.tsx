@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -23,32 +24,46 @@ interface Group {
   total_members: number;
   is_selected: boolean;
   unread_posts_count: number;
-  is_verified?: boolean;
+}
+
+interface Organisation {
+  id: number;
+  name: string;
+  description: string;
+  cover_image: string | null;
+  is_verified: boolean;
+  entity_type: string;
+  registration_number: string;
 }
 
 interface HomeScreenProps {
   onSelectGroup: (group: Group) => void;
   onViewGroupDetails?: (group: Group) => void;
+  onViewOrganisationDetails?: (org: Organisation) => void;
   onViewWallet?: () => void;
   onDiscover?: () => void;
   onCreateGroup?: () => void;
+  onCreateOrganisation?: () => void;
 }
 
 const HomeScreen = ({
   onSelectGroup,
   onViewGroupDetails,
+  onViewOrganisationDetails,
   onViewWallet,
   onDiscover,
   onCreateGroup,
+  onCreateOrganisation,
 }: HomeScreenProps) => {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { registerToken } = usePushNotifications();
   const [searchVisible, setSearchVisible] = useState(false);
 
   useEffect(() => {
-    fetchGroups();
+    fetchData();
     registerToken();
   }, []);
 
@@ -58,20 +73,22 @@ const HomeScreen = ({
         onClose={() => setSearchVisible(false)}
         onSelectGroup={(group) => {
           setSearchVisible(false);
-          // Search result group might miss some fields like is_selected/unread_posts_count
-          // but onViewGroupDetails handles it fine usually or we fetch details later.
           onViewGroupDetails?.(group as any);
         }}
       />
     );
   }
 
-  const fetchGroups = async () => {
+  const fetchData = async () => {
     try {
-      const response = await client.get("groups/mine/");
-      setGroups(response.data);
+      const [groupsRes, orgsRes] = await Promise.all([
+        client.get("groups/mine/"),
+        client.get("organisations/mine/"),
+      ]);
+      setGroups(groupsRes.data);
+      setOrganisations(orgsRes.data);
     } catch (error) {
-      console.error("Error fetching groups:", error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -80,14 +97,13 @@ const HomeScreen = ({
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchGroups();
+    fetchData();
   };
 
   const handleSelectGroup = async (groupId: number) => {
     try {
       await client.post(`groups/${groupId}/select/`);
-      // Refresh groups to reflect selection change
-      fetchGroups();
+      fetchData();
     } catch (error) {
       console.error("Error selecting group:", error);
     }
@@ -97,18 +113,11 @@ const HomeScreen = ({
     return (
       <View style={styles.container}>
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>My Groups</Text>
+          <Text style={styles.headerTitle}>My Hub</Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <View style={styles.searchButton}>
               <Text style={{ fontSize: 22, opacity: 0.3 }}>🔍</Text>
             </View>
-            {onCreateGroup && (
-              <View style={styles.searchButton}>
-                <Text style={{ fontSize: 26, opacity: 0.3, color: "#2563eb" }}>
-                  +
-                </Text>
-              </View>
-            )}
           </View>
         </View>
         <GroupPlaceholder />
@@ -119,7 +128,7 @@ const HomeScreen = ({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>My Groups</Text>
+        <Text style={styles.headerTitle}>My Hub</Text>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => setSearchVisible(true)}
@@ -127,115 +136,193 @@ const HomeScreen = ({
           >
             <Text style={{ fontSize: 22 }}>🔍</Text>
           </TouchableOpacity>
-          {onCreateGroup && (
-            <TouchableOpacity
-              onPress={onCreateGroup}
-              style={styles.searchButton}
-            >
-              <Text
-                style={{ fontSize: 26, color: "#2563eb", fontWeight: "300" }}
-              >
-                +
-              </Text>
-            </TouchableOpacity>
-          )}
         </View>
       </View>
-      <FlatList
-        data={groups}
-        keyExtractor={(item) => item.id.toString()}
+      <ScrollView
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#2563eb"]} // Android
-            tintColor="#2563eb" // iOS
+            colors={["#2563eb"]}
+            tintColor="#2563eb"
           />
         }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => onViewGroupDetails?.(item)}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={["#ffffff", "#f1f5f9"]}
-              style={styles.groupCard}
-            >
-              {item.cover_image ? (
-                <Image
-                  source={{ uri: item.cover_image }}
-                  style={styles.coverImage}
-                  transition={200}
-                />
-              ) : (
-                <View
-                  style={[styles.coverImage, { backgroundColor: "#e5e7eb" }]}
-                />
+      >
+        {/* ──── Organisations Section ──── */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeader}>🏢 My Organisations</Text>
+            {onCreateOrganisation && (
+              <TouchableOpacity onPress={onCreateOrganisation} style={styles.sectionAddBtn}>
+                <Text style={styles.sectionAddBtnText}>+ New</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          {organisations.length === 0 ? (
+            <View style={styles.emptySection}>
+              <Text style={styles.emptySectionText}>No organisations yet.</Text>
+              {onCreateOrganisation && (
+                <TouchableOpacity onPress={onCreateOrganisation}>
+                  <Text style={styles.emptySectionLink}>Register one →</Text>
+                </TouchableOpacity>
               )}
-              <View style={styles.cardContent}>
-                <View style={styles.cardHeader}>
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <Text style={styles.groupName}>{item.name}</Text>
-                      {item.is_verified && (
-                        <View style={styles.verifiedBadge}>
-                          <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+            </View>
+          ) : (
+            organisations.map((org) => (
+              <TouchableOpacity
+                key={`org-${org.id}`}
+                onPress={() => onViewOrganisationDetails?.(org)}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={["#f0fdfa", "#ccfbf1"]}
+                  style={[styles.groupCard, { borderColor: '#99f6e4' }]}
+                >
+                  {org.cover_image ? (
+                    <Image
+                      source={{ uri: org.cover_image }}
+                      style={styles.coverImage}
+                      transition={200}
+                    />
+                  ) : (
+                    <LinearGradient
+                      colors={["#0f766e", "#115e59"]}
+                      style={styles.coverImage}
+                    />
+                  )}
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <Text style={styles.groupName}>{org.name}</Text>
+                          {org.is_verified && (
+                            <View style={styles.verifiedBadge}>
+                              <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+                            </View>
+                          )}
                         </View>
-                      )}
-                    </View>
-                    <Text style={styles.memberCount}>
-                      {item.total_members} members
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.description} numberOfLines={2}>
-                  {item.description || "No description available"}
-                </Text>
-
-                <View style={styles.actionRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.detailsButton,
-                      item.is_selected && styles.selectedButton,
-                    ]}
-                    onPress={() => handleSelectGroup(item.id)}
-                  >
-                    <Text
-                      style={[
-                        styles.detailsButtonText,
-                        item.is_selected && styles.selectedButtonText,
-                      ]}
-                    >
-                      {item.is_selected ? "Selected" : "Select"}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.feedButton}
-                    onPress={() => onSelectGroup(item)}
-                  >
-                    <Text style={styles.feedButtonText}>Discussion Feed</Text>
-                    {item.unread_posts_count > 0 && (
-                      <View style={styles.notificationBadge}>
-                        <Text style={styles.badgeText}>
-                          {item.unread_posts_count}
+                        <Text style={[styles.memberCount, { color: '#0f766e' }]}>
+                          🏢 {(org.entity_type || 'other').toUpperCase()}
                         </Text>
                       </View>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No groups found.</Text>
+                    </View>
+                    <Text style={styles.description} numberOfLines={2}>
+                      {org.description || "No description available"}
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.feedButton, { backgroundColor: '#ccfbf1', borderColor: '#5eead4' }]}
+                      onPress={() => onViewOrganisationDetails?.(org)}
+                    >
+                      <Text style={[styles.feedButtonText, { color: '#0f766e' }]}>Open Workspace →</Text>
+                    </TouchableOpacity>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        {/* ──── Communities Section ──── */}
+        <View style={styles.sectionContainer}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionHeader}>👥 My Communities</Text>
+            {onCreateGroup && (
+              <TouchableOpacity onPress={onCreateGroup} style={styles.sectionAddBtn}>
+                <Text style={styles.sectionAddBtnText}>+ New</Text>
+              </TouchableOpacity>
+            )}
           </View>
-        }
-      />
+          {groups.length === 0 ? (
+            <View style={styles.emptySection}>
+              <Text style={styles.emptySectionText}>No communities yet.</Text>
+              {onDiscover && (
+                <TouchableOpacity onPress={onDiscover}>
+                  <Text style={styles.emptySectionLink}>Discover groups →</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            groups.map((item) => (
+              <TouchableOpacity
+                key={`group-${item.id}`}
+                onPress={() => onViewGroupDetails?.(item)}
+                activeOpacity={0.85}
+              >
+                <LinearGradient
+                  colors={["#ffffff", "#f1f5f9"]}
+                  style={styles.groupCard}
+                >
+                  {item.cover_image ? (
+                    <Image
+                      source={{ uri: item.cover_image }}
+                      style={styles.coverImage}
+                      transition={200}
+                    />
+                  ) : (
+                    <View
+                      style={[styles.coverImage, { backgroundColor: "#e5e7eb" }]}
+                    />
+                  )}
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardHeader}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.groupName}>{item.name}</Text>
+                        <Text style={styles.memberCount}>
+                          {item.total_members} members
+                        </Text>
+                      </View>
+                    </View>
+
+                    <Text style={styles.description} numberOfLines={2}>
+                      {item.description || "No description available"}
+                    </Text>
+
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.detailsButton,
+                          item.is_selected && styles.selectedButton,
+                        ]}
+                        onPress={() => handleSelectGroup(item.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.detailsButtonText,
+                            item.is_selected && styles.selectedButtonText,
+                          ]}
+                        >
+                          {item.is_selected ? "Selected" : "Select"}
+                        </Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.feedButton}
+                        onPress={() => onSelectGroup(item)}
+                      >
+                        <Text style={styles.feedButtonText}>Discussion Feed</Text>
+                        {item.unread_posts_count > 0 && (
+                          <View style={styles.notificationBadge}>
+                            <Text style={styles.badgeText}>
+                              {item.unread_posts_count}
+                            </Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        {groups.length === 0 && organisations.length === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No communities or organisations found.</Text>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -417,6 +504,55 @@ const styles = StyleSheet.create({
     color: '#065f46',
     fontSize: 10,
     fontWeight: '700',
+  },
+  sectionContainer: {
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#475569',
+    marginBottom: 10,
+    marginTop: 10,
+    fontFamily: 'Outfit-Bold',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    marginTop: 10,
+  },
+  sectionAddBtn: {
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#dbeafe',
+  },
+  sectionAddBtnText: {
+    color: '#2563eb',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  emptySection: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  emptySectionText: {
+    color: '#94a3b8',
+    fontSize: 14,
+  },
+  emptySectionLink: {
+    color: '#2563eb',
+    fontWeight: '600',
+    fontSize: 13,
+    marginTop: 8,
   },
 });
 

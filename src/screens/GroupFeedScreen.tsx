@@ -26,7 +26,7 @@ interface Post {
 }
 
 interface GroupFeedProps {
-    group: { id: number; name: string };
+    group: { id: number; name: string; is_organisation?: boolean };
     onBack: () => void;
     onSelectPost: (post: Post) => void;
     onCreatePost: () => void;
@@ -88,7 +88,9 @@ const GroupFeedScreen = ({ group, onBack, onSelectPost, onCreatePost }: GroupFee
 
     const markAsRead = async () => {
         try {
-            await client.post(`groups/${group.id}/mark_read/`);
+            if (!group.is_organisation) {
+                await client.post(`groups/${group.id}/mark_read/`);
+            }
         } catch (error) {
             console.error('Error marking group as read:', error);
         }
@@ -96,7 +98,8 @@ const GroupFeedScreen = ({ group, onBack, onSelectPost, onCreatePost }: GroupFee
 
     const fetchPosts = async (page: number = 1) => {
         try {
-            const response = await client.get(`posts/?group_id=${group.id}&page=${page}`);
+            const queryParam = group.is_organisation ? `organisation=${group.id}` : `group_id=${group.id}`;
+            const response = await client.get(`posts/?${queryParam}&page=${page}`);
             const data = response.data;
 
             // Handle both paginated { results, next } and flat array responses

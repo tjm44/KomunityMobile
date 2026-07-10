@@ -17,34 +17,57 @@ interface Group {
     requires_approval: boolean;
     membership_status: 'active' | 'pending' | null;
     verified_members_only?: boolean;
-    is_verified?: boolean;
+    purpose?: string;
+}
+
+interface Organisation {
+    id: number;
+    name: string;
+    description: string;
+    cover_image: string | null;
+    is_verified: boolean;
+    entity_type: string;
+    registration_number: string;
 }
 
 interface DiscoveryScreenProps {
     onBack: () => void;
     onGroupJoined: () => void;
     onViewGroupDetails?: (group: Group) => void;
+    onViewOrganisationPreview?: (org: Organisation) => void;
+    onGoToVerification?: () => void;
 }
 
-const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: DiscoveryScreenProps) => {
+const DiscoveryScreen = ({
+    onBack,
+    onGroupJoined,
+    onViewGroupDetails,
+    onViewOrganisationPreview,
+    onGoToVerification
+}: DiscoveryScreenProps) => {
     const insets = useSafeAreaInsets();
     const [groups, setGroups] = useState<Group[]>([]);
+    const [organisations, setOrganisations] = useState<Organisation[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [searchVisible, setSearchVisible] = useState(false);
     const [joiningId, setJoiningId] = useState<number | null>(null);
+    const [activeTab, setActiveTab] = useState<'communities' | 'organisations'>('communities');
 
     useEffect(() => {
-        fetchGroups();
+        fetchData();
     }, []);
 
-    const fetchGroups = async () => {
+    const fetchData = async () => {
         try {
-            const response = await client.get('groups/discover/');
-            setGroups(response.data);
+            const [groupsRes, orgsRes] = await Promise.all([
+                client.get('groups/discover/'),
+                client.get('organisations/discover/'),
+            ]);
+            setGroups(groupsRes.data);
+            setOrganisations(orgsRes.data);
         } catch (error) {
-            console.error('Error fetching discovery groups:', error);
-            Alert.alert('Error', 'Failed to load discovery communities.');
+            console.error('Error fetching discovery data:', error);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -65,7 +88,7 @@ const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: Discover
 
     const onRefresh = () => {
         setRefreshing(true);
-        fetchGroups();
+        fetchData();
     };
 
     const handleJoinGroup = (group: Group) => {
@@ -93,12 +116,27 @@ const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: Discover
                 onGroupJoined();
             } else if (status === 'pending') {
                 Alert.alert('Request Sent', 'Your request to join has been sent to the community admins.');
-                fetchGroups();
+                fetchData();
             }
         } catch (error: any) {
             console.error('Error joining group:', error);
-            const msg = error.response?.data?.error || 'Failed to join the community. Please try again.';
-            Alert.alert('Join Failed', msg);
+            const msg = error.response?.data?.error || '';
+            if (msg.toLowerCase().includes('verified') || msg.toLowerCase().includes('restrict')) {
+                Alert.alert(
+                    'Verification Required',
+                    'This group requires verified members. Your account is not yet verified.',
+                    [
+                        { text: 'Maybe Later', style: 'cancel' },
+                        {
+                            text: 'Verify Now',
+                            style: 'default',
+                            onPress: () => onGoToVerification?.()
+                        }
+                    ]
+                );
+            } else {
+                Alert.alert('Join Failed', msg || 'Failed to join the community. Please try again.');
+            }
         } finally {
             setJoiningId(null);
         }
@@ -158,140 +196,169 @@ const DiscoveryScreen = ({ onBack, onGroupJoined, onViewGroupDetails }: Discover
                 <TouchableOpacity onPress={onBack} style={styles.backButton}>
                     <Text style={styles.backButtonText}>←</Text>
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Discover Communities</Text>
+                <Text style={styles.headerTitle}>Explore Hub</Text>
                 <TouchableOpacity onPress={() => setSearchVisible(true)} style={styles.searchButton}>
                     <Text style={{ fontSize: 22 }}>🔍</Text>
                 </TouchableOpacity>
             </View>
-            <FlatList
-                data={groups}
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.listContent}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        colors={['#2563eb']}
-                        tintColor="#2563eb"
-                    />
-                }
-                renderItem={({ item }) => {
-                    const btn = getButtonConfig(item);
-                    return (
-                        <TouchableOpacity
-                            onPress={() => onViewGroupDetails?.(item)}
-                            activeOpacity={0.85}
-                        >
-                            <LinearGradient
-                                colors={['#ffffff', '#f1f5f9']}
-                                style={styles.groupCard}
-                            >
-                                {item.cover_image ? (
-                                    <Image
-                                        source={{ uri: item.cover_image }}
-                                        style={styles.coverImage}
-                                        transition={200}
-                                    />
+
+            <View style={styles.tabsContainer}>
+                <TouchableOpacity
+                    style={[styles.tabButton, activeTab === 'communities' && styles.tabButtonActive]}
+                    onPress={() => setActiveTab('communities')}
+                >
+                    <Text style={[styles.tabButtonText, activeTab === 'communities' && styles.tabButtonTextActive]}>
+                        Communities
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tabButton, activeTab === 'organisations' && styles.tabButtonActive]}
+                    onPress={() => setActiveTab('organisations')}
+                >
+                    <Text style={[styles.tabButtonText, activeTab === 'organisations' && styles.tabButtonTextActive]}>
+                        Organisations
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {activeTab === 'communities' ? (
+                <FlatList
+                    data={groups}
+                    keyExtractor={(item) => `group-${item.id}`}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} tintColor="#2563eb" />
+                    }
+                    renderItem={({ item }) => {
+                        const btn = getButtonConfig(item);
+                        return (
+                            <TouchableOpacity onPress={() => onViewGroupDetails?.(item)} activeOpacity={0.85}>
+                                <LinearGradient colors={['#ffffff', '#f1f5f9']} style={styles.groupCard}>
+                                    {item.cover_image ? (
+                                        <Image source={{ uri: item.cover_image }} style={styles.coverImage} transition={200} />
+                                    ) : (
+                                        <View style={[styles.coverImage, { backgroundColor: '#e5e7eb' }]} />
+                                    )}
+                                    <View style={styles.cardContent}>
+                                        <Text style={styles.groupName}>{item.name}</Text>
+
+                                        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginVertical: 4 }}>
+                                            {item.purpose && (
+                                                <View style={[
+                                                    styles.cardPurposePill,
+                                                    {
+                                                        backgroundColor:
+                                                            item.purpose === 'excess' ? '#eff6ff' :
+                                                            item.purpose === 'emergency' ? '#fef2f2' :
+                                                            item.purpose === 'custom' ? '#f0fdf4' : '#f5f3ff',
+                                                        borderColor:
+                                                            item.purpose === 'excess' ? '#bfdbfe' :
+                                                            item.purpose === 'emergency' ? '#fecaca' :
+                                                            item.purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
+                                                        marginVertical: 0,
+                                                    }
+                                                ]}>
+                                                    <Text style={[
+                                                        styles.cardPurposeText,
+                                                        {
+                                                            color:
+                                                                item.purpose === 'excess' ? '#0284c7' :
+                                                                item.purpose === 'emergency' ? '#dc2626' :
+                                                                item.purpose === 'custom' ? '#059669' : '#7c3aed'
+                                                        }
+                                                    ]}>
+                                                        {({'bereavement': '🕊️ Bereavement', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom Fund'} as any)[item.purpose] ?? item.purpose}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            {item.verified_members_only && (
+                                                <View style={[styles.cardPurposePill, { backgroundColor: '#fee2e2', borderColor: '#fecaca', marginVertical: 0 }]}>
+                                                    <Text style={[styles.cardPurposeText, { color: '#dc2626', fontWeight: 'bold' }]}>🛡️ Verified Only</Text>
+                                                </View>
+                                            )}
+                                        </View>
+
+                                        <Text style={styles.memberCount}>{item.total_members} members</Text>
+                                        <Text style={styles.description} numberOfLines={3}>
+                                            {item.description || 'Connecting community members together.'}
+                                        </Text>
+
+                                        <View style={styles.actionRow}>
+                                            <TouchableOpacity
+                                                style={[btn.style, joiningId === item.id && styles.buttonLoading, { flex: 4 }]}
+                                                onPress={() => handleJoinGroup(item)}
+                                                disabled={btn.disabled || joiningId === item.id}
+                                            >
+                                                {joiningId === item.id ? (
+                                                    <ActivityIndicator size="small" color="#ffffff" />
+                                                ) : (
+                                                    <Text style={btn.textStyle}>{btn.label}</Text>
+                                                )}
+                                            </TouchableOpacity>
+                                            <TouchableOpacity style={styles.shareIconBtn} onPress={() => handleShareGroup(item)}>
+                                                <Text style={styles.shareIconText}>🚀</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </LinearGradient>
+                            </TouchableOpacity>
+                        );
+                    }}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>No new communities found at the moment.</Text>
+                        </View>
+                    }
+                />
+            ) : (
+                <FlatList
+                    data={organisations}
+                    keyExtractor={(item) => `org-${item.id}`}
+                    contentContainerStyle={styles.listContent}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0f766e']} tintColor="#0f766e" />
+                    }
+                    renderItem={({ item: org }) => (
+                        <TouchableOpacity onPress={() => onViewOrganisationPreview?.(org)} activeOpacity={0.85}>
+                            <LinearGradient colors={['#f0fdfa', '#ccfbf1']} style={[styles.groupCard, { borderColor: '#99f6e4' }]}>
+                                {org.cover_image ? (
+                                    <Image source={{ uri: org.cover_image }} style={styles.coverImage} transition={200} />
                                 ) : (
-                                    <View style={[styles.coverImage, { backgroundColor: '#e5e7eb' }]} />
+                                    <LinearGradient colors={['#0f766e', '#115e59']} style={styles.coverImage} />
                                 )}
                                 <View style={styles.cardContent}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
-                                        <Text style={styles.groupName}>{item.name}</Text>
-                                        {item.is_verified && (
+                                        <Text style={styles.groupName}>{org.name}</Text>
+                                        {org.is_verified && (
                                             <View style={styles.verifiedBadge}>
                                                 <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
                                             </View>
                                         )}
                                     </View>
-                                    
-                                    <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginVertical: 4 }}>
-                                        {(item as any).purpose && (
-                                            <View style={[
-                                                styles.cardPurposePill,
-                                                {
-                                                    backgroundColor:
-                                                        (item as any).purpose === 'excess' ? '#eff6ff' :
-                                                        (item as any).purpose === 'emergency' ? '#fef2f2' :
-                                                        (item as any).purpose === 'custom' ? '#f0fdf4' : '#f5f3ff',
-                                                    borderColor:
-                                                        (item as any).purpose === 'excess' ? '#bfdbfe' :
-                                                        (item as any).purpose === 'emergency' ? '#fecaca' :
-                                                        (item as any).purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
-                                                    marginVertical: 0,
-                                                }
-                                            ]}>
-                                                <Text style={[
-                                                    styles.cardPurposeText,
-                                                    {
-                                                        color:
-                                                            (item as any).purpose === 'excess' ? '#0284c7' :
-                                                            (item as any).purpose === 'emergency' ? '#dc2626' :
-                                                            (item as any).purpose === 'custom' ? '#059669' : '#7c3aed'
-                                                    }
-                                                ]}>
-                                                    {({'bereavement': '🕊️ Bereavement', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom Fund'} as any)[(item as any).purpose] ?? (item as any).purpose}
-                                                </Text>
-                                            </View>
-                                        )}
-                                        {item.verified_members_only && (
-                                            <View style={[
-                                                styles.cardPurposePill,
-                                                {
-                                                    backgroundColor: '#fee2e2',
-                                                    borderColor: '#fecaca',
-                                                    marginVertical: 0,
-                                                }
-                                            ]}>
-                                                <Text style={[styles.cardPurposeText, { color: '#dc2626', fontWeight: 'bold' }]}>
-                                                    🛡️ Verified Only
-                                                </Text>
-                                            </View>
-                                        )}
-                                    </View>
-
-                                    <Text style={styles.memberCount}>{item.total_members} members</Text>
-                                    <Text style={styles.description} numberOfLines={3}>
-                                        {item.description || 'Connecting community members together.'}
+                                    <Text style={styles.orgMetaText}>
+                                        🏢 {({'ngo': 'NGO', 'church': 'Church/Religious Org', 'npo': 'NPO/Charity', 'corporate': 'Corporate', 'other': 'Organisation'}[org.entity_type] ?? org.entity_type)}
+                                        {org.registration_number ? ` · Reg: ${org.registration_number}` : ''}
                                     </Text>
-
+                                    <Text style={styles.description} numberOfLines={3}>
+                                        {org.description || 'A formal organisation on the Komunity platform.'}
+                                    </Text>
                                     <TouchableOpacity
-                                        style={styles.viewDetailsLink}
-                                        onPress={() => onViewGroupDetails?.(item)}
+                                        style={[styles.joinButton, { backgroundColor: '#0f766e' }]}
+                                        onPress={() => onViewOrganisationPreview?.(org)}
                                     >
-                                        <Text style={styles.viewDetailsText}>View Details →</Text>
+                                        <Text style={styles.joinButtonText}>Explore Organisation →</Text>
                                     </TouchableOpacity>
-
-                                    <View style={styles.actionRow}>
-                                        <TouchableOpacity
-                                            style={[btn.style, joiningId === item.id && styles.buttonLoading, { flex: 4 }]}
-                                            onPress={() => handleJoinGroup(item)}
-                                            disabled={btn.disabled || joiningId === item.id}
-                                        >
-                                            {joiningId === item.id ? (
-                                                <ActivityIndicator size="small" color="#ffffff" />
-                                            ) : (
-                                                <Text style={btn.textStyle}>{btn.label}</Text>
-                                            )}
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={styles.shareIconBtn}
-                                            onPress={() => handleShareGroup(item)}
-                                        >
-                                            <Text style={styles.shareIconText}>🚀</Text>
-                                        </TouchableOpacity>
-                                    </View>
                                 </View>
                             </LinearGradient>
                         </TouchableOpacity>
-                    );
-                }}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No new communities found at the moment.</Text>
-                    </View>
-                }
-            />
+                    )}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>No verified organisations to discover yet.</Text>
+                        </View>
+                    }
+                />
+            )}
         </View>
     );
 };
@@ -479,6 +546,45 @@ const styles = StyleSheet.create({
         color: '#065f46',
         fontSize: 10,
         fontWeight: '700',
+    },
+    tabsContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#ffffff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb',
+        gap: 12,
+    },
+    tabButton: {
+        flex: 1,
+        paddingVertical: 8,
+        borderRadius: 20,
+        alignItems: 'center',
+        backgroundColor: '#f3f4f6',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    tabButtonActive: {
+        backgroundColor: '#eff6ff',
+        borderColor: '#3b82f6',
+    },
+    tabButtonText: {
+        fontSize: 14,
+        color: '#6b7280',
+        fontWeight: '600',
+        fontFamily: 'Outfit-Regular',
+    },
+    tabButtonTextActive: {
+        color: '#3b82f6',
+        fontWeight: '700',
+    },
+    orgMetaText: {
+        fontSize: 12,
+        color: '#475569',
+        fontWeight: '500',
+        marginBottom: 4,
+        fontFamily: 'Outfit-Regular',
     },
 });
 

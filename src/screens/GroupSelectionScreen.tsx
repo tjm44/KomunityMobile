@@ -5,9 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 interface GroupSelectionProps {
     onJoin: () => void;
     onCreate: () => void;
+    onCreateOrganisation?: () => void;
 }
 
-const GroupSelectionScreen = ({ onJoin, onCreate }: GroupSelectionProps) => {
+const GroupSelectionScreen = ({ onJoin, onCreate, onCreateOrganisation }: GroupSelectionProps) => {
     return (
         <View style={styles.container}>
             <View style={styles.content}>
@@ -33,7 +34,7 @@ const GroupSelectionScreen = ({ onJoin, onCreate }: GroupSelectionProps) => {
                         <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
 
-                    {/* Create new — now navigates to GroupPurposeScreen first */}
+                    {/* Create new */}
                     <TouchableOpacity style={styles.card} onPress={onCreate}>
                         <View style={[styles.iconContainer, { backgroundColor: '#ecfdf5' }]}>
                             <Text style={styles.icon}>➕</Text>
@@ -47,6 +48,15 @@ const GroupSelectionScreen = ({ onJoin, onCreate }: GroupSelectionProps) => {
                         </View>
                         <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
+
+                    {/* Register Organisation (compact button below cards) */}
+                    {onCreateOrganisation && (
+                        <View style={styles.registerOrgContainer}>
+                            <TouchableOpacity style={styles.registerOrgButton} onPress={onCreateOrganisation} activeOpacity={0.85}>
+                                <Text style={styles.registerOrgButtonText}>Register Org</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
                 </View>
             </View>
         </View>
@@ -127,6 +137,23 @@ const styles = StyleSheet.create({
         fontSize: 24,
         color: '#d1d5db',
         marginLeft: 8,
+    },
+    registerOrgContainer: {
+        marginTop: 20,
+        alignItems: 'center',
+    },
+    registerOrgButton: {
+        backgroundColor: '#0f766e',
+        paddingHorizontal: 18,
+        paddingVertical: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#085f52',
+    },
+    registerOrgButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: 16,
     },
 });
 

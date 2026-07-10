@@ -21,7 +21,7 @@ const TABS: Array<{
     emoji?: string;
     color: string;
 }> = [
-    { key: 'home',        label: 'My Groups',   icon: 'users',       color: '#2563eb' },
+    { key: 'home',        label: 'My Hub',      icon: 'users',       color: '#2563eb' },
     { key: 'discovery',   label: 'Explore',     icon: 'search',      color: '#2563eb' },
     { key: 'fundraisers', label: 'Fundraise',   emoji: '🆘',         color: '#dc2626' },
     { key: 'wallet',      label: 'Wallet',      icon: 'credit-card', color: '#2563eb' },

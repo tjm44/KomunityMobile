@@ -128,11 +128,6 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                         <View style={styles.mainInfo}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
                                 <Text style={styles.groupName}>{group.name}</Text>
-                                {group.is_verified && (
-                                    <View style={styles.verifiedBadge}>
-                                        <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
-                                    </View>
-                                )}
                             </View>
                             {(group as any).purpose && (
                                 <View style={styles.purposePill}>
@@ -190,7 +185,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                     <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Description</Text>
                         <Text style={styles.descriptionText}>
-                            {group.description || 'This community has no description yet. Connect with members to learn more about their shared goals and cultural heritage.'}
+                            {group.description || `This ${group.is_verified ? 'organisation' : 'community'} has no description yet. Connect with members to learn more about their shared goals and cultural heritage.`}
                         </Text>
                     </View>
 
@@ -207,9 +202,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                             </View>
                             <View style={styles.statItem}>
                                 <Text style={styles.statLabel}>Status</Text>
-                                <Text style={[styles.statValue, { color: group.is_verified ? '#059669' : '#9ca3af' }]}>
-                                    {group.is_verified ? '✅ Verified' : 'Unverified'}
-                                </Text>
+                                <Text style={[styles.statValue, { color: '#059669' }]}>Active</Text>
                             </View>
                         </View>
                     </View>
@@ -593,34 +586,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#6b7280',
         lineHeight: 18,
-    },
-    verifiedBadge: {
-        backgroundColor: '#d1fae5',
-        borderRadius: 20,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderWidth: 1,
-        borderColor: '#6ee7b7',
-    },
-    verifiedBadgeText: {
-        color: '#065f46',
-        fontSize: 11,
-        fontWeight: '700',
-    },
-    purposePill: {
-        alignSelf: 'flex-start',
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
-        marginTop: 4,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-    },
-    purposePillText: {
-        color: '#ffffff',
-        fontSize: 12,
-        fontWeight: '600',
     },
 });
 

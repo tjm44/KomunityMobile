@@ -26,6 +26,7 @@ interface Profile {
         profile_picture: string | null;
         full_name: string;
         active_role: string | null;
+        is_verified?: boolean;
     };
     active_role?: string | null;
 }
@@ -34,14 +35,21 @@ interface ProfileScreenProps {
     onBack: () => void;
     onLogout: () => void;
     onProfileUpdate?: () => void;
+    autoShowKyc?: boolean;
 }
 
-const ProfileScreen = ({ onBack, onLogout, onProfileUpdate }: ProfileScreenProps) => {
+const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, autoShowKyc }: ProfileScreenProps) => {
     const insets = useSafeAreaInsets();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (autoShowKyc) {
+            setShowKycModal(true);
+        }
+    }, [autoShowKyc]);
 
     const showAlert = (title: string, message: string) => {
         if (Platform.OS === 'web') {

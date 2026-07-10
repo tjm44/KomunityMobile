@@ -43,6 +43,11 @@ import AnimatedScreen from "./src/components/AnimatedScreen";
 import BottomNavBar from "./src/components/BottomNavBar";
 import TopNavBar from "./src/components/TopNavBar";
 import ErrorBoundary from "./src/components/ErrorBoundary";
+import CreateOrganisationScreen from "./src/screens/CreateOrganisationScreen";
+import OrganisationDetailScreen from "./src/screens/OrganisationDetailScreen";
+import EditOrganisationScreen from "./src/screens/EditOrganisationScreen";
+import OrganisationPreviewScreen from "./src/screens/OrganisationPreviewScreen";
+import VerifyIdentityPromptScreen from "./src/screens/VerifyIdentityPromptScreen";
 import client, { setAuthToken, loadToken, clearToken } from "./src/api/client";
 
 export default function App() {
@@ -82,6 +87,17 @@ export default function App() {
   const [previewingGroup, setPreviewingGroup] = React.useState<any>(null); // Discovery preview
   const [viewingCampaign, setViewingCampaign] = React.useState<any>(null); // For FundraisersScreen
   const [isCreatingCampaign, setIsCreatingCampaign] = React.useState<any>(null); // group object
+  
+  // Organisation States
+  const [isCreatingOrganisation, setIsCreatingOrganisation] = React.useState(false);
+  const [viewingOrganisationDetails, setViewingOrganisationDetails] = React.useState<any>(null);
+  const [editingOrganisation, setEditingOrganisation] = React.useState<any>(null);
+  const [previewingOrganisation, setPreviewingOrganisation] = React.useState<any>(null);
+
+  // Identity Verification States
+  const [isPromptingVerification, setIsPromptingVerification] = React.useState(false);
+  const [autoShowKycOnProfile, setAutoShowKycOnProfile] = React.useState(false);
+
   const activeTab_ref = React.useRef<"home" | "discovery" | "wallet" | "profile" | "fundraisers">("home");
   const [activeTab, setActiveTab] = React.useState<
     "home" | "discovery" | "wallet" | "profile" | "fundraisers"
@@ -96,6 +112,7 @@ export default function App() {
     setViewingGroupDetails(null);
     setIsCreatingPost(false);
     setViewingWallet(false);
+    setAutoShowKycOnProfile(false);
     setIsDiscovering(false);
     setIsManagingGroup(null);
     setViewingMemberProfile(null);
@@ -106,6 +123,10 @@ export default function App() {
     setPreviewingGroup(null);
     setViewingCampaign(null);
     setIsCreatingCampaign(null);
+    setIsCreatingOrganisation(false);
+    setViewingOrganisationDetails(null);
+    setEditingOrganisation(null);
+    setPreviewingOrganisation(null);
   }, []);
 
   const handleDeepLink = React.useCallback(
@@ -384,8 +405,31 @@ export default function App() {
       <ErrorBoundary>
         <SafeAreaProvider>
           <ProfileSetupScreen
-            onComplete={() => {
+            onComplete={async () => {
               setNeedsProfileSetup(false);
+              // Fetch user profile to get the newly created profile ID for verification
+              await checkProfileStatus();
+              setIsPromptingVerification(true);
+            }}
+          />
+        </SafeAreaProvider>
+      </ErrorBoundary>
+    );
+  }
+
+  if (isPromptingVerification) {
+    return (
+      <ErrorBoundary>
+        <SafeAreaProvider>
+          <VerifyIdentityPromptScreen
+            profileId={userProfile?.id}
+            onVerified={async () => {
+              await checkProfileStatus();
+              setIsPromptingVerification(false);
+              setIsChoosingGroup(true);
+            }}
+            onSkip={() => {
+              setIsPromptingVerification(false);
               setIsChoosingGroup(true);
             }}
           />
@@ -406,6 +450,10 @@ export default function App() {
             onCreate={() => {
               setIsChoosingGroup(false);
               setIsChoosingGroupPurpose(true);
+            }}
+            onCreateOrganisation={() => {
+              setIsChoosingGroup(false);
+              setIsCreatingOrganisation(true);
             }}
           />
         </SafeAreaProvider>
@@ -434,6 +482,10 @@ export default function App() {
   }
 
   const getCurrentBackAction = () => {
+    if (isCreatingOrganisation) return () => setIsCreatingOrganisation(false);
+    if (editingOrganisation) return () => setEditingOrganisation(null);
+    if (viewingOrganisationDetails) return () => setViewingOrganisationDetails(null);
+    if (previewingOrganisation) return () => setPreviewingOrganisation(null);
     if (isCreatingGroup) return () => setIsCreatingGroup(false);
     if (isViewingContributions) return () => setIsViewingContributions(false);
     if (editingGroup) return () => setEditingGroup(null);
@@ -451,6 +503,10 @@ export default function App() {
   };
 
   const shouldShowTopNavBar = () => {
+    if (isCreatingOrganisation) return true;
+    if (editingOrganisation) return true;
+    if (viewingOrganisationDetails) return true;
+    if (previewingOrganisation) return true;
     if (isCreatingGroup) return true;
     if (viewingMemberProfile) return false;
     if (isViewingAllMembers) return true;
@@ -471,6 +527,10 @@ export default function App() {
   };
 
   const getCurrentTitle = () => {
+    if (isCreatingOrganisation) return "Register Organisation";
+    if (editingOrganisation) return "Edit Organisation";
+    if (viewingOrganisationDetails) return viewingOrganisationDetails.name;
+    if (previewingOrganisation) return previewingOrganisation.name;
     if (isCreatingGroup) return "Create Community";
     if (isViewingContributions) return "My Contributions";
     if (editingGroup) return "Edit Community";
@@ -478,14 +538,14 @@ export default function App() {
       return viewingMemberProfile.member_detail.full_name;
     if (isViewingAllMembers) return "Community Members";
     if (viewingGroupWallet) return "Group Wallet";
-    if (isManagingGroup) return "Group Management";
+    if (isManagingGroup) return "Community Management";
     if (editingPost) return "Edit Proposal";
     if (selectedPost) return "Discussion";
     if (isCreatingPost) return "Create Post";
-    if (viewingGroupDetails) return "About Group";
+    if (viewingGroupDetails) return "Community Details";
     if (selectedGroup) return selectedGroup.name;
 
-    if (activeTab === "home") return "My Groups";
+    if (activeTab === "home") return "My Hub";
     if (activeTab === "discovery") return "Explore";
     if (activeTab === "wallet") return "Wallet";
     if (activeTab === "profile") return "Profile";
@@ -507,7 +567,66 @@ export default function App() {
             />
           )}
           <View style={{ flex: 1, marginBottom: 70 }}>
-            {isCreatingCampaign ? (
+            {isCreatingOrganisation ? (
+              <AnimatedScreen animation="slideUp">
+                <CreateOrganisationScreen
+                  onBack={() => setIsCreatingOrganisation(false)}
+                  isUserVerified={!!userProfile?.is_verified}
+                  onGoToKYC={() => {
+                    setIsCreatingOrganisation(false);
+                    setActiveTab("profile");
+                  }}
+                  onOrganisationCreated={(org) => {
+                    setIsCreatingOrganisation(false);
+                    setViewingOrganisationDetails(org);
+                    setActiveTab("home");
+                  }}
+                />
+              </AnimatedScreen>
+            ) : editingOrganisation ? (
+              <AnimatedScreen animation="slideUp">
+                <EditOrganisationScreen
+                  organisation={editingOrganisation}
+                  onBack={() => setEditingOrganisation(null)}
+                  onOrganisationUpdated={(updated) => {
+                    setEditingOrganisation(null);
+                    setViewingOrganisationDetails(updated);
+                  }}
+                />
+              </AnimatedScreen>
+            ) : viewingOrganisationDetails ? (
+              <AnimatedScreen animation="slideRight">
+                <OrganisationDetailScreen
+                  organisation={viewingOrganisationDetails}
+                  onBack={() => setViewingOrganisationDetails(null)}
+                  onEditOrganisation={() => setEditingOrganisation(viewingOrganisationDetails)}
+                  onViewFeed={() => {
+                    setSelectedGroup(viewingOrganisationDetails);
+                    setViewingOrganisationDetails(null);
+                  }}
+                  onManage={() => {
+                    setIsManagingGroup(viewingOrganisationDetails);
+                  }}
+                  onViewWallet={() => {
+                    setViewingGroupWallet(viewingOrganisationDetails);
+                  }}
+                  onSelectCampaign={(campaign: any) => {
+                    setViewingCampaign(campaign);
+                  }}
+                />
+              </AnimatedScreen>
+            ) : previewingOrganisation ? (
+              <AnimatedScreen animation="slideRight">
+                <OrganisationPreviewScreen
+                  organisation={previewingOrganisation}
+                  onBack={() => setPreviewingOrganisation(null)}
+                  onExplore={() => {
+                    setViewingOrganisationDetails(previewingOrganisation);
+                    setPreviewingOrganisation(null);
+                  }}
+                />
+              </AnimatedScreen>
+            ) : isCreatingCampaign ? (
               <AnimatedScreen animation="slideUp">
                 <CreateCampaignScreen
                   group={isCreatingCampaign}
@@ -675,9 +794,13 @@ export default function App() {
                     onViewGroupDetails={(group: any) =>
                       setViewingGroupDetails(group)
                     }
+                    onViewOrganisationDetails={(org: any) =>
+                      setViewingOrganisationDetails(org)
+                    }
                     onViewWallet={() => setActiveTab("wallet")}
                     onDiscover={() => setActiveTab("discovery")}
                     onCreateGroup={() => setIsCreatingGroup(true)}
+                    onCreateOrganisation={() => setIsCreatingOrganisation(true)}
                   />
                 )}
                 {activeTab === "discovery" && (
@@ -690,6 +813,22 @@ export default function App() {
                           setPreviewingGroup(null);
                           setActiveTab("home");
                         }}
+                        onGoToVerification={() => {
+                          setPreviewingGroup(null);
+                          setActiveTab("profile");
+                          setAutoShowKycOnProfile(true);
+                        }}
+                      />
+                    </AnimatedScreen>
+                  ) : previewingOrganisation ? (
+                    <AnimatedScreen animation="slideRight">
+                      <OrganisationPreviewScreen
+                        organisation={previewingOrganisation}
+                        onBack={() => setPreviewingOrganisation(null)}
+                        onExplore={() => {
+                          setViewingOrganisationDetails(previewingOrganisation);
+                          setPreviewingOrganisation(null);
+                        }}
                       />
                     </AnimatedScreen>
                   ) : (
@@ -697,6 +836,11 @@ export default function App() {
                       onBack={() => setActiveTab("home")}
                       onGroupJoined={() => setActiveTab("home")}
                       onViewGroupDetails={(group: any) => setPreviewingGroup(group)}
+                      onViewOrganisationPreview={(org: any) => setPreviewingOrganisation(org)}
+                      onGoToVerification={() => {
+                        setActiveTab("profile");
+                        setAutoShowKycOnProfile(true);
+                      }}
                     />
                   )
                 )}
@@ -720,6 +864,7 @@ export default function App() {
                     onBack={() => setActiveTab("home")}
                     onLogout={handleLogout}
                     onProfileUpdate={checkProfileStatus}
+                    autoShowKyc={autoShowKycOnProfile}
                   />
                 )}
                 {activeTab === "fundraisers" && (
