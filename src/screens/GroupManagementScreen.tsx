@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    ActivityIndicator, Image, Alert, ScrollView, RefreshControl
+    ActivityIndicator, Image, Alert, ScrollView, RefreshControl,
+    TextInput
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
@@ -40,7 +41,7 @@ interface DeceasedMember {
 type ManagementItem = Member | DeceasedMember;
 
 interface GroupManagementProps {
-    group: { id: number; name: string; purpose?: string };
+    group: { id: number; name: string; purpose?: string; is_admin?: boolean };
     onBack: () => void;
     onSelectMember: (membership: any) => void;
     onViewWallet: () => void;
@@ -52,10 +53,16 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
     const [pendingMembers, setPendingMembers] = useState<Member[]>([]);
     const [activeMembers, setActiveMembers] = useState<Member[]>([]);
     const [deceasedMembers, setDeceasedMembers] = useState<DeceasedMember[]>([]);
+    const [transferRequests, setTransferRequests] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<number | null>(null);
-    const [activeTab, setActiveTab] = useState<'pending' | 'members' | 'payouts'>('pending');
+    const [activeTab, setActiveTab] = useState<'pending' | 'members' | 'payouts' | 'transfers'>('pending');
     const [refreshing, setRefreshing] = useState(false);
+    const [showTransferModal, setShowTransferModal] = useState(false);
+    const [transferAmount, setTransferAmount] = useState('');
+    const [selectedRecipientId, setSelectedRecipientId] = useState<number | null>(null);
+    const [showMemberPicker, setShowMemberPicker] = useState(false);
+    const [transferError, setTransferError] = useState<string | null>(null);
 
     // Beneficiary selection state
     const [isAssigningBeneficiary, setIsAssigningBeneficiary] = useState<number | null>(null);
@@ -65,17 +72,29 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
     }, []);
 
     const fetchData = async () => {
-        // Only set page loading on initial load, not refresh
         if (!refreshing) setLoading(true);
         try {
-            const [pendingRes, activeRes, deceasedRes] = await Promise.all([
-                client.get(`groups/${group.id}/pending_members/`),
-                client.get(`groups/${group.id}/members/`),
-                client.get(`deceased/?group=${group.id}`)
-            ]);
-            setPendingMembers(pendingRes.data);
-            setActiveMembers(activeRes.data);
-            setDeceasedMembers(deceasedRes.data);
+            if (group.is_admin) {
+                const [pendingRes, activeRes, deceasedRes, transferRes] = await Promise.all([
+                    client.get(`groups/${group.id}/pending_members/`),
+                    client.get(`groups/${group.id}/members/`),
+                    client.get(`deceased/?group=${group.id}`),
+                    client.get(`groups/${group.id}/wallet_transfer_requests/`)
+                ]);
+                setPendingMembers(pendingRes.data);
+                setActiveMembers(activeRes.data);
+                setDeceasedMembers(deceasedRes.data);
+                setTransferRequests(transferRes.data);
+            } else {
+                const [pendingRes, activeRes, deceasedRes] = await Promise.all([
+                    client.get(`groups/${group.id}/pending_members/`),
+                    client.get(`groups/${group.id}/members/`),
+                    client.get(`deceased/?group=${group.id}`)
+                ]);
+                setPendingMembers(pendingRes.data);
+                setActiveMembers(activeRes.data);
+                setDeceasedMembers(deceasedRes.data);
+            }
         } catch (error) {
             console.error('Error fetching data:', error);
             Alert.alert('Error', 'Failed to load group information.');
@@ -88,6 +107,57 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
     const onRefresh = () => {
         setRefreshing(true);
         fetchData();
+    };
+
+    const handleCreateTransferRequest = async () => {
+        if (!selectedRecipientId) {
+            setTransferError('Please select a recipient member.');
+            return;
+        }
+
+        const amountValue = parseFloat(transferAmount);
+        if (!transferAmount || isNaN(amountValue) || amountValue <= 0) {
+            setTransferError('Enter a valid transfer amount.');
+            return;
+        }
+
+        setTransferError(null);
+        setProcessingId(-1);
+        try {
+            const response = await client.post(`groups/${group.id}/request_wallet_transfer/`, {
+                recipient_profile: selectedRecipientId,
+                amount: amountValue,
+            });
+            setTransferRequests((prev) => [response.data, ...prev]);
+            setShowTransferModal(false);
+            setTransferAmount('');
+            setSelectedRecipientId(null);
+            setShowMemberPicker(false);
+            Alert.alert('Transfer Request Created', 'A wallet transfer request has been created and awaits admin approvals.');
+        } catch (error: any) {
+            console.error('Error creating transfer request:', error);
+            const msg = error.response?.data?.error || 'Failed to create transfer request.';
+            setTransferError(msg);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    const handleApproveTransferRequest = async (requestId: number) => {
+        setProcessingId(requestId);
+        try {
+            const response = await client.post(`groups/${group.id}/approve_wallet_transfer_request/`, {
+                request_id: requestId,
+            });
+            setTransferRequests((prev) => prev.map((item) => item.id === requestId ? response.data : item));
+            Alert.alert('Approved', 'Your approval has been recorded.');
+        } catch (error: any) {
+            console.error('Error approving transfer request:', error);
+            const msg = error.response?.data?.error || 'Failed to approve transfer request.';
+            Alert.alert('Error', msg);
+        } finally {
+            setProcessingId(null);
+        }
     };
 
     const handleApprove = async (membershipId: number) => {
@@ -228,6 +298,32 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
         </TouchableOpacity>
     );
 
+    const renderTransferRequestItem = ({ item }: { item: any }) => (
+        <View style={styles.requestCard}>
+            <View style={styles.transferHeader}>
+                <Text style={styles.transferTitle}>Transfer to {item.recipient_profile_detail?.full_name || 'Member'}</Text>
+                <Text style={styles.transferStatus}>{item.status}</Text>
+            </View>
+            <Text style={styles.transferAmount}>${parseFloat(item.amount).toFixed(2)}</Text>
+            <Text style={styles.transferMeta}>Requested by {item.requested_by_detail?.full_name || 'Admin'}</Text>
+            <Text style={styles.transferMeta}>Approvals: {item.approvals_count}/3</Text>
+            <View style={styles.transferActions}>
+                {item.status === 'PENDING' && !item.current_user_has_approved && (
+                    <TouchableOpacity
+                        style={[styles.actionButton, styles.approveButton, processingId === item.id && styles.disabledButton]}
+                        onPress={() => handleApproveTransferRequest(item.id)}
+                        disabled={processingId !== null}
+                    >
+                        <Text style={styles.approveButtonText}>Approve</Text>
+                    </TouchableOpacity>
+                )}
+                {item.can_execute && item.status === 'EXECUTED' && (
+                    <Text style={styles.transferExecutedText}>Executed</Text>
+                )}
+            </View>
+        </View>
+    );
+
     const renderDeceasedItem = ({ item }: { item: DeceasedMember }) => (
         <View style={styles.requestCard}>
             <View style={styles.memberInfo}>
@@ -357,6 +453,16 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                             Payouts ({deceasedMembers.length})
                         </Text>
                     </TouchableOpacity>
+                    {group.is_admin && (
+                        <TouchableOpacity
+                            style={[styles.tab, activeTab === 'transfers' && styles.activeTab]}
+                            onPress={() => setActiveTab('transfers')}
+                        >
+                            <Text style={[styles.tabText, activeTab === 'transfers' && styles.activeTabText]}>
+                                Transfers ({transferRequests.length})
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </View>
 
@@ -365,38 +471,144 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                     <ActivityIndicator size="large" color="#2563eb" />
                 </View>
             ) : (
-                <FlatList
-                    data={
-                        (activeTab === 'pending' ? pendingMembers :
+                <>
+                    {group.is_admin && activeTab === 'transfers' && (
+                        <TouchableOpacity
+                            style={styles.createTransferButton}
+                            onPress={() => setShowTransferModal(true)}
+                        >
+                            <Text style={styles.createTransferButtonText}>Create Transfer Request</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    <FlatList
+                        data={
+                            activeTab === 'pending' ? pendingMembers :
                             activeTab === 'members' ? activeMembers :
-                                deceasedMembers) as ManagementItem[]
-                    }
-                    keyExtractor={(item) => item.id.toString()}
-                    contentContainerStyle={styles.listContent}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={['#2563eb']}
-                            tintColor="#2563eb"
-                        />
-                    }
-                    renderItem={({ item }) => {
-                        if (activeTab === 'payouts') {
-                            return renderDeceasedItem({ item: item as DeceasedMember });
+                            activeTab === 'payouts' ? deceasedMembers :
+                            transferRequests
                         }
-                        return renderMemberItem({ item: item as Member });
-                    }}
-                    ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>
-                                {activeTab === 'pending' ? 'No pending requests.' :
-                                    activeTab === 'members' ? 'No active members.' :
-                                        'No funeral funds recorded.'}
-                            </Text>
+                        keyExtractor={(item) => item.id.toString()}
+                        contentContainerStyle={styles.listContent}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                colors={['#2563eb']}
+                                tintColor="#2563eb"
+                            />
+                        }
+                        renderItem={({ item }) => {
+                            if (activeTab === 'payouts') {
+                                return renderDeceasedItem({ item: item as DeceasedMember });
+                            }
+                            if (activeTab === 'transfers') {
+                                return renderTransferRequestItem({ item });
+                            }
+                            return renderMemberItem({ item: item as Member });
+                        }}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>
+                                    {activeTab === 'pending' ? 'No pending requests.' :
+                                        activeTab === 'members' ? 'No active members.' :
+                                            activeTab === 'payouts' ? 'No funeral funds recorded.' :
+                                                'No transfer requests have been created yet.'}
+                                </Text>
+                            </View>
+                        }
+                    />
+                </>
+            )}
+
+            {showTransferModal && (
+                <View style={[styles.modalOverlay, { paddingTop: insets.top }]}> 
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Request Wallet Transfer</Text>
+                        <Text style={styles.modalSubtitle}>Select a recipient and amount, then submit for admin approvals.</Text>
+                        <Text style={styles.modalLabel}>Recipient</Text>
+                        {(() => {
+                            const selectedRecipient = activeMembers.find(m => m.member_detail.id === selectedRecipientId);
+                            return (
+                                <>
+                                    <TouchableOpacity
+                                        style={styles.pickerBtn}
+                                        onPress={() => setShowMemberPicker(!showMemberPicker)}
+                                    >
+                                        <Text style={[styles.pickerBtnText, !selectedRecipient && { color: '#94a3b8' }]}>
+                                            {selectedRecipient
+                                                ? `👤 ${selectedRecipient.member_detail.full_name}`
+                                                : 'Select a member...'}
+                                        </Text>
+                                        <Text style={styles.pickerArrow}>{showMemberPicker ? '▲' : '▼'}</Text>
+                                    </TouchableOpacity>
+
+                                    {showMemberPicker && (
+                                        <ScrollView style={styles.memberDropdownList} nestedScrollEnabled={true}>
+                                            {activeMembers.length === 0 ? (
+                                                <Text style={styles.noMembersText}>No active members available.</Text>
+                                            ) : (
+                                                activeMembers.map((member) => (
+                                                    <TouchableOpacity
+                                                        key={member.id}
+                                                        style={[
+                                                            styles.memberRow,
+                                                            selectedRecipientId === member.member_detail.id && styles.memberRowSelected,
+                                                        ]}
+                                                        onPress={() => {
+                                                            setSelectedRecipientId(member.member_detail.id);
+                                                            setShowMemberPicker(false);
+                                                        }}
+                                                    >
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                            <View style={styles.modalMemberAvatarSmall}>
+                                                                <Text style={styles.modalAvatarTextSmall}>{member.member_detail.full_name[0]}</Text>
+                                                            </View>
+                                                            <Text style={styles.memberName}>{member.member_detail.full_name}</Text>
+                                                        </View>
+                                                        {selectedRecipientId === member.member_detail.id && (
+                                                            <Text style={styles.memberCheck}>✓</Text>
+                                                        )}
+                                                    </TouchableOpacity>
+                                                ))
+                                            )}
+                                        </ScrollView>
+                                    )}
+                                </>
+                            );
+                        })()}
+                        <View style={{ height: 16 }} />
+
+                        <Text style={styles.modalLabel}>Amount</Text>
+                        <TextInput
+                            style={[styles.textInput, transferError ? styles.inputError : undefined]}
+                            keyboardType="numeric"
+                            placeholder="Enter amount"
+                            value={transferAmount}
+                            onChangeText={(text) => {
+                                setTransferAmount(text);
+                                if (transferError) setTransferError(null);
+                            }}
+                        />
+                        {transferError && <Text style={styles.errorText}>{transferError}</Text>}
+                        <View style={styles.modalButtonsRow}>
+                            <TouchableOpacity
+                                style={styles.modalCloseButton}
+                                onPress={() => {
+                                    setShowTransferModal(false);
+                                    setShowMemberPicker(false);
+                                    setSelectedRecipientId(null);
+                                    setTransferError(null);
+                                }}
+                            >
+                                <Text style={styles.modalCloseButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.submitButton, processingId === -1 && styles.disabledButton]} onPress={handleCreateTransferRequest} disabled={processingId === -1}>
+                                <Text style={styles.submitButtonText}>Submit Request</Text>
+                            </TouchableOpacity>
                         </View>
-                    }
-                />
+                    </View>
+                </View>
             )}
 
             {/* Beneficiary Selection Modal */}
@@ -744,6 +956,12 @@ const styles = StyleSheet.create({
         color: '#6b7280',
         marginBottom: 20,
     },
+    modalLabel: {
+        fontSize: 14,
+        color: '#111827',
+        fontWeight: '600',
+        marginBottom: 8,
+    },
     memberScrollView: {
         marginBottom: 20,
     },
@@ -789,6 +1007,106 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#ef4444',
         fontWeight: 'bold',
+    },
+    createTransferButton: {
+        marginHorizontal: 16,
+        marginBottom: 12,
+        paddingVertical: 12,
+        borderRadius: 12,
+        backgroundColor: '#2563eb',
+        alignItems: 'center',
+    },
+    createTransferButtonText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: 14,
+    },
+    selectedMemberItem: {
+        backgroundColor: '#eff6ff',
+    },
+    textInput: {
+        backgroundColor: '#f9fafb',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        marginBottom: 12,
+        color: '#111827',
+    },
+    modalButtonsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 12,
+    },
+    pickerBtn: {
+        backgroundColor: '#f9fafb',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    pickerBtnText: {
+        fontSize: 15,
+        color: '#111827',
+    },
+    pickerArrow: {
+        fontSize: 12,
+        color: '#9ca3af',
+    },
+    memberDropdownList: {
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        marginTop: 4,
+        maxHeight: 180,
+        overflow: 'scroll',
+        marginBottom: 12,
+    },
+    memberRow: {
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    memberRowSelected: {
+        backgroundColor: '#eff6ff',
+    },
+    memberName: {
+        fontSize: 15,
+        color: '#1f2937',
+        marginLeft: 8,
+    },
+    memberCheck: {
+        fontSize: 16,
+        color: '#2563eb',
+        fontWeight: 'bold',
+    },
+    noMembersText: {
+        padding: 16,
+        color: '#9ca3af',
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    modalMemberAvatarSmall: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#2563eb',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalAvatarTextSmall: {
+        color: '#ffffff',
+        fontWeight: 'bold',
+        fontSize: 11,
     },
 });
 

@@ -13,6 +13,7 @@ interface OrganisationDetailScreenProps {
     onBack: () => void;
     onViewFeed: () => void;
     onManage: () => void;
+    onLaunchFundraiser: () => void;
     onViewWallet: () => void;
     onEditOrganisation: () => void;
     onSelectCampaign: (campaign: any) => void;
@@ -23,6 +24,7 @@ const OrganisationDetailScreen = ({
     onBack,
     onViewFeed,
     onManage,
+    onLaunchFundraiser,
     onViewWallet,
     onEditOrganisation,
     onSelectCampaign
@@ -162,7 +164,7 @@ const OrganisationDetailScreen = ({
                         <View style={styles.campaignHeader}>
                             <Text style={styles.cardTitle}>Active Fundraisers</Text>
                             {orgDetails.is_admin && (
-                                <TouchableOpacity style={styles.createCampBtn} onPress={onManage}>
+                                <TouchableOpacity style={styles.createCampBtn} onPress={onLaunchFundraiser}>
                                     <Text style={styles.createCampBtnText}>+ Launch</Text>
                                 </TouchableOpacity>
                             )}

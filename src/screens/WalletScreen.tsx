@@ -9,7 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import client from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
-import { validateAmount } from '../utils/validation';
+import { validateAmount, validatePhone } from '../utils/validation';
 
 interface Transaction {
     id: number;
@@ -37,6 +37,7 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [expandedTransactionId, setExpandedTransactionId] = useState<number | null>(null);
 
     // Top Up States
     const [showTopUp, setShowTopUp] = useState(false);
@@ -63,6 +64,17 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
     const [topUpError, setTopUpError] = useState<string | null>(null);
     const [sendError, setSendError] = useState<string | null>(null);
     const [contributeError, setContributeError] = useState<string | null>(null);
+    const [showWithdraw, setShowWithdraw] = useState(false);
+    const [withdrawChannel, setWithdrawChannel] = useState<'bank_transfer' | 'mobile_money' | 'voucher'>('bank_transfer');
+    const [withdrawAmount, setWithdrawAmount] = useState('');
+    const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
+    const [withdrawBankCode, setWithdrawBankCode] = useState('');
+    const [withdrawPhoneNumber, setWithdrawPhoneNumber] = useState('');
+    const [withdrawProvider, setWithdrawProvider] = useState('');
+    const [withdrawVoucherCode, setWithdrawVoucherCode] = useState('');
+    const [withdrawPartner, setWithdrawPartner] = useState('');
+    const [withdrawError, setWithdrawError] = useState<string | null>(null);
+    const [isWithdrawing, setIsWithdrawing] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -175,6 +187,88 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
             Alert.alert('Error', errorMsg);
         } finally {
             setIsSending(false);
+        }
+    };
+
+    const handleWithdraw = async () => {
+        const amtError = validateAmount(withdrawAmount, 0, parseFloat(balance));
+        if (amtError) {
+            setWithdrawError(amtError);
+            return;
+        }
+
+        const metadata: Record<string, string> = {};
+        if (withdrawChannel === 'bank_transfer') {
+            if (!withdrawAccountNumber.trim()) {
+                setWithdrawError('Account number is required.');
+                return;
+            }
+            if (!withdrawBankCode.trim()) {
+                setWithdrawError('Bank code is required.');
+                return;
+            }
+            metadata.account_number = withdrawAccountNumber.trim();
+            metadata.bank_code = withdrawBankCode.trim();
+        } else if (withdrawChannel === 'mobile_money') {
+            const phoneError = validatePhone(withdrawPhoneNumber.trim());
+            if (!withdrawPhoneNumber.trim()) {
+                setWithdrawError('Mobile money number is required.');
+                return;
+            }
+            if (phoneError) {
+                setWithdrawError(phoneError);
+                return;
+            }
+            if (!withdrawProvider.trim()) {
+                setWithdrawError('Network provider is required.');
+                return;
+            }
+            metadata.phone_number = withdrawPhoneNumber.trim();
+            metadata.provider = withdrawProvider.trim();
+        } else if (withdrawChannel === 'voucher') {
+            if (!withdrawVoucherCode.trim()) {
+                setWithdrawError('Voucher code is required.');
+                return;
+            }
+            if (!withdrawPartner.trim()) {
+                setWithdrawError('Retail partner is required.');
+                return;
+            }
+            metadata.voucher_code = withdrawVoucherCode.trim();
+            metadata.partner = withdrawPartner.trim();
+        }
+
+        setWithdrawError(null);
+        const authenticated = await authenticateAction(`Authenticate withdrawal of ${formatCurrency(withdrawAmount)}`);
+        if (!authenticated) return;
+
+        setIsWithdrawing(true);
+        try {
+            await client.post('wallets/withdraw/', {
+                amount: withdrawAmount,
+                channel: withdrawChannel,
+                metadata,
+                currency: 'ZAR'
+            });
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert('Success', `Withdrawal requested for ${formatCurrency(withdrawAmount)}.`);
+            setShowWithdraw(false);
+            setWithdrawAmount('');
+            setWithdrawAccountNumber('');
+            setWithdrawBankCode('');
+            setWithdrawPhoneNumber('');
+            setWithdrawProvider('');
+            setWithdrawVoucherCode('');
+            setWithdrawPartner('');
+            setWithdrawError(null);
+            fetchData();
+        } catch (error: any) {
+            console.error('Withdraw error:', error);
+            const errorMsg = error.response?.data?.error || 'Failed to submit withdrawal request. Please try again.';
+            Alert.alert('Error', errorMsg);
+            setWithdrawError(errorMsg);
+        } finally {
+            setIsWithdrawing(false);
         }
     };
 
@@ -298,6 +392,13 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.actionButton}
+                            onPress={() => setShowWithdraw(true)}
+                        >
+                            <Text style={styles.actionIcon}>📤</Text>
+                            <Text style={styles.actionText}>Withdraw</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.actionButton}
                             onPress={() => setShowContribute(true)}
                         >
                             <Text style={styles.actionIcon}>🕊️</Text>
@@ -322,48 +423,87 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                         <Text style={styles.emptyStateText}>No transactions yet.</Text>
                     </View>
                 ) : (
-                    transactions.map((item) => (
-                        <View key={item.id} style={styles.transactionItem}>
-                            <View style={styles.transactionIconContainer}>
-                                <Text style={styles.transactionIcon}>{getTransactionIcon(item.transaction_type)}</Text>
-                            </View>
-                            <View style={styles.transactionDetails}>
-                                <Text style={styles.transactionType}>
-                                    {item.transaction_type.replace('_', ' ')}
-                                </Text>
-                                {item.destination_group_detail && (
-                                    <Text style={styles.destinationText}>To: {item.destination_group_detail.name}</Text>
+                    transactions.map((item) => {
+                        const isExpanded = expandedTransactionId === item.id;
+                        const senderLabel = item.transaction_type === 'TRANSFER' && item.wallet_detail
+                            ? item.wallet_detail.full_name || item.wallet_detail.user_email
+                            : item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail
+                                ? item.wallet_detail.full_name || item.wallet_detail.user_email
+                                : null;
+                        const detailTarget = item.destination_group_detail
+                            ? `To group: ${item.destination_group_detail.name}`
+                            : item.recipient_wallet_detail
+                                ? `To: ${item.recipient_wallet_detail.full_name}`
+                                : item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail
+                                    ? `From: ${item.wallet_detail.full_name || item.wallet_detail.user_email}`
+                                    : 'No additional recipient information';
+
+                        return (
+                            <View key={item.id} style={styles.transactionWrapper}>
+                                <TouchableOpacity
+                                    activeOpacity={0.8}
+                                    onPress={() => setExpandedTransactionId(isExpanded ? null : item.id)}
+                                    style={styles.transactionItem}
+                                >
+                                    <View style={styles.transactionIconContainer}>
+                                        <Text style={styles.transactionIcon}>{getTransactionIcon(item.transaction_type)}</Text>
+                                    </View>
+                                    <View style={styles.transactionDetails}>
+                                        <Text style={styles.transactionType}>
+                                            {item.transaction_type.replace('_', ' ')}
+                                        </Text>
+                                        {item.destination_group_detail && (
+                                            <Text style={styles.destinationText}>To: {item.destination_group_detail.name}</Text>
+                                        )}
+                                        {item.recipient_wallet_detail && (
+                                            <Text style={styles.destinationText}>To: {item.recipient_wallet_detail.full_name}</Text>
+                                        )}
+                                        {item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail && (
+                                            <Text style={styles.destinationText}>From: {item.wallet_detail.full_name || item.wallet_detail.user_email}</Text>
+                                        )}
+                                        <Text style={styles.transactionDate}>{formatDate(item.timestamp)}</Text>
+                                    </View>
+                                    <View style={styles.amountContainer}>
+                                        <Text style={[
+                                            styles.transactionAmount,
+                                            (item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT') ? styles.negativeAmount : styles.positiveAmount
+                                        ]}>
+                                            {(item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT') ? '-' : '+'}
+                                            {formatCurrency(item.amount)}
+                                        </Text>
+                                        <View style={[
+                                            styles.statusBadge,
+                                            item.status === 'COMPLETED' ? styles.statusCOMPLETED :
+                                                item.status === 'PENDING' ? styles.statusPENDING :
+                                                    styles.statusFAILED
+                                        ]}>
+                                            <Text style={[
+                                                styles.statusText,
+                                                item.status === 'COMPLETED' ? styles.statusTextCOMPLETED : {}
+                                            ]}>{item.status}</Text>
+                                        </View>
+                                    </View>
+                                </TouchableOpacity>
+
+                                {isExpanded && (
+                                    <View style={styles.expandedCard}>
+                                        <Text style={styles.expandedTitle}>More details</Text>
+                                        <Text style={styles.expandedText}>Transaction ID: #{item.id}</Text>
+                                        <Text style={styles.expandedText}>Type: {item.transaction_type.replace(/_/g, ' ')}</Text>
+                                        <Text style={styles.expandedText}>Status: {item.status}</Text>
+                                        <Text style={styles.expandedText}>Date: {new Date(item.timestamp).toLocaleString()}</Text>
+                                        {senderLabel && (
+                                            <Text style={styles.expandedText}>From: {senderLabel}</Text>
+                                        )}
+                                        {item.transaction_type === 'TRANSFER' && (
+                                            <Text style={styles.expandedText}>Transferred to: {detailTarget.replace('To group: ', '').replace('To: ', '')}</Text>
+                                        )}
+                                        <Text style={styles.expandedText}>Details: {detailTarget}</Text>
+                                    </View>
                                 )}
-                                {item.recipient_wallet_detail && (
-                                    <Text style={styles.destinationText}>To: {item.recipient_wallet_detail.full_name}</Text>
-                                )}
-                                {item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail && (
-                                    <Text style={styles.destinationText}>From: {item.wallet_detail.full_name || item.wallet_detail.user_email}</Text>
-                                )}
-                                <Text style={styles.transactionDate}>{formatDate(item.timestamp)}</Text>
                             </View>
-                            <View style={styles.amountContainer}>
-                                <Text style={[
-                                    styles.transactionAmount,
-                                    (item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT') ? styles.negativeAmount : styles.positiveAmount
-                                ]}>
-                                    {(item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT') ? '-' : '+'}
-                                    {formatCurrency(item.amount)}
-                                </Text>
-                                <View style={[
-                                    styles.statusBadge,
-                                    item.status === 'COMPLETED' ? styles.statusCOMPLETED :
-                                        item.status === 'PENDING' ? styles.statusPENDING :
-                                            styles.statusFAILED
-                                ]}>
-                                    <Text style={[
-                                        styles.statusText,
-                                        item.status === 'COMPLETED' ? styles.statusTextCOMPLETED : {}
-                                    ]}>{item.status}</Text>
-                                </View>
-                            </View>
-                        </View>
-                    ))
+                        );
+                    })
                 )}
             </ScrollView>
 
@@ -559,6 +699,173 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                                 </TouchableOpacity>
                             </>
                         )}
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
+
+            <Modal
+                visible={showWithdraw}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowWithdraw(false)}
+            >
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalOverlay}
+                >
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Withdraw Funds</Text>
+                            <TouchableOpacity onPress={() => {
+                                setShowWithdraw(false);
+                                setWithdrawAmount('');
+                                setWithdrawAccountNumber('');
+                                setWithdrawBankCode('');
+                                setWithdrawPhoneNumber('');
+                                setWithdrawProvider('');
+                                setWithdrawVoucherCode('');
+                                setWithdrawPartner('');
+                                setWithdrawError(null);
+                            }}>
+                                <Text style={styles.closeButton}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={styles.inputLabel}>Withdrawal Channel</Text>
+                        <View style={styles.channelOptions}>
+                            {[
+                                { value: 'bank_transfer', label: 'Bank Transfer', icon: '🏦' },
+                                { value: 'mobile_money', label: 'Mobile Money', icon: '📱' },
+                                { value: 'voucher', label: 'Voucher', icon: '🎫' }
+                            ].map((option) => (
+                                <TouchableOpacity
+                                    key={option.value}
+                                    activeOpacity={0.8}
+                                    style={[
+                                        styles.channelOption,
+                                        withdrawChannel === option.value && styles.channelOptionSelected
+                                    ]}
+                                    onPress={() => setWithdrawChannel(option.value as any)}
+                                >
+                                    <Text style={styles.channelOptionIcon}>{option.icon}</Text>
+                                    <Text style={[
+                                        styles.channelOptionText,
+                                        withdrawChannel === option.value && styles.channelOptionTextSelected
+                                    ]}>{option.label}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <Text style={styles.inputLabel}>Amount (USD)</Text>
+                        <TextInput
+                            style={[styles.textInput, withdrawError && styles.inputError]}
+                            placeholder="0.00"
+                            keyboardType="decimal-pad"
+                            value={withdrawAmount}
+                            onChangeText={(text) => {
+                                setWithdrawAmount(text);
+                                if (withdrawError) setWithdrawError(null);
+                            }}
+                            placeholderTextColor="#9ca3af"
+                        />
+
+                        {withdrawChannel === 'bank_transfer' && (
+                            <>
+                                <Text style={styles.inputLabel}>Account Number</Text>
+                                <TextInput
+                                    style={[styles.textInput, withdrawError && styles.inputError]}
+                                    placeholder="1234567890"
+                                    value={withdrawAccountNumber}
+                                    onChangeText={(text) => {
+                                        setWithdrawAccountNumber(text);
+                                        if (withdrawError) setWithdrawError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                />
+
+                                <Text style={styles.inputLabel}>Bank Code</Text>
+                                <TextInput
+                                    style={[styles.textInput, withdrawError && styles.inputError]}
+                                    placeholder="FNB001"
+                                    value={withdrawBankCode}
+                                    onChangeText={(text) => {
+                                        setWithdrawBankCode(text);
+                                        if (withdrawError) setWithdrawError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                />
+                            </>
+                        )}
+
+                        {withdrawChannel === 'mobile_money' && (
+                            <>
+                                <Text style={styles.inputLabel}>Mobile Money Number</Text>
+                                <TextInput
+                                    style={[styles.textInput, withdrawError && styles.inputError]}
+                                    placeholder="+27761234567"
+                                    value={withdrawPhoneNumber}
+                                    onChangeText={(text) => {
+                                        setWithdrawPhoneNumber(text);
+                                        if (withdrawError) setWithdrawError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                />
+
+                                <Text style={styles.inputLabel}>Network Provider</Text>
+                                <TextInput
+                                    style={[styles.textInput, withdrawError && styles.inputError]}
+                                    placeholder="MTN"
+                                    value={withdrawProvider}
+                                    onChangeText={(text) => {
+                                        setWithdrawProvider(text);
+                                        if (withdrawError) setWithdrawError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                />
+                            </>
+                        )}
+
+                        {withdrawChannel === 'voucher' && (
+                            <>
+                                <Text style={styles.inputLabel}>Voucher Code</Text>
+                                <TextInput
+                                    style={[styles.textInput, withdrawError && styles.inputError]}
+                                    placeholder="ABC123XYZ"
+                                    value={withdrawVoucherCode}
+                                    onChangeText={(text) => {
+                                        setWithdrawVoucherCode(text);
+                                        if (withdrawError) setWithdrawError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                />
+
+                                <Text style={styles.inputLabel}>Retail Partner</Text>
+                                <TextInput
+                                    style={[styles.textInput, withdrawError && styles.inputError]}
+                                    placeholder="Shoprite"
+                                    value={withdrawPartner}
+                                    onChangeText={(text) => {
+                                        setWithdrawPartner(text);
+                                        if (withdrawError) setWithdrawError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                />
+                            </>
+                        )}
+
+                        {withdrawError && <Text style={styles.errorText}>{withdrawError}</Text>}
+
+                        <TouchableOpacity
+                            style={[styles.submitButton, isWithdrawing && styles.disabledButton]}
+                            onPress={handleWithdraw}
+                            disabled={isWithdrawing}
+                        >
+                            {isWithdrawing ? (
+                                <ActivityIndicator color="#ffffff" />
+                            ) : (
+                                <Text style={styles.submitButtonText}>Submit Withdrawal</Text>
+                            )}
+                        </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
@@ -788,13 +1095,15 @@ const styles = StyleSheet.create({
         color: '#111827',
         marginBottom: 16,
     },
+    transactionWrapper: {
+        marginBottom: 12,
+    },
     transactionItem: {
         backgroundColor: '#ffffff',
         borderRadius: 12,
         padding: 16,
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
         borderWidth: 1,
         borderColor: '#e5e7eb',
     },
@@ -842,6 +1151,25 @@ const styles = StyleSheet.create({
     },
     negativeAmount: {
         color: '#ef4444',
+    },
+    expandedCard: {
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        padding: 12,
+        marginTop: 8,
+    },
+    expandedTitle: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#1e293b',
+        marginBottom: 6,
+    },
+    expandedText: {
+        fontSize: 12,
+        color: '#475569',
+        marginTop: 2,
     },
     statusBadge: {
         paddingHorizontal: 8,
@@ -927,6 +1255,39 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         marginLeft: 4,
         fontWeight: '500',
+    },
+    channelOptions: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    channelOption: {
+        flex: 1,
+        paddingVertical: 12,
+        marginHorizontal: 4,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#d1d5db',
+        backgroundColor: '#fafafa',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    channelOptionSelected: {
+        backgroundColor: '#2563eb',
+        borderColor: '#1d4ed8',
+    },
+    channelOptionText: {
+        fontSize: 13,
+        color: '#374151',
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    channelOptionIcon: {
+        fontSize: 20,
+        marginBottom: 6,
+    },
+    channelOptionTextSelected: {
+        color: '#ffffff',
     },
     presets: {
         flexDirection: 'row',

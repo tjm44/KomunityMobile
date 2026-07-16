@@ -31,16 +31,29 @@ interface Profile {
     active_role?: string | null;
 }
 
+interface Organisation {
+    id: number;
+    name: string;
+    description: string;
+    cover_image: string | null;
+    is_verified: boolean;
+    entity_type: string;
+    registration_number: string;
+}
+
 interface ProfileScreenProps {
     onBack: () => void;
     onLogout: () => void;
     onProfileUpdate?: () => void;
+    onViewOrganisationDetails?: (organisation: Organisation) => void;
     autoShowKyc?: boolean;
 }
 
-const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, autoShowKyc }: ProfileScreenProps) => {
+const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDetails, autoShowKyc }: ProfileScreenProps) => {
     const insets = useSafeAreaInsets();
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [organisations, setOrganisations] = useState<Organisation[]>([]);
+    const [orgsLoading, setOrgsLoading] = useState(true);
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -111,9 +124,22 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, autoShowKyc }: Profi
         }
     }, []);
 
+    const fetchOrganisations = React.useCallback(async () => {
+        setOrgsLoading(true);
+        try {
+            const response = await client.get('organisations/mine/');
+            setOrganisations(response.data);
+        } catch (error) {
+            console.error('Error fetching user organisations:', error);
+        } finally {
+            setOrgsLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchProfile();
-    }, [fetchProfile]);
+        fetchOrganisations();
+    }, [fetchProfile, fetchOrganisations]);
 
     const pickImage = async () => {
         if (Platform.OS === 'web') {
@@ -536,6 +562,28 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, autoShowKyc }: Profi
                         <Text style={styles.bioText}>{profile?.profile?.bio || 'No bio yet.'}</Text>
                     )}
                 </View>
+
+                {organisations.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>My Organisations</Text>
+                        {organisations.map((org) => (
+                            <TouchableOpacity
+                                key={org.id}
+                                style={styles.orgCard}
+                                onPress={() => onViewOrganisationDetails?.(org)}
+                                activeOpacity={0.85}
+                            >
+                                <View style={styles.orgCardContent}>
+                                    <View style={styles.orgMeta}>
+                                        <Text style={styles.orgName}>{org.name}</Text>
+                                        <Text style={styles.orgSubtitle}>{(org.entity_type || 'Organisation').toUpperCase()}</Text>
+                                    </View>
+                                    <Text style={styles.feedButtonText}>→</Text>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
 
                 {/* Actions (only non-editing actions remain in ScrollView) */}
                 {!isEditing && (

@@ -49,13 +49,21 @@ const GroupSelectionScreen = ({ onJoin, onCreate, onCreateOrganisation }: GroupS
                         <Text style={styles.arrow}>›</Text>
                     </TouchableOpacity>
 
-                    {/* Register Organisation (compact button below cards) */}
+                    {/* Register Organisation */}
                     {onCreateOrganisation && (
-                        <View style={styles.registerOrgContainer}>
-                            <TouchableOpacity style={styles.registerOrgButton} onPress={onCreateOrganisation} activeOpacity={0.85}>
-                                <Text style={styles.registerOrgButtonText}>Register Org</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity style={[styles.card, { borderColor: '#99f6e4' }]} onPress={onCreateOrganisation}>
+                            <View style={[styles.iconContainer, { backgroundColor: '#f0fdfa' }]}> 
+                                <Text style={styles.icon}>🏢</Text>
+                            </View>
+                            <View style={styles.cardText}>
+                                <Text style={[styles.cardTitle, { color: '#0f766e' }]}>Register an Organisation</Text>
+                                <Text style={styles.cardSubtitle}>
+                                    Set up a formal, verified legal entity (NGO, Church, NPO, Corporate)
+                                    to manage wallets and coordinate campaigns.
+                                </Text>
+                            </View>
+                            <Text style={[styles.arrow, { color: '#0f766e' }]}>›</Text>
+                        </TouchableOpacity>
                     )}
                 </View>
             </View>

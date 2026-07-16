@@ -78,7 +78,7 @@ export default function App() {
   const [viewingGroupWallet, setViewingGroupWallet] = React.useState<any>(null);
   const [isChoosingGroup, setIsChoosingGroup] = React.useState(false);
   const [isChoosingGroupPurpose, setIsChoosingGroupPurpose] = React.useState(false);
-  const [groupPurposeSelection, setGroupPurposeSelection] = React.useState<PurposeSelection>({ purpose: 'bereavement', fund_description: '' });
+  const [groupPurposeSelection, setGroupPurposeSelection] = React.useState<PurposeSelection | null>(null);
   const [isCreatingGroup, setIsCreatingGroup] = React.useState(false);
   const [isViewingContributions, setIsViewingContributions] =
     React.useState(false);
@@ -198,7 +198,7 @@ export default function App() {
       if (isChoosingGroup) return false;
 
       // Sub-screen navigation — mirrors getCurrentBackAction()
-      if (isCreatingGroup) { setIsCreatingGroup(false); return true; }
+      if (isCreatingGroup) { setIsCreatingGroup(false); setIsChoosingGroupPurpose(true); return true; }
       if (isChoosingGroupPurpose) { setIsChoosingGroupPurpose(false); return true; }
       if (viewingCampaign) { setViewingCampaign(null); return true; }
       if (isCreatingCampaign) { setIsCreatingCampaign(null); return true; }
@@ -594,6 +594,16 @@ export default function App() {
                   }}
                 />
               </AnimatedScreen>
+            ) : isCreatingCampaign ? (
+              <AnimatedScreen animation="slideUp">
+                <CreateCampaignScreen
+                  group={isCreatingCampaign}
+                  onBack={() => setIsCreatingCampaign(null)}
+                  onCreated={(campaign) => {
+                    setIsCreatingCampaign(null);
+                  }}
+                />
+              </AnimatedScreen>
             ) : viewingOrganisationDetails ? (
               <AnimatedScreen animation="slideRight">
                 <OrganisationDetailScreen
@@ -601,11 +611,14 @@ export default function App() {
                   onBack={() => setViewingOrganisationDetails(null)}
                   onEditOrganisation={() => setEditingOrganisation(viewingOrganisationDetails)}
                   onViewFeed={() => {
-                    setSelectedGroup(viewingOrganisationDetails);
+                    setSelectedGroup({ ...viewingOrganisationDetails, is_organisation: true });
                     setViewingOrganisationDetails(null);
                   }}
                   onManage={() => {
                     setIsManagingGroup(viewingOrganisationDetails);
+                  }}
+                  onLaunchFundraiser={() => {
+                    setIsCreatingCampaign({ ...viewingOrganisationDetails, is_organisation: true });
                   }}
                   onViewWallet={() => {
                     setViewingGroupWallet(viewingOrganisationDetails);
@@ -626,16 +639,6 @@ export default function App() {
                   }}
                 />
               </AnimatedScreen>
-            ) : isCreatingCampaign ? (
-              <AnimatedScreen animation="slideUp">
-                <CreateCampaignScreen
-                  group={isCreatingCampaign}
-                  onBack={() => setIsCreatingCampaign(null)}
-                  onCreated={(campaign) => {
-                    setIsCreatingCampaign(null);
-                  }}
-                />
-              </AnimatedScreen>
             ) : viewingCampaign ? (
               <AnimatedScreen animation="slideRight">
                 <CampaignDetailScreen
@@ -648,9 +651,12 @@ export default function App() {
             ) : isCreatingGroup ? (
               <AnimatedScreen animation="slideUp">
                 <CreateGroupScreen
-                  onBack={() => setIsCreatingGroup(false)}
-                  purpose={groupPurposeSelection.purpose}
-                  fund_description={groupPurposeSelection.fund_description}
+                  onBack={() => {
+                    setIsCreatingGroup(false);
+                    setIsChoosingGroupPurpose(true);
+                  }}
+                  purpose={groupPurposeSelection?.purpose}
+                  fund_description={groupPurposeSelection?.fund_description ?? ''}
                   onGroupCreated={(group) => {
                     setIsCreatingGroup(false);
                     setSelectedGroup(group);
@@ -794,13 +800,9 @@ export default function App() {
                     onViewGroupDetails={(group: any) =>
                       setViewingGroupDetails(group)
                     }
-                    onViewOrganisationDetails={(org: any) =>
-                      setViewingOrganisationDetails(org)
-                    }
                     onViewWallet={() => setActiveTab("wallet")}
                     onDiscover={() => setActiveTab("discovery")}
-                    onCreateGroup={() => setIsCreatingGroup(true)}
-                    onCreateOrganisation={() => setIsCreatingOrganisation(true)}
+                    onCreateGroup={() => setIsChoosingGroupPurpose(true)}
                   />
                 )}
                 {activeTab === "discovery" && (
@@ -864,6 +866,7 @@ export default function App() {
                     onBack={() => setActiveTab("home")}
                     onLogout={handleLogout}
                     onProfileUpdate={checkProfileStatus}
+                    onViewOrganisationDetails={(org: any) => setViewingOrganisationDetails(org)}
                     autoShowKyc={autoShowKycOnProfile}
                   />
                 )}

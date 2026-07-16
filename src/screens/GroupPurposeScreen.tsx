@@ -3,10 +3,9 @@ import {
     View, Text, StyleSheet, TouchableOpacity,
     ScrollView, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type GroupPurpose = 'bereavement' | 'excess' | 'emergency' | 'custom';
+export type GroupPurpose = 'bereavement' | 'excess' | 'custom';
 
 export interface PurposeSelection {
     purpose: GroupPurpose;
@@ -39,24 +38,15 @@ const PURPOSE_OPTIONS: PurposeOption[] = [
     {
         key: 'excess',
         icon: '🚗',
-        label: 'Insurance Excess Fund',
+        label: 'Insurance Excess',
         description: 'Help a member cover their insurance excess after an accident or claim.',
         color: '#0284c7',
         bgColor: '#f0f9ff',
     },
     {
-        key: 'emergency',
-        icon: '🆘',
-        label: 'Emergency Fundraiser',
-        description:
-            'Once-off public fundraiser for disasters and emergencies. Requires a verified NGO or Church account.',
-        color: '#dc2626',
-        bgColor: '#fef2f2',
-    },
-    {
         key: 'custom',
         icon: '✨',
-        label: 'Custom Purpose',
+        label: 'Custom Fund',
         description: 'Define your own group fund purpose — any reason your community needs.',
         color: '#059669',
         bgColor: '#f0fdf4',
@@ -117,11 +107,6 @@ const GroupPurposeScreen = ({ onSelect, onBack }: Props) => {
                                         <Text style={[styles.cardLabel, isSelected && { color: option.color }]}>
                                             {option.label}
                                         </Text>
-                                        {option.key === 'emergency' && (
-                                            <View style={styles.verifiedBadge}>
-                                                <Text style={styles.verifiedText}>Verified only</Text>
-                                            </View>
-                                        )}
                                     </View>
                                     <Text style={styles.cardDescription}>{option.description}</Text>
                                 </View>

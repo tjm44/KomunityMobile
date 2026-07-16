@@ -45,11 +45,13 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
     const selectedMeta = CAMPAIGN_TYPES.find(t => t.key === campaignType)!;
     const selectedBeneficiary = members.find(m => m.member_detail.id === beneficiaryId);
 
+    const isOrganisation = (group as any).is_organisation || !!(group as any).entity_type;
+
     useEffect(() => {
-        if (!(group as any).is_organisation) {
+        if (!isOrganisation) {
             fetchMembers();
         }
-    }, []);
+    }, [isOrganisation]);
 
     const fetchMembers = async () => {
         setLoadingMembers(true);
@@ -80,7 +82,7 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                 title: title.trim(),
                 description: description.trim(),
             };
-            if ((group as any).is_organisation) {
+            if (isOrganisation) {
                 payload.organisation = group.id;
             } else {
                 payload.group = group.id;

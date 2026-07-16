@@ -10,9 +10,8 @@ import type { GroupPurpose } from './GroupPurposeScreen';
 
 const PURPOSE_META: Record<GroupPurpose, { label: string; icon: string; color: string }> = {
     bereavement: { label: 'Bereavement Fund', icon: '🕊️', color: '#7c3aed' },
-    excess:      { label: 'Insurance Excess Fund', icon: '🚗', color: '#0284c7' },
-    emergency:   { label: 'Emergency Fundraiser', icon: '🆘', color: '#dc2626' },
-    custom:      { label: 'Custom Purpose', icon: '✨', color: '#059669' },
+    excess:      { label: 'Insurance Excess', icon: '🚗', color: '#0284c7' },
+    custom:      { label: 'Custom Fund', icon: '✨', color: '#059669' },
 };
 
 interface CreateGroupScreenProps {
@@ -25,7 +24,7 @@ interface CreateGroupScreenProps {
 const CreateGroupScreen = ({
     onBack,
     onGroupCreated,
-    purpose = 'bereavement',
+    purpose,
     fund_description = '',
 }: CreateGroupScreenProps) => {
     const insets = useSafeAreaInsets();
@@ -36,17 +35,19 @@ const CreateGroupScreen = ({
     const [loading, setLoading] = useState(false);
     const [nameError, setNameError] = useState<string | null>(null);
 
-    // Organisation registration state
-    const [isOrganisation, setIsOrganisation] = useState(false);
-    const [registrationNumber, setRegistrationNumber] = useState('');
-    const [entityType, setEntityType] = useState('ngo');
+    const meta = purpose ? PURPOSE_META[purpose] : { label: 'Select Fund Type', icon: '❓', color: '#64748b' };
 
-    const meta = PURPOSE_META[purpose];
+    const canCreate = !!purpose;
 
     const handleCreateGroup = async () => {
         const error = validateName(name, 'Community Name');
         if (error) {
             setNameError(error);
+            return;
+        }
+
+        if (!purpose) {
+            Alert.alert('Select Fund Type', 'Please choose a fund type before creating your community.');
             return;
         }
 
@@ -61,22 +62,14 @@ const CreateGroupScreen = ({
                 purpose,
                 fund_description: purpose === 'custom' ? fund_description : '',
             };
-            if (isOrganisation) {
-                payload.registration_number = registrationNumber.trim();
-                payload.entity_type = entityType;
-            }
 
             const response = await client.post('groups/', payload);
 
-            if (isOrganisation) {
-                Alert.alert('Success 🏢', `Organisation "${name}" has been registered successfully! Fill in your verification application in settings to unlock emergency fundraiser capabilities.`);
-            } else {
-                Alert.alert('Success 👥', `Community "${name}" has been created successfully!`);
-            }
+            Alert.alert('Success 👥', `Community "${name}" has been created successfully!`);
             onGroupCreated(response.data);
         } catch (error) {
             console.error('Error creating group:', error);
-            Alert.alert('Error', `Failed to create ${isOrganisation ? 'organisation' : 'community'}. Please try again.`);
+            Alert.alert('Error', 'Failed to create community. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -101,34 +94,11 @@ const CreateGroupScreen = ({
                         </View>
                     </View>
 
-                    {/* Hub Type Selector */}
-                    <View style={styles.formSection}>
-                        <Text style={styles.label}>Hub Type</Text>
-                        <View style={{ flexDirection: 'row', gap: 10, marginVertical: 6 }}>
-                            <TouchableOpacity
-                                style={[styles.typePill, !isOrganisation && styles.typePillActive]}
-                                onPress={() => setIsOrganisation(false)}
-                            >
-                                <Text style={[styles.typePillText, !isOrganisation && styles.typePillTextActive]}>
-                                    👥 Peer Community
-                                </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.typePill, isOrganisation && styles.typePillActive]}
-                                onPress={() => setIsOrganisation(true)}
-                            >
-                                <Text style={[styles.typePillText, isOrganisation && styles.typePillTextActive]}>
-                                    🏢 Organisation
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    <View style={styles.formSection}>
-                        <Text style={styles.label}>{isOrganisation ? 'Organisation Name *' : 'Community Name *'}</Text>
+<View style={styles.formSection}>
+                        <Text style={styles.label}>Community Name *</Text>
                         <TextInput
                             style={[styles.input, nameError && styles.inputError]}
-                            placeholder={isOrganisation ? 'e.g. Hope Foundation' : 'e.g. Sunnyvale Neighbourhood'}
+                            placeholder="e.g. Sunnyvale Neighbourhood"
                             value={name}
                             onChangeText={(text) => {
                                 setName(text);
@@ -137,51 +107,6 @@ const CreateGroupScreen = ({
                         />
                         {nameError && <Text style={styles.errorText}>{nameError}</Text>}
                     </View>
-
-                    {isOrganisation && (
-                        <View style={{ marginBottom: 16 }}>
-                            <View style={styles.formSection}>
-                                <Text style={styles.label}>Organisation Type *</Text>
-                                <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                                    {[
-                                        { key: 'ngo', label: 'NGO' },
-                                        { key: 'church', label: 'Church' },
-                                        { key: 'npo', label: 'NPO/Charity' },
-                                        { key: 'corporate', label: 'Corporate' },
-                                        { key: 'other', label: 'Other' },
-                                    ].map((type) => (
-                                        <TouchableOpacity
-                                            key={type.key}
-                                            style={[styles.entityPill, entityType === type.key && styles.entityPillActive]}
-                                            onPress={() => setEntityType(type.key)}
-                                        >
-                                            <Text style={[styles.entityPillText, entityType === type.key && styles.entityPillTextActive]}>
-                                                {type.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <View style={styles.formSection}>
-                                <Text style={styles.label}>Registration Number *</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="e.g. NPO-123-456 or REG-2026-99"
-                                    value={registrationNumber}
-                                    onChangeText={setRegistrationNumber}
-                                    autoCapitalize="characters"
-                                    autoCorrect={false}
-                                />
-                            </View>
-                            
-                            <View style={[styles.infoBox, { backgroundColor: '#eff6ff', borderColor: '#bfdbfe' }]}>
-                                <Text style={[styles.infoText, { color: '#1e3a8a' }]}>
-                                    ℹ️ Organisations start as unverified. Go to your Hub settings after creation to submit a verification request.
-                                </Text>
-                            </View>
-                        </View>
-                    )}
 
                     <View style={styles.formSection}>
                         <Text style={styles.label}>Description</Text>
@@ -239,17 +164,21 @@ const CreateGroupScreen = ({
 
                 <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
                     <TouchableOpacity
-                        style={[styles.createButton, { backgroundColor: meta.color }, loading && styles.buttonDisabled]}
-                        onPress={handleCreateGroup}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color="#ffffff" />
-                        ) : (
-                            <Text style={styles.createButtonText}>
-                                {isOrganisation ? 'Register Organisation' : 'Launch Community'} {meta.icon}
-                            </Text>
-                        )}
+                    style={[
+                        styles.createButton,
+                        { backgroundColor: canCreate ? meta.color : '#cbd5e1' },
+                        (loading || !canCreate) && styles.buttonDisabled,
+                    ]}
+                    onPress={handleCreateGroup}
+                    disabled={loading || !canCreate}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#ffffff" />
+                    ) : (
+                        <Text style={styles.createButtonText}>
+                            {canCreate ? `Launch Community ${meta.icon}` : 'Choose Fund Type First'}
+                        </Text>
+                    )}
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={onBack} style={styles.cancelButton}>

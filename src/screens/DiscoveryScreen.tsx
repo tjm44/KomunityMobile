@@ -267,7 +267,7 @@ const DiscoveryScreen = ({
                                                                 item.purpose === 'custom' ? '#059669' : '#7c3aed'
                                                         }
                                                     ]}>
-                                                        {({'bereavement': '🕊️ Bereavement', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom Fund'} as any)[item.purpose] ?? item.purpose}
+                                                        {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Insurance Excess', 'emergency': '🆘 Emergency / Disaster Fundraiser', 'custom': '✨ Custom Fund'} as any)[item.purpose] ?? item.purpose}
                                                     </Text>
                                                 </View>
                                             )}

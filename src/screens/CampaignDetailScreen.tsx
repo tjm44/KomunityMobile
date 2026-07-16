@@ -10,8 +10,8 @@ import { authenticateAction } from '../utils/biometrics';
 
 const TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
     bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement Fund' },
-    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess Fund' },
-    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency Fundraiser' },
+    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency / Disaster Fundraiser' },
     custom:      { icon: '✨', color: '#059669', label: 'Custom Fund' },
 };
 

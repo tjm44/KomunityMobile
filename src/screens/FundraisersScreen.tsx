@@ -22,9 +22,16 @@ const CampaignCard = ({ campaign, onPress }: { campaign: any; onPress: () => voi
     const raised = parseFloat(campaign.total_raised || 0);
     const target = campaign.target_amount ? parseFloat(campaign.target_amount) : null;
     const progress = target ? Math.min((raised / target) * 100, 100) : null;
+    const orgName = campaign.organisation_detail?.name
+        ?? campaign.group_detail?.name
+        ?? `Group #${campaign.group}`;
 
     return (
         <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+            <View style={styles.orgHeader}>
+                <Text style={styles.orgHeaderText}>{orgName}</Text>
+            </View>
+
             <View style={styles.cardHeader}>
                 <View style={[styles.typeBadge, { backgroundColor: `${meta.color}18` }]}>
                     <Text style={styles.typeBadgeIcon}>{meta.icon}</Text>
@@ -63,7 +70,6 @@ const CampaignCard = ({ campaign, onPress }: { campaign: any; onPress: () => voi
             )}
 
             <View style={styles.cardFooter}>
-                <Text style={styles.groupName}>📍 {campaign.group_detail?.name ?? `Group #${campaign.group}`}</Text>
                 {campaign.deadline && (
                     <Text style={styles.deadline}>⏰ {campaign.deadline}</Text>
                 )}
@@ -194,6 +200,18 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 3,
     },
+    orgHeader: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+    },
+    orgHeaderText: {
+        fontSize: 16,
+        fontWeight: '800',
+        color: '#0f172a',
+        textAlign: 'center',
+        fontFamily: 'Outfit-Bold',
+    },
     cardHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -260,7 +278,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 10,
     },
-    groupName: { fontSize: 12, color: '#94a3b8', fontFamily: 'Outfit-Regular' },
     deadline: { fontSize: 12, color: '#f97316', fontFamily: 'Outfit-Regular' },
     contributeHint: {
         borderRadius: 10,

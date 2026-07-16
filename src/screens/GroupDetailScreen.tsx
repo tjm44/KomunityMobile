@@ -132,7 +132,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                             {(group as any).purpose && (
                                 <View style={styles.purposePill}>
                                     <Text style={styles.purposePillText}>
-                                        {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Excess Fund', 'emergency': '🆘 Emergency', 'custom': '✨ Custom'} as any)[(group as any).purpose] ?? ''}
+                                        {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Insurance Excess', 'emergency': '🆘 Emergency / Disaster Fundraiser', 'custom': '✨ Custom Fund'} as any)[(group as any).purpose] ?? ''}
                                     </Text>
                                 </View>
                             )}

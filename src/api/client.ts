@@ -8,8 +8,14 @@ import Constants from 'expo-constants';
 const LOCAL_API_URL = 'http://127.0.0.1:8000/api/v1/';
 
 // Dynamically get the Expo host IP for LAN connections
-let hostIp = '192.168.88.201'; // default fallback
-if (Constants.expoConfig?.hostUri) {
+let hostIp = '192.168.88.248'; // default fallback for this machine
+
+if (Constants.manifest?.debuggerHost) {
+    const ip = Constants.manifest.debuggerHost.split(':')[0];
+    if (ip) {
+        hostIp = ip;
+    }
+} else if (Constants.expoConfig?.hostUri) {
     const ip = Constants.expoConfig.hostUri.split(':')[0];
     if (ip) {
         hostIp = ip;

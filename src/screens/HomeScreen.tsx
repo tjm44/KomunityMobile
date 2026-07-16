@@ -26,37 +26,22 @@ interface Group {
   unread_posts_count: number;
 }
 
-interface Organisation {
-  id: number;
-  name: string;
-  description: string;
-  cover_image: string | null;
-  is_verified: boolean;
-  entity_type: string;
-  registration_number: string;
-}
-
 interface HomeScreenProps {
   onSelectGroup: (group: Group) => void;
   onViewGroupDetails?: (group: Group) => void;
-  onViewOrganisationDetails?: (org: Organisation) => void;
   onViewWallet?: () => void;
   onDiscover?: () => void;
   onCreateGroup?: () => void;
-  onCreateOrganisation?: () => void;
 }
 
 const HomeScreen = ({
   onSelectGroup,
   onViewGroupDetails,
-  onViewOrganisationDetails,
   onViewWallet,
   onDiscover,
   onCreateGroup,
-  onCreateOrganisation,
 }: HomeScreenProps) => {
   const [groups, setGroups] = useState<Group[]>([]);
-  const [organisations, setOrganisations] = useState<Organisation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { registerToken } = usePushNotifications();
@@ -81,12 +66,8 @@ const HomeScreen = ({
 
   const fetchData = async () => {
     try {
-      const [groupsRes, orgsRes] = await Promise.all([
-        client.get("groups/mine/"),
-        client.get("organisations/mine/"),
-      ]);
+      const groupsRes = await client.get("groups/mine/");
       setGroups(groupsRes.data);
-      setOrganisations(orgsRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -149,80 +130,6 @@ const HomeScreen = ({
           />
         }
       >
-        {/* ──── Organisations Section ──── */}
-        <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionHeader}>🏢 My Organisations</Text>
-            {onCreateOrganisation && (
-              <TouchableOpacity onPress={onCreateOrganisation} style={styles.sectionAddBtn}>
-                <Text style={styles.sectionAddBtnText}>+ New</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          {organisations.length === 0 ? (
-            <View style={styles.emptySection}>
-              <Text style={styles.emptySectionText}>No organisations yet.</Text>
-              {onCreateOrganisation && (
-                <TouchableOpacity onPress={onCreateOrganisation}>
-                  <Text style={styles.emptySectionLink}>Register one →</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : (
-            organisations.map((org) => (
-              <TouchableOpacity
-                key={`org-${org.id}`}
-                onPress={() => onViewOrganisationDetails?.(org)}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={["#f0fdfa", "#ccfbf1"]}
-                  style={[styles.groupCard, { borderColor: '#99f6e4' }]}
-                >
-                  {org.cover_image ? (
-                    <Image
-                      source={{ uri: org.cover_image }}
-                      style={styles.coverImage}
-                      transition={200}
-                    />
-                  ) : (
-                    <LinearGradient
-                      colors={["#0f766e", "#115e59"]}
-                      style={styles.coverImage}
-                    />
-                  )}
-                  <View style={styles.cardContent}>
-                    <View style={styles.cardHeader}>
-                      <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <Text style={styles.groupName}>{org.name}</Text>
-                          {org.is_verified && (
-                            <View style={styles.verifiedBadge}>
-                              <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
-                            </View>
-                          )}
-                        </View>
-                        <Text style={[styles.memberCount, { color: '#0f766e' }]}>
-                          🏢 {(org.entity_type || 'other').toUpperCase()}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.description} numberOfLines={2}>
-                      {org.description || "No description available"}
-                    </Text>
-                    <TouchableOpacity
-                      style={[styles.feedButton, { backgroundColor: '#ccfbf1', borderColor: '#5eead4' }]}
-                      onPress={() => onViewOrganisationDetails?.(org)}
-                    >
-                      <Text style={[styles.feedButtonText, { color: '#0f766e' }]}>Open Workspace →</Text>
-                    </TouchableOpacity>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-
         {/* ──── Communities Section ──── */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeaderRow}>
@@ -317,9 +224,9 @@ const HomeScreen = ({
           )}
         </View>
 
-        {groups.length === 0 && organisations.length === 0 && (
+        {groups.length === 0 && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No communities or organisations found.</Text>
+            <Text style={styles.emptyText}>No communities found.</Text>
           </View>
         )}
       </ScrollView>
