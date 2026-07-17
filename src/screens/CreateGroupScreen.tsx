@@ -12,6 +12,7 @@ const PURPOSE_META: Record<GroupPurpose, { label: string; icon: string; color: s
     bereavement: { label: 'Bereavement Fund', icon: '🕊️', color: '#7c3aed' },
     excess:      { label: 'Insurance Excess', icon: '🚗', color: '#0284c7' },
     custom:      { label: 'Custom Fund', icon: '✨', color: '#059669' },
+    emergency:   { label: 'Emergency Fund', icon: '🆘', color: '#dc2626' },
 };
 
 interface CreateGroupScreenProps {

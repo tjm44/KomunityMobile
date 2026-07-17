@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type GroupPurpose = 'bereavement' | 'excess' | 'custom';
+export type GroupPurpose = 'bereavement' | 'excess' | 'custom' | 'emergency';
 
 export interface PurposeSelection {
     purpose: GroupPurpose;
