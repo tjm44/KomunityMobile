@@ -41,8 +41,7 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
 
     // Top Up States
     const [showTopUp, setShowTopUp] = useState(false);
-    const [topUpAmount, setTopUpAmount] = useState('');
-    const [voucherRef, setVoucherRef] = useState('');
+    const [voucherPin, setVoucherPin] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Send Money States
@@ -104,9 +103,8 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
     };
 
     const handleTopUp = async () => {
-        const error = validateAmount(topUpAmount, 0);
-        if (error) {
-            setTopUpError(error);
+        if (!voucherPin.trim()) {
+            setTopUpError('Please enter your 1Voucher PIN.');
             return;
         }
 
@@ -114,18 +112,16 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
         setIsSubmitting(true);
         try {
             await client.post('wallets/top_up/', {
-                amount: topUpAmount,
-                voucher_reference: voucherRef || `SIM_${Date.now()}`
+                voucher_pin: voucherPin.trim()
             });
-            Alert.alert('Success', `Successfully topped up ${formatCurrency(topUpAmount)}`);
+            Alert.alert('Success', 'Voucher redeemed successfully! Your balance has been updated.');
             setShowTopUp(false);
-            setTopUpAmount('');
-            setVoucherRef('');
-            fetchData(); // Refresh balance and history
+            setVoucherPin('');
+            fetchData();
         } catch (error: any) {
             console.error('Top up error:', error);
-            const errorMsg = error.response?.data?.error || 'Failed to process top-up. Please try again.';
-            Alert.alert('Error', errorMsg);
+            const errorMsg = error.response?.data?.error || 'Failed to redeem voucher. Please check your PIN and try again.';
+            setTopUpError(errorMsg);
         } finally {
             setIsSubmitting(false);
         }
@@ -519,56 +515,40 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                 >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Top Up Wallet</Text>
-                            <TouchableOpacity onPress={() => setShowTopUp(false)}>
+                            <Text style={styles.modalTitle}>Top Up with 1Voucher</Text>
+                            <TouchableOpacity onPress={() => { setShowTopUp(false); setVoucherPin(''); setTopUpError(null); }}>
                                 <Text style={styles.closeButton}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={styles.inputLabel}>Amount (USD)</Text>
+                        <Text style={[styles.inputLabel, { marginBottom: 4 }]}>1Voucher PIN</Text>
+                        <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 10 }}>
+                            Enter the 14–16 digit PIN from your physical 1Voucher.
+                        </Text>
                         <TextInput
-                            style={[styles.textInput, topUpError && styles.inputError]}
-                            placeholder="0.00"
-                            keyboardType="decimal-pad"
-                            value={topUpAmount}
+                            style={[styles.textInput, topUpError ? styles.inputError : null, { letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 18, textAlign: 'center' }]}
+                            placeholder="0000 0000 0000 00"
+                            keyboardType="number-pad"
+                            value={voucherPin}
                             onChangeText={(text) => {
-                                setTopUpAmount(text);
+                                setVoucherPin(text);
                                 if (topUpError) setTopUpError(null);
                             }}
                             placeholderTextColor="#9ca3af"
+                            maxLength={16}
+                            autoFocus
                         />
                         {topUpError && <Text style={styles.errorText}>{topUpError}</Text>}
 
-                        <View style={styles.presets}>
-                            {['10', '25', '50', '100'].map((amt) => (
-                                <TouchableOpacity
-                                    key={amt}
-                                    style={styles.presetBtn}
-                                    onPress={() => setTopUpAmount(amt)}
-                                >
-                                    <Text style={styles.presetText}>${amt}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-
-                        <Text style={styles.inputLabel}>Voucher Reference (Optional)</Text>
-                        <TextInput
-                            style={styles.textInput}
-                            placeholder="Enter voucher code"
-                            value={voucherRef}
-                            onChangeText={setVoucherRef}
-                            placeholderTextColor="#9ca3af"
-                        />
-
                         <TouchableOpacity
-                            style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+                            style={[styles.submitButton, isSubmitting && styles.disabledButton, { marginTop: 20 }]}
                             onPress={handleTopUp}
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? (
                                 <ActivityIndicator color="#ffffff" />
                             ) : (
-                                <Text style={styles.submitButtonText}>Confirm Deposit</Text>
+                                <Text style={styles.submitButtonText}>Redeem Voucher</Text>
                             )}
                         </TouchableOpacity>
                     </View>
