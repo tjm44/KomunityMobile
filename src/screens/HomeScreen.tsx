@@ -46,6 +46,7 @@ const HomeScreen = ({
   const [refreshing, setRefreshing] = useState(false);
   const { registerToken } = usePushNotifications();
   const [searchVisible, setSearchVisible] = useState(false);
+  const [activeGroupId, setActiveGroupId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -67,7 +68,20 @@ const HomeScreen = ({
   const fetchData = async () => {
     try {
       const groupsRes = await client.get("groups/mine/");
-      setGroups(groupsRes.data);
+      const fetchedGroups = groupsRes.data as Group[];
+      setGroups(fetchedGroups);
+
+      const activeGroups = fetchedGroups.filter((g) => g.is_selected);
+      if (activeGroups.length === 1) {
+        setActiveGroupId(activeGroups[0].id);
+      } else if (fetchedGroups.length > 0) {
+        setActiveGroupId((prev) => {
+          if (prev !== null && fetchedGroups.some((g) => g.id === prev)) {
+            return prev;
+          }
+          return fetchedGroups[0].id;
+        });
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -82,6 +96,7 @@ const HomeScreen = ({
   };
 
   const handleSelectGroup = async (groupId: number) => {
+    setActiveGroupId(groupId);
     try {
       await client.post(`groups/${groupId}/select/`);
       fetchData();
@@ -150,77 +165,123 @@ const HomeScreen = ({
               )}
             </View>
           ) : (
-            groups.map((item) => (
-              <TouchableOpacity
-                key={`group-${item.id}`}
-                onPress={() => onViewGroupDetails?.(item)}
-                activeOpacity={0.85}
-              >
-                <LinearGradient
-                  colors={["#ffffff", "#f1f5f9"]}
-                  style={styles.groupCard}
+            groups.map((item) => {
+              const isActive = item.id === activeGroupId;
+              return (
+                <TouchableOpacity
+                  key={`group-${item.id}`}
+                  onPress={() => onViewGroupDetails?.(item)}
+                  activeOpacity={0.85}
                 >
-                  {item.cover_image ? (
-                    <Image
-                      source={{ uri: item.cover_image }}
-                      style={styles.coverImage}
-                      transition={200}
-                    />
-                  ) : (
-                    <View
-                      style={[styles.coverImage, { backgroundColor: "#e5e7eb" }]}
-                    />
-                  )}
-                  <View style={styles.cardContent}>
-                    <View style={styles.cardHeader}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.groupName}>{item.name}</Text>
-                        <Text style={styles.memberCount}>
-                          {item.total_members} members
-                        </Text>
-                      </View>
-                    </View>
+                  <LinearGradient
+                    colors={isActive ? ["#ffffff", "#f1f5f9"] : ["#ffffff", "#f8fafc"]}
+                    style={[styles.groupCard, !isActive && styles.minimizedCard]}
+                  >
+                    {isActive ? (
+                      <>
+                        {item.cover_image ? (
+                          <Image
+                            source={{ uri: item.cover_image }}
+                            style={styles.coverImage}
+                            transition={200}
+                          />
+                        ) : (
+                          <View
+                            style={[styles.coverImage, { backgroundColor: "#e5e7eb" }]}
+                          />
+                        )}
+                        <View style={styles.cardContent}>
+                          <View style={styles.cardHeader}>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.groupName}>{item.name}</Text>
+                              <Text style={styles.memberCount}>
+                                {item.total_members} members
+                              </Text>
+                            </View>
+                          </View>
 
-                    <Text style={styles.description} numberOfLines={2}>
-                      {item.description || "No description available"}
-                    </Text>
+                          <Text style={styles.description} numberOfLines={2}>
+                            {item.description || "No description available"}
+                          </Text>
 
-                    <View style={styles.actionRow}>
-                      <TouchableOpacity
-                        style={[
-                          styles.detailsButton,
-                          item.is_selected && styles.selectedButton,
-                        ]}
-                        onPress={() => handleSelectGroup(item.id)}
-                      >
-                        <Text
-                          style={[
-                            styles.detailsButtonText,
-                            item.is_selected && styles.selectedButtonText,
-                          ]}
-                        >
-                          {item.is_selected ? "Selected" : "Select"}
-                        </Text>
-                      </TouchableOpacity>
+                          <View style={styles.actionRow}>
+                            <TouchableOpacity
+                              style={[
+                                styles.detailsButton,
+                                styles.selectedButton,
+                              ]}
+                              onPress={() => handleSelectGroup(item.id)}
+                            >
+                              <Text
+                                style={[
+                                  styles.detailsButtonText,
+                                  styles.selectedButtonText,
+                                ]}
+                              >
+                                Selected
+                              </Text>
+                            </TouchableOpacity>
 
-                      <TouchableOpacity
-                        style={styles.feedButton}
-                        onPress={() => onSelectGroup(item)}
-                      >
-                        <Text style={styles.feedButtonText}>Discussion Feed</Text>
-                        {item.unread_posts_count > 0 && (
-                          <View style={styles.notificationBadge}>
-                            <Text style={styles.badgeText}>
-                              {item.unread_posts_count}
-                            </Text>
+                            <TouchableOpacity
+                              style={styles.feedButton}
+                              onPress={() => onSelectGroup(item)}
+                            >
+                              <Text style={styles.feedButtonText}>Discussion Feed</Text>
+                              {item.unread_posts_count > 0 && (
+                                <View style={styles.notificationBadge}>
+                                  <Text style={styles.badgeText}>
+                                    {item.unread_posts_count}
+                                  </Text>
+                                </View>
+                              )}
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </>
+                    ) : (
+                      <View style={styles.minimizedContent}>
+                        {item.cover_image ? (
+                          <Image
+                            source={{ uri: item.cover_image }}
+                            style={styles.minimizedThumbnail}
+                            transition={200}
+                          />
+                        ) : (
+                          <View
+                            style={[styles.minimizedThumbnail, { backgroundColor: "#e2e8f0" }]}
+                          >
+                            <Text style={{ fontSize: 16 }}>👥</Text>
                           </View>
                         )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </LinearGradient>
-              </TouchableOpacity>
-            ))
+                        <View style={styles.minimizedTextContainer}>
+                          <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <Text style={[styles.minimizedGroupName, { flexShrink: 1 }]} numberOfLines={1}>
+                              {item.name}
+                            </Text>
+                            {item.unread_posts_count > 0 && (
+                              <View style={[styles.notificationBadge, { marginLeft: 6, flexShrink: 0 }]}>
+                                <Text style={styles.badgeText}>
+                                  {item.unread_posts_count}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text style={styles.minimizedMemberCount}>
+                            {item.total_members} members
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.minimizedSelectButton}
+                          onPress={() => handleSelectGroup(item.id)}
+                        >
+                          <Text style={styles.minimizedSelectButtonText}>Select</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+            })
           )}
         </View>
 
@@ -460,6 +521,49 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13,
     marginTop: 8,
+  },
+  minimizedCard: {
+    marginBottom: 12,
+  },
+  minimizedContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+  },
+  minimizedThumbnail: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    marginRight: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  minimizedTextContainer: {
+    flex: 1,
+    marginRight: 8,
+  },
+  minimizedGroupName: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1f2937",
+  },
+  minimizedMemberCount: {
+    fontSize: 13,
+    color: "#6b7280",
+    marginTop: 2,
+  },
+  minimizedSelectButton: {
+    backgroundColor: "#f0fdf4",
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#dcfce7",
+  },
+  minimizedSelectButtonText: {
+    color: "#16a34a",
+    fontWeight: "bold",
+    fontSize: 13,
   },
 });
 

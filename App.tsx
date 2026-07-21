@@ -87,6 +87,8 @@ export default function App() {
   const [previewingGroup, setPreviewingGroup] = React.useState<any>(null); // Discovery preview
   const [viewingCampaign, setViewingCampaign] = React.useState<any>(null); // For FundraisersScreen
   const [isCreatingCampaign, setIsCreatingCampaign] = React.useState<any>(null); // group object
+  const [managementRefreshKey, setManagementRefreshKey] = React.useState(0);
+  const [preselectedCampaignForWallet, setPreselectedCampaignForWallet] = React.useState<any>(null);
   
   // Organisation States
   const [isCreatingOrganisation, setIsCreatingOrganisation] = React.useState(false);
@@ -601,6 +603,8 @@ export default function App() {
                   onBack={() => setIsCreatingCampaign(null)}
                   onCreated={(campaign) => {
                     setIsCreatingCampaign(null);
+                    // Increment key so GroupManagementScreen re-fetches campaigns
+                    setManagementRefreshKey(k => k + 1);
                   }}
                 />
               </AnimatedScreen>
@@ -646,6 +650,11 @@ export default function App() {
                   isAdmin={viewingCampaign?.group_detail?.is_admin ?? false}
                   onBack={() => setViewingCampaign(null)}
                   onUpdated={(updated) => setViewingCampaign(updated)}
+                  onContributePress={(campaign) => {
+                    setPreselectedCampaignForWallet(campaign);
+                    setViewingCampaign(null);
+                    setActiveTab("wallet");
+                  }}
                 />
               </AnimatedScreen>
             ) : isCreatingGroup ? (
@@ -708,6 +717,10 @@ export default function App() {
                   onCreateCampaign={() => {
                     setIsCreatingCampaign(isManagingGroup);
                   }}
+                  onSelectCampaign={(campaign) => {
+                    setViewingCampaign(campaign);
+                  }}
+                  refreshKey={managementRefreshKey}
                 />
               </AnimatedScreen>
             ) : editingPost ? (
@@ -859,6 +872,8 @@ export default function App() {
                       onViewContributions={() =>
                         setIsViewingContributions(true)
                       }
+                      initialCampaign={preselectedCampaignForWallet}
+                      onClearInitialCampaign={() => setPreselectedCampaignForWallet(null)}
                     />
                   ))}
                 {activeTab === "profile" && (

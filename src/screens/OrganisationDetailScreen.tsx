@@ -47,8 +47,8 @@ const OrganisationDetailScreen = ({
             setOrgDetails(orgRes.data);
 
             // Fetch campaigns for this organisation
-            const campRes = await client.get(`campaigns/?organisation=${organisation.id}`);
-            setCampaigns(campRes.data);
+            const activeCampaigns = campRes.data.filter((c: any) => c.contributions_open);
+            setCampaigns(activeCampaigns);
         } catch (error) {
             console.error('Error fetching org details & campaigns:', error);
         } finally {

@@ -91,9 +91,9 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
     };
 
     const formatCurrency = (amount: string) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-ZA', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZAR',
         }).format(parseFloat(amount));
     };
 

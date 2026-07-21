@@ -11,6 +11,13 @@ import client from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
 import { validateAmount, validatePhone } from '../utils/validation';
 
+const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
+    bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement' },
+    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency' },
+    custom:      { icon: '✨', color: '#059669', label: 'Custom' },
+};
+
 interface Transaction {
     id: number;
     transaction_type: string;
@@ -31,7 +38,17 @@ interface Transaction {
     };
 }
 
-const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onViewContributions?: () => void }) => {
+const WalletScreen = ({ 
+    onBack, 
+    onViewContributions,
+    initialCampaign,
+    onClearInitialCampaign
+}: { 
+    onBack: () => void; 
+    onViewContributions?: () => void;
+    initialCampaign?: any;
+    onClearInitialCampaign?: () => void;
+}) => {
     const insets = useSafeAreaInsets();
     const [balance, setBalance] = useState<string>('0.00');
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -52,10 +69,10 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
     const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
     const [isSending, setIsSending] = useState(false);
 
-    // Contribute to Deceased States
+    // Contribute to Campaign States
     const [showContribute, setShowContribute] = useState(false);
-    const [deceasedMembers, setDeceasedMembers] = useState<any[]>([]);
-    const [selectedDeceased, setSelectedDeceased] = useState<any>(null);
+    const [activeCampaigns, setActiveCampaigns] = useState<any[]>([]);
+    const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
     const [contributeAmount, setContributeAmount] = useState('');
     const [isContributing, setIsContributing] = useState(false);
 
@@ -78,17 +95,33 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
     useEffect(() => {
         fetchData();
         fetchMembers();
-        fetchDeceasedMembers();
+        fetchActiveCampaigns();
     }, []);
+
+    useEffect(() => {
+        if (initialCampaign) {
+            setSelectedCampaign(initialCampaign);
+            setShowContribute(true);
+            onClearInitialCampaign?.();
+        }
+    }, [initialCampaign]);
+
+    const [activeGroupOrOrg, setActiveGroupOrOrg] = useState<string | null>(null);
 
     const fetchData = async () => {
         try {
-            const [balanceRes, transRes] = await Promise.all([
+            const [balanceRes, transRes, activeGroupRes] = await Promise.all([
                 client.get('wallets/balance/'),
-                client.get('transactions/')
+                client.get('transactions/'),
+                client.get('groups/mine/?active=true')
             ]);
             setBalance(balanceRes.data.balance);
             setTransactions(transRes.data);
+            if (activeGroupRes.data && activeGroupRes.data.length > 0) {
+                setActiveGroupOrOrg(activeGroupRes.data[0].name);
+            } else {
+                setActiveGroupOrOrg(null);
+            }
         } catch (error) {
             console.error('Error fetching wallet data:', error);
         } finally {
@@ -222,15 +255,10 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
             metadata.phone_number = withdrawPhoneNumber.trim();
             metadata.provider = withdrawProvider.trim();
         } else if (withdrawChannel === 'voucher') {
-            if (!withdrawVoucherCode.trim()) {
-                setWithdrawError('Voucher code is required.');
-                return;
-            }
             if (!withdrawPartner.trim()) {
                 setWithdrawError('Retail partner is required.');
                 return;
             }
-            metadata.voucher_code = withdrawVoucherCode.trim();
             metadata.partner = withdrawPartner.trim();
         }
 
@@ -268,18 +296,19 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
         }
     };
 
-    const fetchDeceasedMembers = async () => {
+    const fetchActiveCampaigns = async () => {
         try {
-            const response = await client.get('deceased/');
-            setDeceasedMembers(response.data);
+            const response = await client.get('campaigns/');
+            const openCampaigns = response.data.filter((c: any) => c.contributions_open);
+            setActiveCampaigns(openCampaigns);
         } catch (error) {
-            console.error('Error fetching deceased members:', error);
+            console.error('Error fetching active campaigns:', error);
         }
     };
 
-    const handleContributeToDeceased = async () => {
-        if (!selectedDeceased) {
-            setContributeError('Please select a deceased member to contribute to.');
+    const handleContributeToCampaign = async () => {
+        if (!selectedCampaign) {
+            setContributeError('Please select a campaign to contribute to.');
             return;
         }
 
@@ -291,28 +320,28 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
 
         setContributeError(null);
 
-        // Authenticate before contribution
-        const authenticated = await authenticateAction(`Authenticate to contribute ${formatCurrency(contributeAmount)} to ${selectedDeceased.deceased_detail.full_name}'s fund`);
+        const authenticated = await authenticateAction(`Authenticate to contribute ${formatCurrency(contributeAmount)} to "${selectedCampaign.title}"`);
         if (!authenticated) return;
 
         setIsContributing(true);
         try {
-            const response = await client.post('wallets/contribute_to_deceased/', {
-                deceased_id: selectedDeceased.id,
-                amount: contributeAmount
+            await client.post(`campaigns/${selectedCampaign.id}/contribute/`, {
+                amount: parseFloat(contributeAmount)
             });
             Alert.alert(
                 'Contribution Successful',
-                `You contributed ${formatCurrency(contributeAmount)} to ${selectedDeceased.deceased_detail.full_name}'s fund.\n\nTotal raised: ${formatCurrency(response.data.contribution.total_raised)}`
+                `You contributed ${formatCurrency(contributeAmount)} to "${selectedCampaign.title}".`
             );
             setShowContribute(false);
             setContributeAmount('');
-            setSelectedDeceased(null);
+            setSelectedCampaign(null);
             fetchData(); // Refresh balance and history
-            fetchDeceasedMembers(); // Refresh deceased list
+            fetchActiveCampaigns(); // Refresh campaigns list
         } catch (error: any) {
             console.error('Contribution error:', error);
-            const errorMsg = error.response?.data?.error || 'Failed to process contribution. Please try again.';
+            const errorMsg = error.response?.data?.error 
+                || error.response?.data?.non_field_errors?.[0]
+                || 'Failed to process contribution. Please try again.';
             Alert.alert('Error', errorMsg);
         } finally {
             setIsContributing(false);
@@ -320,9 +349,9 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
     };
 
     const formatCurrency = (amount: string) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-ZA', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'ZAR',
         }).format(parseFloat(amount));
     };
 
@@ -358,7 +387,15 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                     <Text style={styles.backButtonText}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>My Wallet</Text>
-                <View style={{ width: 40 }} />
+                {activeGroupOrOrg ? (
+                    <View style={styles.activeEntityContainer}>
+                        <Text style={styles.activeEntityText} numberOfLines={1}>
+                            {activeGroupOrOrg}
+                        </Text>
+                    </View>
+                ) : (
+                    <View style={{ width: 40 }} />
+                )}
             </View>
 
             <ScrollView
@@ -397,7 +434,7 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                             style={styles.actionButton}
                             onPress={() => setShowContribute(true)}
                         >
-                            <Text style={styles.actionIcon}>🕊️</Text>
+                            <Text style={styles.actionIcon}>🤝</Text>
                             <Text style={styles.actionText}>Contribute</Text>
                         </TouchableOpacity>
                         {onViewContributions && (
@@ -640,7 +677,7 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                                     </View>
                                 </View>
 
-                                <Text style={styles.inputLabel}>Amount (USD)</Text>
+                                <Text style={styles.inputLabel}>Amount (ZAR)</Text>
                                 <TextInput
                                     style={[styles.textInput, sendError && styles.inputError]}
                                     placeholder="0.00"
@@ -736,7 +773,7 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                             ))}
                         </View>
 
-                        <Text style={styles.inputLabel}>Amount (USD)</Text>
+                        <Text style={styles.inputLabel}>Amount (ZAR)</Text>
                         <TextInput
                             style={[styles.textInput, withdrawError && styles.inputError]}
                             placeholder="0.00"
@@ -807,18 +844,6 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
 
                         {withdrawChannel === 'voucher' && (
                             <>
-                                <Text style={styles.inputLabel}>Voucher Code</Text>
-                                <TextInput
-                                    style={[styles.textInput, withdrawError && styles.inputError]}
-                                    placeholder="ABC123XYZ"
-                                    value={withdrawVoucherCode}
-                                    onChangeText={(text) => {
-                                        setWithdrawVoucherCode(text);
-                                        if (withdrawError) setWithdrawError(null);
-                                    }}
-                                    placeholderTextColor="#9ca3af"
-                                />
-
                                 <Text style={styles.inputLabel}>Retail Partner</Text>
                                 <TextInput
                                     style={[styles.textInput, withdrawError && styles.inputError]}
@@ -862,50 +887,44 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                 >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Contribute to Memorial Fund</Text>
+                            <Text style={styles.modalTitle}>Contribute to Fundraiser</Text>
                             <TouchableOpacity onPress={() => {
                                 setShowContribute(false);
-                                setSelectedDeceased(null);
+                                setSelectedCampaign(null);
                                 setContributeAmount('');
                             }}>
                                 <Text style={styles.closeButton}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
-                        {!selectedDeceased ? (
+                        {!selectedCampaign ? (
                             <>
-                                <Text style={styles.inputLabel}>Select Deceased Member</Text>
+                                <Text style={styles.inputLabel}>Select Campaign / Fund</Text>
                                 <ScrollView style={styles.memberList}>
-                                    {deceasedMembers.map((deceased) => (
-                                        <TouchableOpacity
-                                            key={deceased.id}
-                                            style={styles.deceasedItem}
-                                            onPress={() => setSelectedDeceased(deceased)}
-                                        >
-                                            <View style={styles.memberAvatar}>
-                                                {deceased.deceased_detail.profile_picture ? (
-                                                    <Image
-                                                        source={{ uri: deceased.deceased_detail.profile_picture }}
-                                                        style={styles.avatarImg}
-                                                    />
-                                                ) : (
-                                                    <Text style={styles.avatarInitial}>
-                                                        {deceased.deceased_detail.full_name[0].toUpperCase()}
+                                    {activeCampaigns.map((campaign) => {
+                                        const meta = CAMPAIGN_TYPE_META[campaign.campaign_type] || CAMPAIGN_TYPE_META.custom;
+                                        return (
+                                            <TouchableOpacity
+                                                key={campaign.id}
+                                                style={styles.deceasedItem}
+                                                onPress={() => setSelectedCampaign(campaign)}
+                                            >
+                                                <View style={[styles.memberAvatar, { backgroundColor: `${meta.color}15`, justifyContent: 'center', alignItems: 'center' }]}>
+                                                    <Text style={{ fontSize: 20 }}>{meta.icon}</Text>
+                                                </View>
+                                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                                    <Text style={styles.memberName} numberOfLines={1}>{campaign.title}</Text>
+                                                    <Text style={styles.fundProgress}>
+                                                        Type: {meta.label} · Raised: {formatCurrency(campaign.total_raised.toString())}
                                                     </Text>
-                                                )}
-                                            </View>
-                                            <View style={{ flex: 1 }}>
-                                                <Text style={styles.memberName}>{deceased.deceased_detail.full_name}</Text>
-                                                <Text style={styles.fundProgress}>
-                                                    Raised: {formatCurrency(deceased.total_raised.toString())}
-                                                </Text>
-                                            </View>
-                                            <Text style={styles.chevron}>›</Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                    {deceasedMembers.length === 0 && (
+                                                </View>
+                                                <Text style={styles.chevron}>›</Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                    {activeCampaigns.length === 0 && (
                                         <View style={styles.emptyState}>
-                                            <Text style={styles.emptyStateText}>No active memorial funds at this time.</Text>
+                                            <Text style={styles.emptyStateText}>No active campaigns at this time.</Text>
                                         </View>
                                     )}
                                 </ScrollView>
@@ -913,30 +932,22 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                         ) : (
                             <>
                                 <View style={styles.selectedRecipient}>
-                                    <View style={styles.memberAvatar}>
-                                        {selectedDeceased.deceased_detail.profile_picture ? (
-                                            <Image
-                                                source={{ uri: selectedDeceased.deceased_detail.profile_picture }}
-                                                style={styles.avatarImg}
-                                            />
-                                        ) : (
-                                            <Text style={styles.avatarInitial}>
-                                                {selectedDeceased.deceased_detail.full_name[0].toUpperCase()}
-                                            </Text>
-                                        )}
+                                    <View style={[styles.memberAvatar, { backgroundColor: `${(CAMPAIGN_TYPE_META[selectedCampaign.campaign_type] || CAMPAIGN_TYPE_META.custom).color}15`, justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Text style={{ fontSize: 24 }}>{(CAMPAIGN_TYPE_META[selectedCampaign.campaign_type] || CAMPAIGN_TYPE_META.custom).icon}</Text>
                                     </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={styles.recipientName}>{selectedDeceased.deceased_detail.full_name}</Text>
+                                    <View style={{ flex: 1, marginLeft: 10 }}>
+                                        <Text style={styles.recipientName}>{selectedCampaign.title}</Text>
                                         <Text style={styles.fundProgress}>
-                                            Total raised: {formatCurrency(selectedDeceased.total_raised.toString())}
+                                            Total raised: {formatCurrency(selectedCampaign.total_raised.toString())}
+                                            {selectedCampaign.target_amount ? ` of ${formatCurrency(selectedCampaign.target_amount.toString())}` : ''}
                                         </Text>
-                                        <TouchableOpacity onPress={() => setSelectedDeceased(null)}>
+                                        <TouchableOpacity onPress={() => setSelectedCampaign(null)}>
                                             <Text style={styles.changeRecipient}>Change selection</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
 
-                                <Text style={styles.inputLabel}>Contribution Amount (USD)</Text>
+                                <Text style={styles.inputLabel}>Contribution Amount (ZAR)</Text>
                                 <TextInput
                                     style={[styles.textInput, contributeError && styles.inputError]}
                                     placeholder="0.00"
@@ -957,14 +968,14 @@ const WalletScreen = ({ onBack, onViewContributions }: { onBack: () => void; onV
                                             style={styles.presetBtn}
                                             onPress={() => setContributeAmount(amt)}
                                         >
-                                            <Text style={styles.presetText}>${amt}</Text>
+                                            <Text style={styles.presetText}>R{amt}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
 
                                 <TouchableOpacity
                                     style={[styles.submitButton, isContributing && styles.disabledButton]}
-                                    onPress={handleContributeToDeceased}
+                                    onPress={handleContributeToCampaign}
                                     disabled={isContributing}
                                 >
                                     {isContributing ? (
@@ -1386,6 +1397,22 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: '#9ca3af',
         marginLeft: 8,
+    },
+    activeEntityContainer: {
+        backgroundColor: '#eff6ff',
+        borderColor: '#dbeafe',
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        maxWidth: 120,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    activeEntityText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#2563eb',
     },
 });
 

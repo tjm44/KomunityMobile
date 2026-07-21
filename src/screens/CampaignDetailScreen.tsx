@@ -20,18 +20,22 @@ interface CampaignDetailScreenProps {
     isAdmin: boolean;
     onBack: () => void;
     onUpdated?: (campaign: any) => void;
+    onContributePress: (campaign: any) => void;
 }
 
-const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUpdated }: CampaignDetailScreenProps) => {
+const formatCurrency = (amount: string) => {
+    return new Intl.NumberFormat('en-ZA', {
+        style: 'currency',
+        currency: 'ZAR',
+    }).format(parseFloat(amount));
+};
+
+const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUpdated, onContributePress }: CampaignDetailScreenProps) => {
     const insets = useSafeAreaInsets();
     const [campaign, setCampaign] = useState(initialCampaign);
     const [refreshing, setRefreshing] = useState(false);
-    const [contributing, setContributing] = useState(false);
     const [disbursing, setDisbursing] = useState(false);
     const [closing, setClosing] = useState(false);
-    const [showContributeModal, setShowContributeModal] = useState(false);
-    const [amount, setAmount] = useState('');
-    const [note, setNote] = useState('');
 
     const meta = TYPE_META[campaign.campaign_type] ?? TYPE_META.custom;
 
@@ -48,30 +52,6 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
         }
     }, [campaign.id]);
 
-    const handleContribute = async () => {
-        const amtNum = parseFloat(amount);
-        if (!amount || isNaN(amtNum) || amtNum <= 0) {
-            Alert.alert('Invalid', 'Please enter a valid amount.');
-            return;
-        }
-        const ok = await authenticateAction('Authenticate to contribute to this campaign');
-        if (!ok) return;
-
-        setContributing(true);
-        try {
-            await client.post(`campaigns/${campaign.id}/contribute/`, { amount: amtNum, note });
-            setShowContributeModal(false);
-            setAmount('');
-            setNote('');
-            Alert.alert('✅ Thank you!', `R${amtNum.toFixed(2)} contributed successfully.`);
-            refresh();
-        } catch (e: any) {
-            const msg = e?.response?.data?.error || 'Contribution failed. Please try again.';
-            Alert.alert('Error', msg);
-        } finally {
-            setContributing(false);
-        }
-    };
 
     const handleDisburse = () => {
         Alert.alert(
@@ -182,38 +162,54 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                     )}
                 </View>
 
-                {progress !== null && (
+                {campaign.target_amount && (
                     <View style={styles.progressContainer}>
                         <View style={styles.progressTrack}>
-                            <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: meta.color }]} />
+                            <View
+                                style={[
+                                    styles.progressBar,
+                                    {
+                                        backgroundColor: meta.color,
+                                        width: `${Math.min(100, ((campaign.total_raised || 0) / campaign.target_amount) * 100)}%`
+                                    }
+                                ]}
+                            />
                         </View>
-                        <Text style={[styles.progressText, { color: meta.color }]}>{progress.toFixed(1)}%</Text>
+                        <Text style={[styles.progressText, { color: meta.color }]}>
+                            {Math.round(((campaign.total_raised || 0) / campaign.target_amount) * 100)}%
+                        </Text>
                     </View>
                 )}
 
-                {/* Status */}
                 <View style={styles.statusRow}>
                     <View style={[styles.statusPill, { backgroundColor: campaign.contributions_open ? '#d1fae5' : '#fee2e2' }]}>
                         <Text style={[styles.statusText, { color: campaign.contributions_open ? '#065f46' : '#991b1b' }]}>
-                            {campaign.contributions_open ? '🟢 Accepting Contributions' : '🔴 Closed'}
+                            {campaign.contributions_open ? '● Open for Contributions' : '● Closed'}
                         </Text>
                     </View>
-                    {campaign.funds_disbursed && (
-                        <View style={[styles.statusPill, { backgroundColor: '#dbeafe' }]}>
-                            <Text style={[styles.statusText, { color: '#1e40af' }]}>✅ Funds Disbursed</Text>
-                        </View>
-                    )}
                 </View>
 
-                {campaign.deadline && (
-                    <Text style={styles.deadline}>⏰ Deadline: {campaign.deadline}</Text>
+                {campaign.end_date && (
+                    <Text style={styles.deadline}>
+                        Deadline: {new Date(campaign.end_date).toLocaleDateString()}
+                    </Text>
                 )}
 
-                {/* Admin controls */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Beneficiary</Text>
+                    <Text style={styles.cardValue}>{campaign.beneficiary_detail?.full_name || 'Group Account'}</Text>
+                </View>
+
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Current Balance</Text>
+                    <Text style={styles.cardValue}>{formatCurrency(campaign.balance?.toString() || '0')}</Text>
+                </View>
+
                 {isAdmin && (
                     <View style={styles.adminSection}>
                         <Text style={styles.adminTitle}>Admin Controls</Text>
-                        {!campaign.funds_disbursed && campaign.beneficiary && (
+                        
+                        {parseFloat(campaign.balance || 0) > 0 && (
                             <TouchableOpacity
                                 style={[styles.adminBtn, { backgroundColor: meta.color }]}
                                 onPress={handleDisburse}
@@ -225,6 +221,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                                 }
                             </TouchableOpacity>
                         )}
+
                         {campaign.contributions_open && (
                             <TouchableOpacity
                                 style={[styles.adminBtn, { backgroundColor: '#64748b' }]}
@@ -246,7 +243,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                 <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                     <TouchableOpacity
                         style={[styles.contributeBtn, { backgroundColor: meta.color }]}
-                        onPress={() => setShowContributeModal(true)}
+                        onPress={() => onContributePress(campaign)}
                     >
                         <Text style={styles.contributeBtnText}>💙 Contribute to this Fund</Text>
                     </TouchableOpacity>
@@ -260,45 +257,6 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                     </View>
                 </View>
             )}
-
-            {/* Contribute modal */}
-            <Modal visible={showContributeModal} transparent animationType="slide">
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
-                        <Text style={styles.modalTitle}>Contribute to "{campaign.title}"</Text>
-                        <Text style={styles.modalSubtitle}>Amount will be deducted from your wallet balance.</Text>
-
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="Amount (e.g. 250)"
-                            value={amount}
-                            onChangeText={setAmount}
-                            keyboardType="numeric"
-                            autoFocus
-                        />
-                        <TextInput
-                            style={styles.modalInput}
-                            placeholder="Optional message..."
-                            value={note}
-                            onChangeText={setNote}
-                        />
-
-                        <TouchableOpacity
-                            style={[styles.modalConfirm, { backgroundColor: meta.color }, contributing && { opacity: 0.6 }]}
-                            onPress={handleContribute}
-                            disabled={contributing}
-                        >
-                            {contributing
-                                ? <ActivityIndicator color="#fff" />
-                                : <Text style={styles.modalConfirmText}>Confirm Contribution</Text>
-                            }
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setShowContributeModal(false)} style={styles.modalCancel}>
-                            <Text style={styles.modalCancelText}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 };

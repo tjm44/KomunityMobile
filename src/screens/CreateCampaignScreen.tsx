@@ -4,6 +4,7 @@ import {
     ScrollView, Alert, ActivityIndicator, Platform, KeyboardAvoidingView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import client from '../api/client';
 
 interface Member {
@@ -35,12 +36,28 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
-    const [deadline, setDeadline] = useState('');
+    const [deadlineDate, setDeadlineDate] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
     const [beneficiaryId, setBeneficiaryId] = useState<number | null>(null);
     const [members, setMembers] = useState<Member[]>([]);
     const [loadingMembers, setLoadingMembers] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showMemberPicker, setShowMemberPicker] = useState(false);
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(false);
+        if (selectedDate) {
+            setDeadlineDate(selectedDate);
+        }
+    };
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    };
 
     const selectedMeta = CAMPAIGN_TYPES.find(t => t.key === campaignType)!;
     const selectedBeneficiary = members.find(m => m.member_detail.id === beneficiaryId);
@@ -89,7 +106,9 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
             }
             if (beneficiaryId) payload.beneficiary = beneficiaryId;
             if (targetAmount) payload.target_amount = parseFloat(targetAmount);
-            if (deadline) payload.deadline = deadline;
+            if (deadlineDate) {
+                payload.deadline = deadlineDate.toISOString().split('T')[0];
+            }
 
             const res = await client.post('campaigns/', payload);
             Alert.alert('✅ Campaign Created', `"${res.data.title}" is now active!`);
@@ -222,13 +241,34 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
 
                     {/* Deadline */}
                     <Text style={styles.sectionLabel}>Deadline (optional)</Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="YYYY-MM-DD"
-                        value={deadline}
-                        onChangeText={setDeadline}
-                        maxLength={10}
-                    />
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity 
+                            style={[styles.input, { flex: 1, justifyContent: 'center' }]} 
+                            onPress={() => setShowDatePicker(true)}
+                        >
+                            <Text style={deadlineDate ? { color: '#1e293b', fontFamily: 'Outfit-Regular', fontSize: 15 } : { color: '#94a3b8', fontFamily: 'Outfit-Regular', fontSize: 15 }}>
+                                {deadlineDate ? formatDate(deadlineDate) : "Select a deadline date"}
+                            </Text>
+                        </TouchableOpacity>
+                        {deadlineDate && (
+                            <TouchableOpacity 
+                                style={{ marginLeft: 10, padding: 12, backgroundColor: '#fee2e2', borderRadius: 12, borderWidth: 1, borderColor: '#fecaca' }}
+                                onPress={() => setDeadlineDate(null)}
+                            >
+                                <Text style={{ color: '#ef4444', fontFamily: 'Outfit-Bold', fontSize: 14 }}>Clear</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {showDatePicker && (
+                        <DateTimePicker
+                            value={deadlineDate || new Date()}
+                            mode="date"
+                            display="default"
+                            minimumDate={new Date()}
+                            onChange={onDateChange}
+                        />
+                    )}
 
                     {campaignType === 'emergency' && (
                         <View style={styles.infoBox}>
