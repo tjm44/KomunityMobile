@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, SafeAreaView, KeyboardAvoidingView,
+    ScrollView, Alert, KeyboardAvoidingView,
     Platform, ActivityIndicator, Pressable, Image, Modal
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 import { validatePhone, validateName, validateDateOfBirth } from '../utils/validation';
 

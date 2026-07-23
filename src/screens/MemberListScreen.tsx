@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    SafeAreaView, ActivityIndicator, Alert
+    ActivityIndicator, Alert
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 
 interface Member {

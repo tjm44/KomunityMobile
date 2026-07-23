@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 import * as Haptics from "expo-haptics";
 import LoginScreen from "./src/screens/LoginScreen";
+import PhoneAuthScreen from "./src/screens/PhoneAuthScreen";
 import HomeScreen from "./src/screens/HomeScreen";
 import GroupFeedScreen from "./src/screens/GroupFeedScreen";
 import PostDetailScreen from "./src/screens/PostDetailScreen";
@@ -362,6 +363,14 @@ export default function App() {
     );
   }
 
+  const handlePhoneAuthSuccess = async (isNewUser?: boolean) => {
+    await checkProfileStatus();
+    if (isNewUser) {
+      setNeedsProfileSetup(true);
+    }
+    setIsLoggedIn(true);
+  };
+
   if (!isLoggedIn) {
     return (
       <ErrorBoundary>
@@ -369,32 +378,14 @@ export default function App() {
           <WelcomeScreen
             onShowLogin={() => {
               setShowWelcome(false);
-              setIsSigningUp(false);
             }}
             onShowSignUp={() => {
               setShowWelcome(false);
-              setIsSigningUp(true);
             }}
-          />
-        ) : isSigningUp ? (
-          <SignUpScreen
-            onSignUpSuccess={handleSignUpSuccess}
-            onBackToLogin={() => {
-              setIsSigningUp(false);
-            }}
-            onBack={() => setShowWelcome(true)}
-          />
-        ) : isResettingPassword ? (
-          <PasswordResetScreen
-            onBackToLogin={() => setIsResettingPassword(false)}
           />
         ) : (
-          <LoginScreen
-            onLoginSuccess={handleLoginSuccess}
-            onShowSignUp={() => {
-              setIsSigningUp(true);
-            }}
-            onForgotPassword={() => setIsResettingPassword(true)}
+          <PhoneAuthScreen
+            onLoginSuccess={handlePhoneAuthSuccess}
             onBack={() => setShowWelcome(true)}
           />
         )}

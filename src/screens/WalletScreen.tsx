@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    ActivityIndicator, SafeAreaView, ScrollView, RefreshControl,
+    ActivityIndicator, ScrollView, RefreshControl,
     Modal, TextInput, Alert, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import client from '../api/client';
 import { authenticateAction } from '../utils/biometrics';

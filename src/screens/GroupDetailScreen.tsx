@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, StyleSheet, Image, ScrollView,
-    TouchableOpacity, SafeAreaView, Dimensions, ActivityIndicator, Alert, RefreshControl
+    TouchableOpacity, Dimensions, ActivityIndicator, Alert, RefreshControl
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 
 const { width } = Dimensions.get('window');

@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     ScrollView, Alert, ActivityIndicator, Switch, Platform,
-    KeyboardAvoidingView, Image, Modal, SafeAreaView
+    KeyboardAvoidingView, Image, Modal
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import client from '../api/client';
 
