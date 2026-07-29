@@ -7,8 +7,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import client from '../api/client';
-import { validatePhone, validateName, validateDateOfBirth } from '../utils/validation';
+import client, { fetchFormData, appendFileToFormData } from '../api/client';
+
+import { validatePhone, validateName, validateDateOfBirth, validateEmail } from '../utils/validation';
 
 interface ProfileSetupProps {
     onComplete: () => void;
@@ -127,6 +128,7 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
 
     const handleSaveProfile = async () => {
         const newErrors: { [key: string]: string | null } = {
+            email: validateEmail(userEmail),
             firstName: validateName(firstName, 'First Name'),
             surname: validateName(surname, 'Surname'),
             phone: validatePhone(phone),
@@ -149,6 +151,7 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
 
             // Updated profile
             const formData = new FormData();
+            formData.append('email', userEmail.trim());
             formData.append('first_name', firstName.trim());
             formData.append('surname', surname.trim());
             formData.append('phone', phone.trim());
@@ -160,22 +163,11 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
             formData.append('bio', bio.trim());
 
             if (profilePicture) {
-                const filename = profilePicture.split('/').pop();
-                const match = /\.(\w+)$/.exec(filename || '');
-                const type = match ? `image/${match[1]}` : `image`;
-
-                formData.append('profile_picture', {
-                    uri: profilePicture,
-                    name: filename || 'profile.jpg',
-                    type,
-                } as any);
+                await appendFileToFormData(formData, 'profile_picture', profilePicture, 'profile.jpg');
             }
 
-            await client.patch(`profiles/${profileId}/`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            await fetchFormData('PATCH', `profiles/${profileId}/`, formData);
+
 
             Alert.alert('Welcome!', 'Your profile has been set up successfully.');
             onComplete();
@@ -213,9 +205,28 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
                                     </View>
                                 )}
                                 <View style={styles.editBadge}>
-                                    <Text style={styles.editBadgeText}>+</Text>
+                                    <Text style={styles.editBadgeText}>📷</Text>
                                 </View>
                             </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={{
+                                    marginTop: 10,
+                                    paddingHorizontal: 16,
+                                    paddingVertical: 8,
+                                    backgroundColor: '#eff6ff',
+                                    borderRadius: 20,
+                                    borderWidth: 1,
+                                    borderColor: '#bfdbfe',
+                                }}
+                                onPress={pickImage}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: '#2563eb' }}>
+                                    📷 {profilePicture ? 'Change Profile Photo' : 'Upload Profile Photo'}
+                                </Text>
+                            </TouchableOpacity>
+
                             {profilePicture && (
                                 <TouchableOpacity
                                     style={styles.photoCompleteBtn}
@@ -231,10 +242,17 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Account Email</Text>
                             <TextInput
-                                style={[styles.input, styles.readOnlyInput]}
+                                style={[styles.input, errors.email && styles.inputError]}
+                                placeholder="Email Address"
                                 value={userEmail}
-                                editable={false}
+                                onChangeText={(text) => {
+                                    setUserEmail(text);
+                                    if (errors.email) setErrors((prev: any) => ({ ...prev, email: null }));
+                                }}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
                             />
+                            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
                         </View>
 
                         <View style={styles.inputGroup}>

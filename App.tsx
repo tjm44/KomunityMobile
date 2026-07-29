@@ -374,21 +374,23 @@ export default function App() {
   if (!isLoggedIn) {
     return (
       <ErrorBoundary>
-        {showWelcome ? (
-          <WelcomeScreen
-            onShowLogin={() => {
-              setShowWelcome(false);
-            }}
-            onShowSignUp={() => {
-              setShowWelcome(false);
-            }}
-          />
-        ) : (
-          <PhoneAuthScreen
-            onLoginSuccess={handlePhoneAuthSuccess}
-            onBack={() => setShowWelcome(true)}
-          />
-        )}
+        <SafeAreaProvider>
+          {showWelcome ? (
+            <WelcomeScreen
+              onShowLogin={() => {
+                setShowWelcome(false);
+              }}
+              onShowSignUp={() => {
+                setShowWelcome(false);
+              }}
+            />
+          ) : (
+            <PhoneAuthScreen
+              onLoginSuccess={handlePhoneAuthSuccess}
+              onBack={() => setShowWelcome(true)}
+            />
+          )}
+        </SafeAreaProvider>
       </ErrorBoundary>
     );
   }
@@ -599,30 +601,6 @@ export default function App() {
                   }}
                 />
               </AnimatedScreen>
-            ) : viewingOrganisationDetails ? (
-              <AnimatedScreen animation="slideRight">
-                <OrganisationDetailScreen
-                  organisation={viewingOrganisationDetails}
-                  onBack={() => setViewingOrganisationDetails(null)}
-                  onEditOrganisation={() => setEditingOrganisation(viewingOrganisationDetails)}
-                  onViewFeed={() => {
-                    setSelectedGroup({ ...viewingOrganisationDetails, is_organisation: true });
-                    setViewingOrganisationDetails(null);
-                  }}
-                  onManage={() => {
-                    setIsManagingGroup(viewingOrganisationDetails);
-                  }}
-                  onLaunchFundraiser={() => {
-                    setIsCreatingCampaign({ ...viewingOrganisationDetails, is_organisation: true });
-                  }}
-                  onViewWallet={() => {
-                    setViewingGroupWallet(viewingOrganisationDetails);
-                  }}
-                  onSelectCampaign={(campaign: any) => {
-                    setViewingCampaign(campaign);
-                  }}
-                />
-              </AnimatedScreen>
             ) : previewingOrganisation ? (
               <AnimatedScreen animation="slideRight">
                 <OrganisationPreviewScreen
@@ -757,6 +735,30 @@ export default function App() {
                     if (viewingGroupDetails)
                       setViewingGroupDetails(updatedGroup);
                     if (selectedGroup) setSelectedGroup(updatedGroup);
+                  }}
+                />
+              </AnimatedScreen>
+            ) : viewingOrganisationDetails ? (
+              <AnimatedScreen animation="slideRight">
+                <OrganisationDetailScreen
+                  organisation={viewingOrganisationDetails}
+                  onBack={() => setViewingOrganisationDetails(null)}
+                  onEditOrganisation={() => setEditingOrganisation(viewingOrganisationDetails)}
+                  onViewFeed={() => {
+                    setSelectedGroup({ ...viewingOrganisationDetails, is_organisation: true });
+                    setViewingOrganisationDetails(null);
+                  }}
+                  onManage={() => {
+                    setIsManagingGroup(viewingOrganisationDetails);
+                  }}
+                  onLaunchFundraiser={() => {
+                    setIsCreatingCampaign({ ...viewingOrganisationDetails, is_organisation: true });
+                  }}
+                  onViewWallet={() => {
+                    setViewingGroupWallet(viewingOrganisationDetails);
+                  }}
+                  onSelectCampaign={(campaign: any) => {
+                    setViewingCampaign(campaign);
                   }}
                 />
               </AnimatedScreen>

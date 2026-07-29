@@ -4,6 +4,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
+import { getMediaUrl } from '../api/client';
 
 type TabName = 'home' | 'discovery' | 'wallet' | 'fundraisers' | 'profile';
 
@@ -63,7 +64,7 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture }: BottomN
                         >
                             {profilePicture ? (
                                 <Image
-                                    source={{ uri: profilePicture }}
+                                    source={{ uri: getMediaUrl(profilePicture) }}
                                     style={[styles.profilePic, isActive && styles.activeProfilePic]}
                                     transition={200}
                                 />

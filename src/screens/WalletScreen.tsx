@@ -7,7 +7,7 @@ import {
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import client from '../api/client';
+import client, { getMediaUrl } from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
 import { validateAmount, validatePhone } from '../utils/validation';
 
@@ -639,7 +639,7 @@ const WalletScreen = ({
                                                 <View style={styles.memberAvatar}>
                                                     {member.member_detail.profile_picture ? (
                                                         <Image
-                                                            source={{ uri: member.member_detail.profile_picture }}
+                                                            source={{ uri: getMediaUrl(member.member_detail.profile_picture) }}
                                                             style={styles.avatarImg}
                                                         />
                                                     ) : (
@@ -660,7 +660,7 @@ const WalletScreen = ({
                                     <View style={styles.memberAvatar}>
                                         {selectedRecipient.member_detail.profile_picture ? (
                                             <Image
-                                                source={{ uri: selectedRecipient.member_detail.profile_picture }}
+                                                source={{ uri: getMediaUrl(selectedRecipient.member_detail.profile_picture) }}
                                                 style={styles.avatarImg}
                                             />
                                         ) : (

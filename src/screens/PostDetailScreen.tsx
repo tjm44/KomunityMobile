@@ -9,7 +9,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import client from '../api/client';
+import client, { getMediaUrl } from '../api/client';
 
 const { width, height } = Dimensions.get('window');
 
@@ -176,7 +176,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
             style={styles.postCard}
         >
             <View style={styles.postHeader}>
-                <Image source={{ uri: post.author_detail.profile_picture || undefined }} style={styles.avatar} contentFit="cover" />
+                <Image source={{ uri: getMediaUrl(post.author_detail.profile_picture) }} style={styles.avatar} contentFit="cover" />
                 <View style={{ flex: 1 }}>
                     <Text style={styles.author}>{post.author_detail.full_name}</Text>
                     <Text style={styles.date}>{formatDate(post.created_at)}</Text>
@@ -201,7 +201,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                         data={post.images} horizontal pagingEnabled
                         showsHorizontalScrollIndicator={false}
                         renderItem={({ item }) => (
-                            <Image source={{ uri: item.image }} style={[styles.postImage, { width: width - 30 }]} />
+                            <Image source={{ uri: getMediaUrl(item.image) }} style={[styles.postImage, { width: width - 30 }]} />
                         )}
                         keyExtractor={i => i.id.toString()}
                         onMomentumScrollEnd={(e) => {
@@ -236,7 +236,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
 
     const renderComment = ({ item }: { item: Comment }) => (
         <View style={styles.commentRow}>
-            <Image source={{ uri: item.author_detail.profile_picture || undefined }} style={[styles.avatar, { width: 34, height: 34 }]} />
+            <Image source={{ uri: getMediaUrl(item.author_detail.profile_picture) }} style={[styles.avatar, { width: 34, height: 34 }]} />
             <View style={{ flex: 1, marginLeft: 10 }}>
                 <LinearGradient
                     colors={['#ffffff', '#dcfce7']}
@@ -258,7 +258,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                 {/* Replies */}
                 {item.replies?.map(r => (
                     <View key={r.id} style={{ flexDirection: 'row', marginTop: 12 }}>
-                        <Image source={{ uri: r.author_detail.profile_picture || undefined }} style={[styles.avatar, { width: 28, height: 28 }]} />
+                        <Image source={{ uri: getMediaUrl(r.author_detail.profile_picture) }} style={[styles.avatar, { width: 28, height: 28 }]} />
                         <View style={{ flex: 1, marginLeft: 10 }}>
                             <LinearGradient
                                 colors={['#ffffff', '#dcfce7']}

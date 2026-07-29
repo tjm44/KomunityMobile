@@ -5,7 +5,7 @@ import {
     TextInput
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import client from '../api/client';
+import client, { getMediaUrl } from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
 
 interface Member {
@@ -315,7 +315,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                 <View style={styles.avatarCircle}>
                     {item.member_detail.profile_picture ? (
                         <Image
-                            source={{ uri: item.member_detail.profile_picture }}
+                            source={{ uri: getMediaUrl(item.member_detail.profile_picture) }}
                             style={styles.avatarImg}
                         />
                     ) : (
@@ -390,7 +390,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                 <View style={styles.avatarCircle}>
                     {item.deceased_detail.profile_picture ? (
                         <Image
-                            source={{ uri: item.deceased_detail.profile_picture }}
+                            source={{ uri: getMediaUrl(item.deceased_detail.profile_picture) }}
                             style={styles.avatarImg}
                         />
                     ) : (

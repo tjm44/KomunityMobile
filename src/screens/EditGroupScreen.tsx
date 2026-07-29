@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import client from '../api/client';
+import client, { fetchFormData, appendFileToFormData } from '../api/client';
 
 interface EditGroupScreenProps {
     group: any;
@@ -117,22 +117,12 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             }
 
             if (newCoverImage) {
-                const uri = newCoverImage.uri;
-                const filename = uri.split('/').pop() || 'cover.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : 'image/jpeg';
-                formData.append('cover_image', {
-                    uri,
-                    name: filename,
-                    type,
-                } as any);
+                await appendFileToFormData(formData, 'cover_image', newCoverImage.uri, 'cover.jpg');
             } else if (removeCover) {
                 formData.append('cover_image', '');
             }
 
-            const response = await client.patch(`groups/${group.id}/`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const response = await fetchFormData('PATCH', `groups/${group.id}/`, formData);
 
             Alert.alert('Success', 'Community details have been updated!');
             onGroupUpdated(response.data);

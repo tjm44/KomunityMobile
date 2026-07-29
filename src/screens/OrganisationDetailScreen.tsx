@@ -47,6 +47,7 @@ const OrganisationDetailScreen = ({
             setOrgDetails(orgRes.data);
 
             // Fetch campaigns for this organisation
+            const campRes = await client.get(`campaigns/?organisation=${organisation.id}`);
             const activeCampaigns = campRes.data.filter((c: any) => c.contributions_open);
             setCampaigns(activeCampaigns);
         } catch (error) {
@@ -159,6 +160,35 @@ const OrganisationDetailScreen = ({
                         </View>
                     </View>
 
+                    {/* Contact & Leadership Card */}
+                    <View style={styles.card}>
+                        <Text style={styles.cardTitle}>Contact & Leadership</Text>
+                        <View style={styles.registryRow}>
+                            <Text style={styles.registryLabel}>Email</Text>
+                            <Text style={styles.registryValue}>{orgDetails.email || 'Not provided'}</Text>
+                        </View>
+                        <View style={styles.registryRow}>
+                            <Text style={styles.registryLabel}>Phone Number</Text>
+                            <Text style={styles.registryValue}>{orgDetails.phone_number || 'Not provided'}</Text>
+                        </View>
+                        <View style={{ marginTop: 12 }}>
+                            <Text style={[styles.registryLabel, { marginBottom: 6 }]}>Administrators</Text>
+                            <View style={{ gap: 6 }}>
+                                <Text style={styles.adminNameText}>👤 Primary Admin (Creator)</Text>
+                                {orgDetails.admin2_detail && (
+                                    <Text style={styles.adminNameText}>
+                                        👤 {orgDetails.admin2_detail.full_name || orgDetails.admin2_detail.email} (Co-Admin)
+                                    </Text>
+                                )}
+                                {orgDetails.admin3_detail && (
+                                    <Text style={styles.adminNameText}>
+                                        👤 {orgDetails.admin3_detail.full_name || orgDetails.admin3_detail.email} (Co-Admin)
+                                    </Text>
+                                )}
+                            </View>
+                        </View>
+                    </View>
+
                     {/* Campaigns List */}
                     <View style={styles.card}>
                         <View style={styles.campaignHeader}>
@@ -268,6 +298,7 @@ const styles = StyleSheet.create({
     campTitle: { fontSize: 14, fontWeight: '700', color: '#334155' },
     campRaised: { fontSize: 12, color: '#64748b', marginTop: 2 },
     campChevron: { fontSize: 18, color: '#94a3b8', fontWeight: '700' },
+    adminNameText: { fontSize: 14, color: '#1e293b', fontWeight: '500', fontFamily: 'Outfit-Regular' },
 });
 
 export default OrganisationDetailScreen;

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import client from '../api/client';
+import client, { getMediaUrl } from '../api/client';
 
 interface Member {
     id: number;
@@ -57,7 +57,7 @@ const MemberListScreen = ({ group, onBack, onSelectMember }: MemberListProps) =>
                 <View style={styles.avatarCircle}>
                     {item.member_detail.profile_picture ? (
                         <Image
-                            source={{ uri: item.member_detail.profile_picture }}
+                            source={{ uri: getMediaUrl(item.member_detail.profile_picture) }}
                             style={styles.avatarImg}
                             transition={200}
                         />

@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
-    ScrollView, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform
+    ScrollView, Alert, ActivityIndicator, Image, KeyboardAvoidingView, Platform,
+    Modal, SafeAreaView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import client from '../api/client';
+import client, { fetchFormData, appendFileToFormData } from '../api/client';
 
 interface EditOrganisationScreenProps {
     organisation: any;
@@ -19,11 +20,33 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
     const [description, setDescription] = useState(organisation.description || '');
     const [registrationNumber, setRegistrationNumber] = useState(organisation.registration_number || '');
     const [entityType, setEntityType] = useState(organisation.entity_type || 'ngo');
+    const [email, setEmail] = useState(organisation.email || '');
+    const [phone, setPhone] = useState(organisation.phone_number || '');
+
+    const [profiles, setProfiles] = useState<any[]>([]);
+    const [admin2, setAdmin2] = useState<any>(organisation.admin2 || null);
+    const [admin3, setAdmin3] = useState<any>(organisation.admin3 || null);
+    const [showAdmin2Modal, setShowAdmin2Modal] = useState(false);
+    const [showAdmin3Modal, setShowAdmin3Modal] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
     const [loading, setLoading] = useState(false);
     const [coverImage, setCoverImage] = useState<string | null>(organisation.cover_image || null);
     const [newCoverImage, setNewCoverImage] = useState<any>(null);
     const [removeCover, setRemoveCover] = useState(false);
     const [requestingVerification, setRequestingVerification] = useState(false);
+
+    useEffect(() => {
+        const loadProfiles = async () => {
+            try {
+                const res = await client.get('profiles/');
+                setProfiles(res.data);
+            } catch (err) {
+                console.error('Error fetching profiles:', err);
+            }
+        };
+        loadProfiles();
+    }, []);
 
     const pickCoverImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -59,6 +82,10 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
             description.trim() !== (organisation.description || '') ||
             registrationNumber.trim() !== (organisation.registration_number || '') ||
             entityType !== (organisation.entity_type || 'ngo') ||
+            email.trim() !== (organisation.email || '') ||
+            phone.trim() !== (organisation.phone_number || '') ||
+            admin2 !== (organisation.admin2 || null) ||
+            admin3 !== (organisation.admin3 || null) ||
             newCoverImage !== null ||
             removeCover
         );
@@ -77,24 +104,18 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
             formData.append('description', description.trim());
             formData.append('registration_number', registrationNumber.trim());
             formData.append('entity_type', entityType);
+            formData.append('email', email.trim());
+            formData.append('phone_number', phone.trim());
+            formData.append('admin2', admin2 ? String(admin2) : '');
+            formData.append('admin3', admin3 ? String(admin3) : '');
 
             if (newCoverImage) {
-                const uri = newCoverImage.uri;
-                const filename = uri.split('/').pop() || 'cover.jpg';
-                const match = /\.(\w+)$/.exec(filename);
-                const type = match ? `image/${match[1]}` : 'image/jpeg';
-                formData.append('cover_image', {
-                    uri,
-                    name: filename,
-                    type,
-                } as any);
+                await appendFileToFormData(formData, 'cover_image', newCoverImage.uri, 'cover.jpg');
             } else if (removeCover) {
                 formData.append('cover_image', '');
             }
 
-            const response = await client.patch(`organisations/${organisation.id}/`, formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const response = await fetchFormData('PATCH', `organisations/${organisation.id}/`, formData);
 
             Alert.alert('Success', 'Organisation details updated!');
             onOrganisationUpdated(response.data);
@@ -218,6 +239,79 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
                         />
                     </View>
 
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Organisation Email</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. contact@organisation.org"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                    </View>
+
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Organisation Phone Number</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="e.g. +1234567890"
+                            value={phone}
+                            onChangeText={setPhone}
+                            keyboardType="phone-pad"
+                            autoCorrect={false}
+                        />
+                    </View>
+
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Second Administrator (Optional)</Text>
+                        <View style={styles.pickerRow}>
+                            <TouchableOpacity 
+                                style={styles.pickerButton} 
+                                onPress={() => {
+                                    setSearchQuery('');
+                                    setShowAdmin2Modal(true);
+                                }}
+                            >
+                                <Text style={styles.pickerButtonText}>
+                                    {admin2 
+                                        ? profiles.find(p => p.user === admin2)?.full_name || 'Selected Admin'
+                                        : 'Select Second Admin...'}
+                                </Text>
+                            </TouchableOpacity>
+                            {admin2 && (
+                                <TouchableOpacity style={styles.clearBtn} onPress={() => setAdmin2(null)}>
+                                    <Text style={styles.clearBtnText}>Clear</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+
+                    <View style={styles.formSection}>
+                        <Text style={styles.label}>Third Administrator (Optional)</Text>
+                        <View style={styles.pickerRow}>
+                            <TouchableOpacity 
+                                style={styles.pickerButton} 
+                                onPress={() => {
+                                    setSearchQuery('');
+                                    setShowAdmin3Modal(true);
+                                }}
+                            >
+                                <Text style={styles.pickerButtonText}>
+                                    {admin3 
+                                        ? profiles.find(p => p.user === admin3)?.full_name || 'Selected Admin'
+                                        : 'Select Third Admin...'}
+                                </Text>
+                            </TouchableOpacity>
+                            {admin3 && (
+                                <TouchableOpacity style={styles.clearBtn} onPress={() => setAdmin3(null)}>
+                                    <Text style={styles.clearBtnText}>Clear</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    </View>
+
                     {/* Verification Status Card */}
                     <View style={[
                         styles.verificationCard,
@@ -268,6 +362,80 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            {/* Admin 2 Selection Modal */}
+            <Modal visible={showAdmin2Modal} animationType="slide" transparent={true}>
+                <SafeAreaView style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Select Second Admin</Text>
+                        <TextInput
+                            style={styles.searchBar}
+                            placeholder="Search by name or email..."
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            autoCapitalize="none"
+                        />
+                        <ScrollView style={styles.profilesList}>
+                            {profiles.filter(p => {
+                                const q = searchQuery.toLowerCase();
+                                return (p.full_name || '').toLowerCase().includes(q) || (p.email || '').toLowerCase().includes(q);
+                            }).map(p => (
+                                <TouchableOpacity 
+                                    key={p.id} 
+                                    style={styles.profileItem}
+                                    onPress={() => {
+                                        setAdmin2(p.user);
+                                        setShowAdmin2Modal(false);
+                                    }}
+                                >
+                                    <Text style={styles.profileItemName}>{p.full_name || 'No Name'}</Text>
+                                    <Text style={styles.profileItemEmail}>{p.email}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity style={styles.closeModalBtn} onPress={() => setShowAdmin2Modal(false)}>
+                            <Text style={styles.closeModalBtnText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaView>
+            </Modal>
+
+            {/* Admin 3 Selection Modal */}
+            <Modal visible={showAdmin3Modal} animationType="slide" transparent={true}>
+                <SafeAreaView style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Select Third Admin</Text>
+                        <TextInput
+                            style={styles.searchBar}
+                            placeholder="Search by name or email..."
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            autoCapitalize="none"
+                        />
+                        <ScrollView style={styles.profilesList}>
+                            {profiles.filter(p => {
+                                const q = searchQuery.toLowerCase();
+                                return (p.full_name || '').toLowerCase().includes(q) || (p.email || '').toLowerCase().includes(q);
+                            }).map(p => (
+                                <TouchableOpacity 
+                                    key={p.id} 
+                                    style={styles.profileItem}
+                                    onPress={() => {
+                                        setAdmin3(p.user);
+                                        setShowAdmin3Modal(false);
+                                    }}
+                                >
+                                    <Text style={styles.profileItemName}>{p.full_name || 'No Name'}</Text>
+                                    <Text style={styles.profileItemEmail}>{p.email}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+                        <TouchableOpacity style={styles.closeModalBtn} onPress={() => setShowAdmin3Modal(false)}>
+                            <Text style={styles.closeModalBtnText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </SafeAreaView>
+            </Modal>
         </View>
     );
 };
@@ -315,6 +483,92 @@ const styles = StyleSheet.create({
     saveButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, fontFamily: 'Outfit-Bold' },
     cancelButton: { padding: 12, alignItems: 'center' },
     cancelButtonText: { color: '#6b7280', fontSize: 15, fontWeight: '500' },
+    pickerRow: {
+        flexDirection: 'row',
+        gap: 10,
+        alignItems: 'center',
+    },
+    pickerButton: {
+        flex: 1,
+        backgroundColor: '#f9fafb',
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+        borderRadius: 12,
+        padding: 16,
+    },
+    pickerButtonText: {
+        fontSize: 16,
+        color: '#111827',
+        fontFamily: 'Outfit-Regular',
+    },
+    clearBtn: {
+        backgroundColor: '#fee2e2',
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#fca5a5',
+    },
+    clearBtnText: {
+        color: '#dc2626',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#ffffff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        padding: 24,
+        maxHeight: '80%',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#111827',
+        fontFamily: 'Outfit-Bold',
+        marginBottom: 16,
+    },
+    searchBar: {
+        backgroundColor: '#f3f4f6',
+        borderRadius: 12,
+        padding: 12,
+        fontSize: 16,
+        color: '#111827',
+        marginBottom: 16,
+    },
+    profilesList: {
+        marginBottom: 16,
+    },
+    profileItem: {
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f3f4f6',
+    },
+    profileItemName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1f2937',
+    },
+    profileItemEmail: {
+        fontSize: 14,
+        color: '#6b7280',
+    },
+    closeModalBtn: {
+        backgroundColor: '#374151',
+        borderRadius: 12,
+        padding: 16,
+        alignItems: 'center',
+    },
+    closeModalBtnText: {
+        color: '#ffffff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
 });
 
 export default EditOrganisationScreen;

@@ -35,9 +35,10 @@ const TOKEN_KEY = 'komunity_auth_token';
 
 const client = axios.create({
     baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    // Do NOT set a default Content-Type here.
+    // When FormData is passed, axios must auto-generate
+    // 'multipart/form-data; boundary=...' with the correct boundary.
+    // Setting 'application/json' here would override that and break file uploads.
 });
 
 export const setAuthToken = (token: string | null) => {
@@ -93,6 +94,119 @@ export const clearToken = async (): Promise<void> => {
     } catch (error) {
         console.error('Error clearing token from secure storage:', error);
     }
+};
+
+/**
+ * Upload FormData (including files) using native fetch instead of axios.
+ *
+ * WHY: Axios has a known React Native bug — it either serialises FormData as a
+ * JSON string or sends file parts as empty bodies when given a `file://` URI.
+ * React Native's built-in `fetch` reads local file URIs correctly and sets the
+ * multipart boundary automatically when you pass a FormData body without
+ * explicitly setting Content-Type.
+ *
+ * @param method  HTTP method ('PATCH' | 'POST' | 'PUT')
+ * @param path    Path relative to API_BASE_URL (e.g. 'profiles/27/')
+ * @param formData FormData object (may contain file fields)
+ * @returns Parsed JSON response data
+ * @throws { response: { data, status } } — same shape as an axios error so
+ *         callers can keep the same error-handling code.
+ */
+export const fetchFormData = async (
+    method: 'POST' | 'PATCH' | 'PUT',
+    path: string,
+    formData: FormData,
+): Promise<any> => {
+    const url = `${API_BASE_URL}${path}`;
+
+    // Grab the auth token that was set via setAuthToken()
+    const authHeader = client.defaults.headers.common['Authorization'] as string | undefined;
+
+    const headers: Record<string, string> = {};
+    if (authHeader) {
+        headers['Authorization'] = authHeader;
+    }
+    // DO NOT set Content-Type here — fetch will set it automatically with the
+    // correct boundary when the body is a FormData instance.
+
+    const response = await fetch(url, { method, headers, body: formData });
+
+    let data: any = null;
+    const text = await response.text();
+    try {
+        data = text ? JSON.parse(text) : null;
+    } catch {
+        data = text;
+    }
+
+    if (!response.ok) {
+        // Match the shape of an axios error so callers don't need changes
+        const err: any = new Error(`HTTP ${response.status}`);
+        err.response = { status: response.status, data };
+        throw err;
+    }
+
+    return data;
+};
+
+/**
+ * Utility to append an image file to FormData correctly on Web and React Native.
+ */
+export const appendFileToFormData = async (
+    formData: FormData,
+    fieldName: string,
+    imageUri: string,
+    defaultFilename = 'profile.jpg'
+): Promise<void> => {
+    let filename = imageUri.split('/').pop() || defaultFilename;
+    if (!filename.includes('.')) {
+        filename += '.jpg';
+    }
+
+    const extMatch = /\.(\w+)$/.exec(filename);
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'jpg';
+    let type = 'image/jpeg';
+    if (ext === 'png') type = 'image/png';
+    else if (ext === 'heic') type = 'image/heic';
+    else if (ext === 'webp') type = 'image/webp';
+
+    if (Platform.OS === 'web') {
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+        formData.append(fieldName, blob, filename);
+    } else {
+        formData.append(fieldName, {
+            uri: imageUri,
+            name: filename,
+            type,
+        } as any);
+    }
+};
+
+/**
+ * Get full URL for media items, replacing localhost/127.0.0.1 with current backend host IP
+ */
+export const getMediaUrl = (path?: string | null): string | undefined => {
+    if (!path) return undefined;
+
+    let url = path;
+
+    // If Django serialized absolute URL with localhost/127.0.0.1, replace with current server base URL
+    if (url.startsWith('http://127.0.0.1:8000') || url.startsWith('http://localhost:8000')) {
+        const baseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+        url = url.replace(/^http:\/\/(127\.0\.0\.1|localhost):8000/, baseUrl);
+    } else if (
+        !url.startsWith('http://') &&
+        !url.startsWith('https://') &&
+        !url.startsWith('file://') &&
+        !url.startsWith('data:') &&
+        !url.startsWith('blob:')
+    ) {
+        const baseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+        url = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+
+    return url;
 };
 
 export default client;

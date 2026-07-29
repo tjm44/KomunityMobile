@@ -4,7 +4,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import client from '../api/client';
+import client, { getMediaUrl } from '../api/client';
 import { FeedPlaceholder } from '../components/Loaders';
 
 interface Author {
@@ -262,7 +262,7 @@ const GroupFeedScreen = ({ group, onBack, onSelectPost, onCreatePost }: GroupFee
                                 <View style={styles.avatarCircle}>
                                     {item.author_detail.profile_picture ? (
                                         <Image
-                                            source={{ uri: item.author_detail.profile_picture }}
+                                            source={{ uri: getMediaUrl(item.author_detail.profile_picture) }}
                                             style={styles.avatarImage}
                                             contentFit="cover"
                                             transition={200}

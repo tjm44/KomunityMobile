@@ -37,9 +37,11 @@ const CampaignCard = ({ campaign, onPress }: { campaign: any; onPress: () => voi
                     <Text style={styles.typeBadgeIcon}>{meta.icon}</Text>
                     <Text style={[styles.typeBadgeLabel, { color: meta.color }]}>{meta.label}</Text>
                 </View>
-                <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedText}>✓ Verified</Text>
-                </View>
+                {campaign.organisation_detail?.is_verified && (
+                    <View style={styles.verifiedBadge}>
+                        <Text style={styles.verifiedText}>✓ Verified</Text>
+                    </View>
+                )}
             </View>
 
             <Text style={styles.cardTitle}>{campaign.title}</Text>

@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import client from '../api/client';
+import client, { fetchFormData, appendFileToFormData } from '../api/client';
 
 interface Group {
     id: number;
@@ -132,22 +132,8 @@ const CreatePostScreen = ({ group, post, onBack, onPostCreated }: CreatePostProp
                 for (const imgWrapper of newImages) {
                     const formData = new FormData();
                     formData.append('post', postId.toString());
-
-                    const filename = imgWrapper.uri.split('/').pop() || 'upload.jpg';
-                    const match = /\.(\w+)$/.exec(filename);
-                    const type = match ? `image/${match[1]}` : `image`;
-
-                    formData.append('image', {
-                        uri: imgWrapper.uri,
-                        name: filename,
-                        type,
-                    } as any);
-
-                    await client.post('post-images/', formData, {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    });
+                    await appendFileToFormData(formData, 'image', imgWrapper.uri, 'upload.jpg');
+                    await fetchFormData('POST', 'post-images/', formData);
                 }
             }
 

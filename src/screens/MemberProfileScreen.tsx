@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import client from '../api/client';
+import client, { getMediaUrl } from '../api/client';
 
 const { width } = Dimensions.get('window');
 
@@ -101,7 +101,7 @@ const MemberProfileScreen = ({ membership, isAdmin, onBack, onStatusChange }: Me
                     <View style={styles.avatarContainer}>
                         {profile.profile_picture ? (
                             <Image
-                                source={{ uri: profile.profile_picture }}
+                                source={{ uri: getMediaUrl(profile.profile_picture) }}
                                 style={styles.avatar}
                                 transition={200}
                             />

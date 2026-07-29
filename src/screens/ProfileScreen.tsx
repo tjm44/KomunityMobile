@@ -7,7 +7,8 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import client from '../api/client';
+import client, { fetchFormData, appendFileToFormData, getMediaUrl } from '../api/client';
+
 
 interface Profile {
     id: number;
@@ -57,6 +58,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
     const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
 
     useEffect(() => {
         if (autoShowKyc) {
@@ -142,6 +144,9 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
     }, [fetchProfile, fetchOrganisations]);
 
     const pickImage = async () => {
+        if (!isEditing) {
+            setIsEditing(true);
+        }
         if (Platform.OS === 'web') {
             handleGalleryLaunch();
         } else {
@@ -219,22 +224,11 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
             formData.append('bio', bio);
 
             if (profilePicture) {
-                const filename = profilePicture.split('/').pop();
-                const match = /\.(\w+)$/.exec(filename || '');
-                const type = match ? `image/${match[1]}` : `image`;
-
-                formData.append('profile_picture', {
-                    uri: profilePicture,
-                    name: filename || 'profile.jpg',
-                    type,
-                } as unknown as Blob);
+                await appendFileToFormData(formData, 'profile_picture', profilePicture, 'profile.jpg');
             }
 
-            await client.patch(`profiles/${profile.profile.id}/`, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            await fetchFormData('PATCH', `profiles/${profile.profile.id}/`, formData);
+
 
             showAlert('Success', 'Profile updated successfully');
             setIsEditing(false);
@@ -332,7 +326,13 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     <Text style={styles.backButtonText}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Profile</Text>
-                <View style={{ width: 40 }} />
+                {!isEditing ? (
+                    <TouchableOpacity onPress={() => setShowMenu(true)} style={styles.menuButton}>
+                        <Text style={styles.menuButtonText}>⋮</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <View style={{ width: 40 }} />
+                )}
             </View>
 
             <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: isEditing ? 180 : 40 }}>
@@ -340,8 +340,8 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                 <View style={styles.profileHeader}>
                     <TouchableOpacity
                         style={styles.avatarContainer}
-                        onPress={isEditing ? pickImage : undefined}
-                        disabled={!isEditing}
+                        onPress={pickImage}
+                        activeOpacity={0.8}
                     >
                         {profilePicture ? (
                             <Image
@@ -351,7 +351,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                             />
                         ) : profile?.profile?.profile_picture ? (
                             <Image
-                                source={{ uri: profile.profile.profile_picture }}
+                                source={{ uri: getMediaUrl(profile.profile.profile_picture) }}
                                 style={styles.avatar}
                                 transition={200}
                             />
@@ -362,11 +362,17 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                                 </Text>
                             </View>
                         )}
-                        {isEditing && (
-                            <View style={styles.editBadge}>
-                                <Text style={styles.editBadgeText}>✎</Text>
-                            </View>
-                        )}
+                        <View style={styles.editBadge}>
+                            <Text style={styles.editBadgeText}>📷</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.changePhotoButton}
+                        onPress={pickImage}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.changePhotoButtonText}>📷 Change Profile Photo</Text>
                     </TouchableOpacity>
                     <Text style={styles.profileName}>
                         {isEditing ? `${firstName} ${surname}`.trim() || 'New User' : profile?.profile?.full_name || 'No name set'}
@@ -585,33 +591,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     </View>
                 )}
 
-                {/* Actions (only non-editing actions remain in ScrollView) */}
-                {!isEditing && (
-                    <View style={styles.section}>
-                        {!profile?.profile?.is_verified && (
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: '#10b981', marginBottom: 12 }]}
-                                onPress={() => setShowKycModal(true)}
-                            >
-                                <Text style={styles.actionButtonText}>Verify Profile (KYC) 🛡️</Text>
-                            </TouchableOpacity>
-                        )}
 
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => setIsEditing(true)}
-                        >
-                            <Text style={styles.actionButtonText}>Edit Profile</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.logoutButton]}
-                            onPress={handleLogout}
-                        >
-                            <Text style={[styles.actionButtonText, styles.logoutText]}>Logout</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
             </ScrollView>
 
             {/* Internal Image Review Modal */}
@@ -753,6 +733,49 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     </View>
                 </View>
             </Modal>
+
+            {/* Options Menu Modal */}
+            <Modal
+                visible={showMenu}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowMenu(false)}
+            >
+                <Pressable style={styles.menuOverlay} onPress={() => setShowMenu(false)}>
+                    <View style={[styles.menuDropdown, { top: insets.top + 60 }]}>
+                        {!profile?.profile?.is_verified && (
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={() => {
+                                    setShowMenu(false);
+                                    setShowKycModal(true);
+                                }}
+                            >
+                                <Text style={styles.menuItemText}>Verify Profile (KYC) 🛡️</Text>
+                            </TouchableOpacity>
+                        )}
+                        <TouchableOpacity
+                            style={styles.menuItem}
+                            onPress={() => {
+                                setShowMenu(false);
+                                setIsEditing(true);
+                            }}
+                        >
+                            <Text style={styles.menuItemText}>Edit Profile ✎</Text>
+                        </TouchableOpacity>
+                        <View style={styles.menuDivider} />
+                        <TouchableOpacity
+                            style={[styles.menuItem, styles.menuItemLogout]}
+                            onPress={() => {
+                                setShowMenu(false);
+                                handleLogout();
+                            }}
+                        >
+                            <Text style={[styles.menuItemText, styles.menuItemLogoutText]}>Logout ⤶</Text>
+                        </TouchableOpacity>
+                    </View>
+                </Pressable>
+            </Modal>
         </View>
     );
 };
@@ -845,6 +868,24 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: 14,
         fontWeight: 'bold',
+    },
+    changePhotoButton: {
+        marginTop: 10,
+        marginBottom: 6,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#eff6ff',
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#bfdbfe',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+    },
+    changePhotoButtonText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#2563eb',
     },
     profileName: {
         fontSize: 24,
@@ -1165,6 +1206,59 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 15,
         fontFamily: 'Outfit-Bold',
+    },
+    menuButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#f3f4f6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    menuButtonText: {
+        fontSize: 22,
+        color: '#4b5563',
+        fontWeight: 'bold',
+        marginTop: -4,
+    },
+    menuOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    },
+    menuDropdown: {
+        position: 'absolute',
+        right: 16,
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        paddingVertical: 8,
+        minWidth: 180,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: '#e5e7eb',
+    },
+    menuItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    menuItemText: {
+        fontSize: 14,
+        color: '#374151',
+        fontWeight: '600',
+    },
+    menuItemLogout: {
+        backgroundColor: '#fee2e2',
+    },
+    menuItemLogoutText: {
+        color: '#dc2626',
+    },
+    menuDivider: {
+        height: 1,
+        backgroundColor: '#e5e7eb',
+        marginVertical: 4,
     },
 });
 
