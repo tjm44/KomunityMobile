@@ -37,6 +37,16 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
     const [disbursing, setDisbursing] = useState(false);
     const [closing, setClosing] = useState(false);
 
+    // Ledger state
+    const [showLedgerModal, setShowLedgerModal] = useState(false);
+    const [loadingLedger, setLoadingLedger] = useState(false);
+    const [ledgerData, setLedgerData] = useState<any>(null);
+
+    // Partial withdrawal state
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [withdrawAmount, setWithdrawAmount] = useState('');
+    const [withdrawNote, setWithdrawNote] = useState('');
+
     const meta = TYPE_META[campaign.campaign_type] ?? TYPE_META.custom;
 
     const refresh = useCallback(async () => {
@@ -52,33 +62,51 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
         }
     }, [campaign.id]);
 
+    const fetchLedger = async () => {
+        setShowLedgerModal(true);
+        setLoadingLedger(true);
+        try {
+            const res = await client.get(`campaigns/${campaign.id}/ledger/`);
+            setLedgerData(res.data);
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Could not load campaign ledger.');
+        } finally {
+            setLoadingLedger(false);
+        }
+    };
 
-    const handleDisburse = () => {
-        Alert.alert(
-            'Disburse Funds',
-            `Send R${parseFloat(campaign.balance || 0).toFixed(2)} to ${campaign.beneficiary_detail?.full_name || 'beneficiary'}?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Disburse',
-                    style: 'destructive',
-                    onPress: async () => {
-                        const ok = await authenticateAction('Authenticate to disburse funds');
-                        if (!ok) return;
-                        setDisbursing(true);
-                        try {
-                            await client.post(`campaigns/${campaign.id}/disburse/`);
-                            Alert.alert('✅ Funds Disbursed', 'The funds have been sent to the beneficiary.');
-                            refresh();
-                        } catch (e: any) {
-                            Alert.alert('Error', e?.response?.data?.error || 'Disbursement failed.');
-                        } finally {
-                            setDisbursing(false);
-                        }
-                    },
-                },
-            ]
-        );
+    const handleOpenWithdrawModal = () => {
+        setWithdrawAmount((campaign.balance || 0).toString());
+        setWithdrawNote('');
+        setShowWithdrawModal(true);
+    };
+
+    const handleExecuteWithdrawal = async () => {
+        const amt = parseFloat(withdrawAmount);
+        if (isNaN(amt) || amt <= 0) {
+            Alert.alert('Invalid Amount', 'Please enter a valid withdrawal amount.');
+            return;
+        }
+
+        const ok = await authenticateAction('Authenticate to disburse campaign funds');
+        if (!ok) return;
+
+        setDisbursing(true);
+        try {
+            await client.post(`campaigns/${campaign.id}/disburse/`, {
+                amount: amt,
+                note: withdrawNote,
+            });
+            Alert.alert('✅ Withdrawal Successful', `R${amt.toFixed(2)} has been withdrawn from campaign.`);
+            setShowWithdrawModal(false);
+            refresh();
+            if (showLedgerModal) fetchLedger();
+        } catch (e: any) {
+            Alert.alert('Error', e?.response?.data?.error || 'Withdrawal failed.');
+        } finally {
+            setDisbursing(false);
+        }
     };
 
     const handleClose = () => {
@@ -205,6 +233,14 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                     <Text style={styles.cardValue}>{formatCurrency(campaign.balance?.toString() || '0')}</Text>
                 </View>
 
+                {/* Ledger button */}
+                <TouchableOpacity
+                    style={[styles.adminBtn, { backgroundColor: '#3b82f6', marginBottom: 12 }]}
+                    onPress={fetchLedger}
+                >
+                    <Text style={styles.adminBtnText}>📜 View Campaign Ledger</Text>
+                </TouchableOpacity>
+
                 {isAdmin && (
                     <View style={styles.adminSection}>
                         <Text style={styles.adminTitle}>Admin Controls</Text>
@@ -212,12 +248,12 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                         {parseFloat(campaign.balance || 0) > 0 && (
                             <TouchableOpacity
                                 style={[styles.adminBtn, { backgroundColor: meta.color }]}
-                                onPress={handleDisburse}
+                                onPress={handleOpenWithdrawModal}
                                 disabled={disbursing}
                             >
                                 {disbursing
                                     ? <ActivityIndicator color="#fff" />
-                                    : <Text style={styles.adminBtnText}>💸 Disburse Funds to Beneficiary</Text>
+                                    : <Text style={styles.adminBtnText}>💸 Withdraw Campaign Funds</Text>
                                 }
                             </TouchableOpacity>
                         )}
@@ -257,6 +293,102 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                     </View>
                 </View>
             )}
+
+            {/* LEDGER MODAL */}
+            <Modal visible={showLedgerModal} animationType="slide" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <Text style={styles.modalTitle}>📜 Campaign Ledger</Text>
+                            <TouchableOpacity onPress={() => setShowLedgerModal(false)}>
+                                <Text style={{ fontSize: 18, color: '#64748b', fontWeight: 'bold' }}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {loadingLedger ? (
+                            <ActivityIndicator color={meta.color} size="large" style={{ padding: 20 }} />
+                        ) : ledgerData ? (
+                            <ScrollView showsVerticalScrollIndicator={false}>
+                                <View style={{ flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 12, padding: 12, marginBottom: 16 }}>
+                                    <View style={{ flex: 1, alignItems: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#64748b', fontWeight: 'bold' }}>RAISED</Text>
+                                        <Text style={{ fontSize: 14, color: '#059669', fontWeight: 'bold' }}>R{parseFloat(ledgerData.total_raised || 0).toFixed(2)}</Text>
+                                    </View>
+                                    <View style={{ flex: 1, alignItems: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#64748b', fontWeight: 'bold' }}>WITHDRAWN</Text>
+                                        <Text style={{ fontSize: 14, color: '#dc2626', fontWeight: 'bold' }}>R{parseFloat(ledgerData.total_disbursed || 0).toFixed(2)}</Text>
+                                    </View>
+                                    <View style={{ flex: 1, alignItems: 'center' }}>
+                                        <Text style={{ fontSize: 10, color: '#64748b', fontWeight: 'bold' }}>BALANCE</Text>
+                                        <Text style={{ fontSize: 14, color: '#0284c7', fontWeight: 'bold' }}>R{parseFloat(ledgerData.available_balance || 0).toFixed(2)}</Text>
+                                    </View>
+                                </View>
+
+                                {ledgerData.timeline && ledgerData.timeline.length > 0 ? (
+                                    ledgerData.timeline.map((item: any, idx: number) => {
+                                        const isContrib = item.type === 'contribution';
+                                        return (
+                                            <View key={idx} style={{ padding: 12, backgroundColor: '#f8fafc', borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>
+                                                        {isContrib ? `💙 ${item.contributor_name}` : `💸 Payout to ${item.recipient_name}`}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 14, fontWeight: '800', color: isContrib ? '#059669' : '#dc2626' }}>
+                                                        {isContrib ? '+' : '-'} R{parseFloat(item.amount || 0).toFixed(2)}
+                                                    </Text>
+                                                </View>
+                                                {item.note ? <Text style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>{item.note}</Text> : null}
+                                                <Text style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{item.date || item.timestamp}</Text>
+                                            </View>
+                                        );
+                                    })
+                                ) : (
+                                    <Text style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>No transaction history found.</Text>
+                                )}
+                            </ScrollView>
+                        ) : null}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* WITHDRAWAL MODAL */}
+            <Modal visible={showWithdrawModal} animationType="slide" transparent>
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>💸 Withdraw Campaign Funds</Text>
+                        <Text style={styles.modalSubtitle}>Withdraw funds from {campaign.title} while keeping campaign active.</Text>
+                        
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 4 }}>WITHDRAWAL AMOUNT (ZAR)</Text>
+                        <TextInput
+                            style={styles.modalInput}
+                            keyboardType="numeric"
+                            value={withdrawAmount}
+                            onChangeText={setWithdrawAmount}
+                            placeholder="0.00"
+                        />
+
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 4 }}>REASON / NOTE (OPTIONAL)</Text>
+                        <TextInput
+                            style={styles.modalInput}
+                            value={withdrawNote}
+                            onChangeText={setWithdrawNote}
+                            placeholder="Reason for withdrawal..."
+                        />
+
+                        <TouchableOpacity
+                            style={[styles.modalConfirm, { backgroundColor: meta.color }]}
+                            onPress={handleExecuteWithdrawal}
+                            disabled={disbursing}
+                        >
+                            {disbursing ? <ActivityIndicator color="#fff" /> : <Text style={styles.modalConfirmText}>Confirm Withdrawal</Text>}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.modalCancel} onPress={() => setShowWithdrawModal(false)}>
+                            <Text style={styles.modalCancelText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };

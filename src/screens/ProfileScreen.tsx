@@ -670,7 +670,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     <View style={styles.kycContent}>
                         <Text style={styles.kycTitle}>ID Verification (KYC) 🛡️</Text>
                         <Text style={styles.kycSubtitle}>
-                            To start emergency fundraisers or join verified-only communities, please verify your identity.
+                            Identity verification is powered securely by Flutterwave Identity API. Verified members can create organisations and access verified features.
                         </Text>
 
                         {/* ID Type Selection */}

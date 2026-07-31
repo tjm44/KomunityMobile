@@ -58,7 +58,12 @@ const WalletScreen = ({
 
     // Top Up States
     const [showTopUp, setShowTopUp] = useState(false);
+    const [topUpMethod, setTopUpMethod] = useState<'voucher' | 'card'>('voucher');
     const [voucherPin, setVoucherPin] = useState('');
+    const [cardAmount, setCardAmount] = useState('');
+    const [cardNumber, setCardNumber] = useState('');
+    const [cardExpiry, setCardExpiry] = useState('');
+    const [cardCvv, setCardCvv] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Send Money States
@@ -136,24 +141,49 @@ const WalletScreen = ({
     };
 
     const handleTopUp = async () => {
-        if (!voucherPin.trim()) {
-            setTopUpError('Please enter your 1Voucher PIN.');
-            return;
-        }
-
         setTopUpError(null);
         setIsSubmitting(true);
         try {
-            await client.post('wallets/top_up/', {
-                voucher_pin: voucherPin.trim()
-            });
-            Alert.alert('Success', 'Voucher redeemed successfully! Your balance has been updated.');
+            if (topUpMethod === 'voucher') {
+                if (!voucherPin.trim()) {
+                    setTopUpError('Please enter your 1Voucher PIN.');
+                    setIsSubmitting(false);
+                    return;
+                }
+                await client.post('wallets/top_up/', {
+                    payment_method: 'voucher',
+                    voucher_pin: voucherPin.trim()
+                });
+                Alert.alert('Success', 'Voucher redeemed successfully! Your balance has been updated.');
+            } else {
+                const parts = cardExpiry.split('/');
+                const expiry_month = parts[0]?.trim() || '';
+                const expiry_year = parts[1]?.trim() || '';
+                if (!cardAmount || !cardNumber || !expiry_month || !expiry_year || !cardCvv) {
+                    setTopUpError('All card fields are required.');
+                    setIsSubmitting(false);
+                    return;
+                }
+                await client.post('wallets/top_up/', {
+                    payment_method: 'card',
+                    amount: cardAmount,
+                    card_number: cardNumber.replace(/\s+/g, ''),
+                    expiry_month,
+                    expiry_year,
+                    cvv: cardCvv
+                });
+                Alert.alert('Success', 'Card payment processed successfully! Your balance has been updated.');
+            }
             setShowTopUp(false);
             setVoucherPin('');
+            setCardAmount('');
+            setCardNumber('');
+            setCardExpiry('');
+            setCardCvv('');
             fetchData();
         } catch (error: any) {
             console.error('Top up error:', error);
-            const errorMsg = error.response?.data?.error || 'Failed to redeem voucher. Please check your PIN and try again.';
+            const errorMsg = error.response?.data?.error || 'Top-up failed. Please check your details and try again.';
             setTopUpError(errorMsg);
         } finally {
             setIsSubmitting(false);
@@ -552,29 +582,128 @@ const WalletScreen = ({
                 >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Top Up with 1Voucher</Text>
+                            <Text style={styles.modalTitle}>Top Up Wallet</Text>
                             <TouchableOpacity onPress={() => { setShowTopUp(false); setVoucherPin(''); setTopUpError(null); }}>
                                 <Text style={styles.closeButton}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={[styles.inputLabel, { marginBottom: 4 }]}>1Voucher PIN</Text>
-                        <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 10 }}>
-                            Enter the 14–16 digit PIN from your physical 1Voucher.
-                        </Text>
-                        <TextInput
-                            style={[styles.textInput, topUpError ? styles.inputError : null, { letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 18, textAlign: 'center' }]}
-                            placeholder="0000 0000 0000 00"
-                            keyboardType="number-pad"
-                            value={voucherPin}
-                            onChangeText={(text) => {
-                                setVoucherPin(text);
-                                if (topUpError) setTopUpError(null);
-                            }}
-                            placeholderTextColor="#9ca3af"
-                            maxLength={16}
-                            autoFocus
-                        />
+                        {/* Method Selection Tabs */}
+                        <View style={{ flexDirection: 'row', backgroundColor: '#f3f4f6', padding: 4, borderRadius: 8, marginBottom: 16 }}>
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: 8,
+                                    borderRadius: 6,
+                                    backgroundColor: topUpMethod === 'voucher' ? '#2563eb' : 'transparent',
+                                    alignItems: 'center'
+                                }}
+                                onPress={() => { setTopUpMethod('voucher'); setTopUpError(null); }}
+                            >
+                                <Text style={{ color: topUpMethod === 'voucher' ? '#ffffff' : '#4b5563', fontWeight: 'bold' }}>🎫 1Voucher</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{
+                                    flex: 1,
+                                    paddingVertical: 8,
+                                    borderRadius: 6,
+                                    backgroundColor: topUpMethod === 'card' ? '#2563eb' : 'transparent',
+                                    alignItems: 'center'
+                                }}
+                                onPress={() => { setTopUpMethod('card'); setTopUpError(null); }}
+                            >
+                                <Text style={{ color: topUpMethod === 'card' ? '#ffffff' : '#4b5563', fontWeight: 'bold' }}>💳 Bank Card</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {topUpMethod === 'voucher' ? (
+                            <>
+                                <Text style={[styles.inputLabel, { marginBottom: 4 }]}>1Voucher PIN</Text>
+                                <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 10 }}>
+                                    Enter the 14–16 digit PIN from your physical 1Voucher.
+                                </Text>
+                                <TextInput
+                                    style={[styles.textInput, topUpError ? styles.inputError : null, { letterSpacing: 2, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontSize: 18, textAlign: 'center' }]}
+                                    placeholder="0000 0000 0000 00"
+                                    keyboardType="number-pad"
+                                    value={voucherPin}
+                                    onChangeText={(text) => {
+                                        setVoucherPin(text);
+                                        if (topUpError) setTopUpError(null);
+                                    }}
+                                    placeholderTextColor="#9ca3af"
+                                    maxLength={16}
+                                />
+                            </>
+                        ) : (
+                            <View style={{ gap: 12 }}>
+                                <View>
+                                    <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Amount (ZAR)</Text>
+                                    <TextInput
+                                        style={styles.textInput}
+                                        placeholder="e.g. 150"
+                                        keyboardType="numeric"
+                                        value={cardAmount}
+                                        onChangeText={(text) => {
+                                            setCardAmount(text.replace(/[^0-9.]/g, ''));
+                                            if (topUpError) setTopUpError(null);
+                                        }}
+                                        placeholderTextColor="#9ca3af"
+                                    />
+                                </View>
+                                <View>
+                                    <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Card Number</Text>
+                                    <TextInput
+                                        style={[styles.textInput, { fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', letterSpacing: 2 }]}
+                                        placeholder="5531 8866 5214 2950"
+                                        keyboardType="number-pad"
+                                        value={cardNumber}
+                                        onChangeText={(text) => {
+                                            const raw = text.replace(/\D/g, '').slice(0, 16);
+                                            const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                                            setCardNumber(formatted);
+                                            if (topUpError) setTopUpError(null);
+                                        }}
+                                        placeholderTextColor="#9ca3af"
+                                        maxLength={19}
+                                    />
+                                </View>
+                                <View style={{ flexDirection: 'row', gap: 12 }}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Expiry (MM/YY)</Text>
+                                        <TextInput
+                                            style={styles.textInput}
+                                            placeholder="09/32"
+                                            value={cardExpiry}
+                                            onChangeText={(text) => {
+                                                let val = text.replace(/\D/g, '').slice(0, 4);
+                                                if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+                                                setCardExpiry(val);
+                                                if (topUpError) setTopUpError(null);
+                                            }}
+                                            placeholderTextColor="#9ca3af"
+                                            maxLength={5}
+                                        />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={[styles.inputLabel, { marginBottom: 4 }]}>CVV</Text>
+                                        <TextInput
+                                            style={styles.textInput}
+                                            placeholder="564"
+                                            keyboardType="number-pad"
+                                            secureTextEntry
+                                            value={cardCvv}
+                                            onChangeText={(text) => {
+                                                setCardCvv(text.replace(/\D/g, '').slice(0, 4));
+                                                if (topUpError) setTopUpError(null);
+                                            }}
+                                            placeholderTextColor="#9ca3af"
+                                            maxLength={4}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+                        )}
                         {topUpError && <Text style={styles.errorText}>{topUpError}</Text>}
 
                         <TouchableOpacity
@@ -585,7 +714,9 @@ const WalletScreen = ({
                             {isSubmitting ? (
                                 <ActivityIndicator color="#ffffff" />
                             ) : (
-                                <Text style={styles.submitButtonText}>Redeem Voucher</Text>
+                                <Text style={styles.submitButtonText}>
+                                    {topUpMethod === 'voucher' ? 'Redeem Voucher' : 'Pay with Card'}
+                                </Text>
                             )}
                         </TouchableOpacity>
                     </View>

@@ -7,28 +7,38 @@ import client from '../api/client';
 
 interface ContributionItem {
     id: number;
-    group: number;
-    deceased_member: number;
-    deceased_member_detail: {
+    type?: 'deceased' | 'campaign';
+    group?: number;
+    group_detail?: {
         id: number;
-        deceased_detail: {
+        name: string;
+    };
+    campaign_detail?: {
+        id: number;
+        title: string;
+        campaign_type: string;
+    };
+    deceased_member?: number;
+    deceased_member_detail?: {
+        id: number;
+        deceased_detail?: {
             id: number;
             full_name: string;
             profile_picture: string | null;
         };
-        group_detail: {
+        group_detail?: {
             id: number;
             name: string;
         };
-        total_raised: string;
-        contributions_open: boolean;
-        cont_is_active: boolean;
+        total_raised?: string;
+        contributions_open?: boolean;
+        cont_is_active?: boolean;
     };
-    contributing_member: number;
-    contributing_member_detail: {
+    contributing_member?: number;
+    contributing_member_detail?: {
         id: number;
-        full_name: string;
-        profile_picture: string | null;
+        full_name?: string;
+        profile_picture?: string | null;
     };
     amount: string;
     payment_method: string;
@@ -123,20 +133,25 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
         }
     };
 
-    // Get unique deceased members for filter tabs
+    // Get unique deceased members / campaigns for filter tabs
     const deceasedFilters = contributions.reduce<Array<{
-        id: number;
+        id: number | string;
         name: string;
         groupName: string;
         profilePicture: string | null;
         totalRaised: string;
     }>>((acc, contribution) => {
-        if (!acc.find(d => d.id === contribution.deceased_member)) {
+        const filterId = contribution.deceased_member || (contribution.campaign_detail ? `campaign-${contribution.campaign_detail.id}` : contribution.id);
+        const name = contribution.campaign_detail?.title || contribution.deceased_member_detail?.deceased_detail?.full_name || 'Community Campaign';
+        const groupName = contribution.group_detail?.name || contribution.deceased_member_detail?.group_detail?.name || 'Community';
+        const profilePicture = contribution.deceased_member_detail?.deceased_detail?.profile_picture || null;
+        
+        if (!acc.find(d => d.id === filterId)) {
             acc.push({
-                id: contribution.deceased_member,
-                name: contribution.deceased_member_detail?.deceased_detail?.full_name || 'Unknown',
-                groupName: contribution.deceased_member_detail?.group_detail?.name || '',
-                profilePicture: contribution.deceased_member_detail?.deceased_detail?.profile_picture || null,
+                id: filterId,
+                name: name,
+                groupName: groupName,
+                profilePicture: profilePicture,
                 totalRaised: contribution.deceased_member_detail?.total_raised || '0',
             });
         }
@@ -163,32 +178,38 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
         );
     }
 
-    const renderContribution = ({ item }: { item: ContributionItem }) => (
-        <View style={styles.contributionCard}>
-            <View style={styles.cardLeft}>
-                <View style={styles.iconContainer}>
-                    <Text style={styles.cardIcon}>✝️</Text>
-                </View>
-                <View style={styles.cardInfo}>
-                    <Text style={styles.deceasedName}>
-                        {item.deceased_member_detail?.deceased_detail?.full_name || 'Unknown Member'}
-                    </Text>
-                    <Text style={styles.groupName}>
-                        {item.deceased_member_detail?.group_detail?.name || 'Unknown Group'}
-                    </Text>
-                    <View style={styles.metaRow}>
-                        <Text style={styles.paymentBadge}>
-                            {getPaymentMethodIcon(item.payment_method)} {getPaymentMethodLabel(item.payment_method)}
+    const renderContribution = ({ item }: { item: ContributionItem }) => {
+        const title = item.campaign_detail?.title || item.deceased_member_detail?.deceased_detail?.full_name || 'Community Fundraiser';
+        const groupName = item.group_detail?.name || item.deceased_member_detail?.group_detail?.name || 'Komunity Group';
+        const icon = item.campaign_detail ? '🎗️' : '🕊️';
+
+        return (
+            <View style={styles.contributionCard}>
+                <View style={styles.cardLeft}>
+                    <View style={styles.cardIconContainer}>
+                        <Text style={styles.cardIcon}>{icon}</Text>
+                    </View>
+                    <View style={styles.cardInfo}>
+                        <Text style={styles.deceasedName}>
+                            {title}
                         </Text>
-                        <Text style={styles.dateText}>{formatDate(item.contribution_date)}</Text>
+                        <Text style={styles.groupName}>
+                            {groupName}
+                        </Text>
+                        <View style={styles.metaRow}>
+                            <Text style={styles.paymentBadge}>
+                                {getPaymentMethodIcon(item.payment_method)} {getPaymentMethodLabel(item.payment_method)}
+                            </Text>
+                            <Text style={styles.dateText}>{formatDate(item.contribution_date)}</Text>
+                        </View>
                     </View>
                 </View>
+                <View style={styles.cardRight}>
+                    <Text style={styles.amountText}>{formatCurrency(item.amount)}</Text>
+                </View>
             </View>
-            <View style={styles.cardRight}>
-                <Text style={styles.amountText}>{formatCurrency(item.amount)}</Text>
-            </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={styles.container}>
