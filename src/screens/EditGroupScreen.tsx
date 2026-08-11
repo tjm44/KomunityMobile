@@ -20,6 +20,14 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
     const [description, setDescription] = useState(group.description || '');
     const [requiresApproval, setRequiresApproval] = useState(group.requires_approval || false);
     const [verifiedMembersOnly, setVerifiedMembersOnly] = useState(group.verified_members_only || false);
+    
+    // Notifications States
+    const [notifyOnMemberJoin, setNotifyOnMemberJoin] = useState(group.notify_on_member_join !== false);
+    const [notifyOnMemberPromote, setNotifyOnMemberPromote] = useState(group.notify_on_member_promote !== false);
+    const [notifyOnWalletTransfer, setNotifyOnWalletTransfer] = useState(group.notify_on_wallet_transfer !== false);
+    const [notifyOnCampaignCreated, setNotifyOnCampaignCreated] = useState(group.notify_on_campaign_created !== false);
+    const [minDisbursementApprovals, setMinDisbursementApprovals] = useState<number>(group.min_disbursement_approvals || 1);
+
     const [registrationNumber, setRegistrationNumber] = useState(group.registration_number || '');
     const [entityType, setEntityType] = useState(group.entity_type || 'ngo');
     const isOrganisation = !!group.registration_number || !!group.entity_type;
@@ -109,6 +117,13 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             formData.append('description', description.trim());
             formData.append('requires_approval', requiresApproval.toString());
             formData.append('verified_members_only', verifiedMembersOnly.toString());
+            
+            // Notification preferences
+            formData.append('notify_on_member_join', notifyOnMemberJoin.toString());
+            formData.append('notify_on_member_promote', notifyOnMemberPromote.toString());
+            formData.append('notify_on_wallet_transfer', notifyOnWalletTransfer.toString());
+            formData.append('notify_on_campaign_created', notifyOnCampaignCreated.toString());
+            formData.append('min_disbursement_approvals', String(minDisbursementApprovals));
 
             const isOrganisation = !!group.registration_number || !!group.entity_type;
             if (isOrganisation) {
@@ -143,6 +158,11 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             description.trim() !== (group.description || '') ||
             requiresApproval !== (group.requires_approval || false) ||
             verifiedMembersOnly !== (group.verified_members_only || false) ||
+            notifyOnMemberJoin !== (group.notify_on_member_join !== false) ||
+            notifyOnMemberPromote !== (group.notify_on_member_promote !== false) ||
+            notifyOnWalletTransfer !== (group.notify_on_wallet_transfer !== false) ||
+            notifyOnCampaignCreated !== (group.notify_on_campaign_created !== false) ||
+            minDisbursementApprovals !== (group.min_disbursement_approvals || 1) ||
             registrationNumber.trim() !== (group.registration_number || '') ||
             entityType !== (group.entity_type || 'ngo') ||
             newCoverImage !== null ||
@@ -305,6 +325,114 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                             trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
                             thumbColor={verifiedMembersOnly ? '#2563eb' : '#f4f3f4'}
                         />
+                    </View>
+
+                    {/* Notification & Governance Preferences */}
+                    <Text style={styles.sectionHeader}>Member Notifications (Governance Trust)</Text>
+
+                    {/* Notify on Member Join */}
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingText}>
+                            <Text style={styles.settingLabel}>Notify on Member Join</Text>
+                            <Text style={styles.settingDescription}>
+                                Alert all members when a new member joins the group.
+                            </Text>
+                        </View>
+                        <Switch
+                            value={notifyOnMemberJoin}
+                            onValueChange={setNotifyOnMemberJoin}
+                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+                            thumbColor={notifyOnMemberJoin ? '#2563eb' : '#f4f3f4'}
+                        />
+                    </View>
+
+                    {/* Notify on Admin Promote */}
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingText}>
+                            <Text style={styles.settingLabel}>Notify on Admin Promotion</Text>
+                            <Text style={styles.settingDescription}>
+                                Alert all members when a member is promoted to Admin.
+                            </Text>
+                        </View>
+                        <Switch
+                            value={notifyOnMemberPromote}
+                            onValueChange={setNotifyOnMemberPromote}
+                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+                            thumbColor={notifyOnMemberPromote ? '#2563eb' : '#f4f3f4'}
+                        />
+                    </View>
+
+                    {/* Notify on Wallet Transfer */}
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingText}>
+                            <Text style={styles.settingLabel}>Notify on Wallet Transfer</Text>
+                            <Text style={styles.settingDescription}>
+                                Alert all members when funds are transferred/disbursed from the wallet.
+                            </Text>
+                        </View>
+                        <Switch
+                            value={notifyOnWalletTransfer}
+                            onValueChange={setNotifyOnWalletTransfer}
+                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+                            thumbColor={notifyOnWalletTransfer ? '#2563eb' : '#f4f3f4'}
+                        />
+                    </View>
+
+                    {/* Notify on Campaign Created */}
+                    <View style={styles.settingRow}>
+                        <View style={styles.settingText}>
+                            <Text style={styles.settingLabel}>Notify on Campaign Creation</Text>
+                            <Text style={styles.settingDescription}>
+                                Alert all members when a new fund campaign is launched.
+                            </Text>
+                        </View>
+                        <Switch
+                            value={notifyOnCampaignCreated}
+                            onValueChange={setNotifyOnCampaignCreated}
+                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
+                            thumbColor={notifyOnCampaignCreated ? '#2563eb' : '#f4f3f4'}
+                        />
+                    </View>
+
+                    {/* Multi-Admin Disbursement Approval */}
+                    <View style={{ marginTop: 8, marginBottom: 4 }}>
+                        <Text style={styles.sectionHeader}>🔐 Multi-Admin Disbursement Approval</Text>
+                        <Text style={[styles.settingDescription, { marginBottom: 12, marginHorizontal: 4 }]}>
+                            Require multiple admin sign-offs before any transfer executes.
+                        </Text>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            {[1, 2, 3].map((n) => (
+                                <TouchableOpacity
+                                    key={n}
+                                    onPress={() => setMinDisbursementApprovals(n)}
+                                    style={{
+                                        flex: 1,
+                                        paddingVertical: 10,
+                                        borderRadius: 10,
+                                        borderWidth: 2,
+                                        borderColor: minDisbursementApprovals === n ? '#2563eb' : '#e5e7eb',
+                                        backgroundColor: minDisbursementApprovals === n ? 'rgba(37,99,235,0.1)' : 'transparent',
+                                        alignItems: 'center',
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: minDisbursementApprovals === n ? '700' : '500',
+                                        color: minDisbursementApprovals === n ? '#2563eb' : '#6b7280',
+                                    }}>
+                                        {n === 1 ? '🔓 1' : n === 2 ? '🔒 2' : '🔐 3'}
+                                    </Text>
+                                    <Text style={{ fontSize: 10, color: minDisbursementApprovals === n ? '#3b82f6' : '#9ca3af', marginTop: 2 }}>
+                                        {n === 1 ? 'Instant' : n === 2 ? '2 Admins' : '3 Admins'}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        {minDisbursementApprovals > 1 && (
+                            <Text style={{ fontSize: 11, color: '#f59e0b', marginTop: 8, marginHorizontal: 4 }}>
+                                ⚠️ Transfers require {minDisbursementApprovals} admin approvals before executing.
+                            </Text>
+                        )}
                     </View>
 
                     {/* Group Verification Status */}
@@ -677,6 +805,17 @@ const styles = StyleSheet.create({
     entityPillTextActive: {
         color: '#2563eb',
         fontWeight: '700',
+    },
+    sectionHeader: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#374151',
+        marginBottom: 12,
+        marginTop: 4,
+        paddingHorizontal: 4,
+        borderLeftWidth: 3,
+        borderLeftColor: '#2563eb',
+        paddingLeft: 10,
     },
 });
 

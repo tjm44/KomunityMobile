@@ -44,6 +44,7 @@ import AnimatedScreen from "./src/components/AnimatedScreen";
 import BottomNavBar from "./src/components/BottomNavBar";
 import TopNavBar from "./src/components/TopNavBar";
 import ErrorBoundary from "./src/components/ErrorBoundary";
+import DevScreenBadge from "./src/components/DevScreenBadge";
 import CreateOrganisationScreen from "./src/screens/CreateOrganisationScreen";
 import OrganisationDetailScreen from "./src/screens/OrganisationDetailScreen";
 import EditOrganisationScreen from "./src/screens/EditOrganisationScreen";
@@ -376,19 +377,25 @@ export default function App() {
       <ErrorBoundary>
         <SafeAreaProvider>
           {showWelcome ? (
-            <WelcomeScreen
-              onShowLogin={() => {
-                setShowWelcome(false);
-              }}
-              onShowSignUp={() => {
-                setShowWelcome(false);
-              }}
-            />
+            <View style={{ flex: 1 }}>
+              <WelcomeScreen
+                onShowLogin={() => {
+                  setShowWelcome(false);
+                }}
+                onShowSignUp={() => {
+                  setShowWelcome(false);
+                }}
+              />
+              <DevScreenBadge id="MOB-01" />
+            </View>
           ) : (
-            <PhoneAuthScreen
-              onLoginSuccess={handlePhoneAuthSuccess}
-              onBack={() => setShowWelcome(true)}
-            />
+            <View style={{ flex: 1 }}>
+              <PhoneAuthScreen
+                onLoginSuccess={handlePhoneAuthSuccess}
+                onBack={() => setShowWelcome(true)}
+              />
+              <DevScreenBadge id="MOB-04" />
+            </View>
           )}
         </SafeAreaProvider>
       </ErrorBoundary>
@@ -399,14 +406,17 @@ export default function App() {
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
-          <ProfileSetupScreen
-            onComplete={async () => {
-              setNeedsProfileSetup(false);
-              // Fetch user profile to get the newly created profile ID for verification
-              await checkProfileStatus();
-              setIsPromptingVerification(true);
-            }}
-          />
+          <View style={{ flex: 1 }}>
+            <ProfileSetupScreen
+              onComplete={async () => {
+                setNeedsProfileSetup(false);
+                // Fetch user profile to get the newly created profile ID for verification
+                await checkProfileStatus();
+                setIsPromptingVerification(true);
+              }}
+            />
+            <DevScreenBadge id="MOB-06" />
+          </View>
         </SafeAreaProvider>
       </ErrorBoundary>
     );
@@ -416,18 +426,21 @@ export default function App() {
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
-          <VerifyIdentityPromptScreen
-            profileId={userProfile?.id}
-            onVerified={async () => {
-              await checkProfileStatus();
-              setIsPromptingVerification(false);
-              setIsChoosingGroup(true);
-            }}
-            onSkip={() => {
-              setIsPromptingVerification(false);
-              setIsChoosingGroup(true);
-            }}
-          />
+          <View style={{ flex: 1 }}>
+            <VerifyIdentityPromptScreen
+              profileId={userProfile?.id}
+              onVerified={async () => {
+                await checkProfileStatus();
+                setIsPromptingVerification(false);
+                setIsChoosingGroup(true);
+              }}
+              onSkip={() => {
+                setIsPromptingVerification(false);
+                setIsChoosingGroup(true);
+              }}
+            />
+            <DevScreenBadge id="MOB-11" />
+          </View>
         </SafeAreaProvider>
       </ErrorBoundary>
     );
@@ -437,20 +450,23 @@ export default function App() {
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
-          <GroupSelectionScreen
-            onJoin={() => {
-              setIsChoosingGroup(false);
-              setActiveTab("discovery");
-            }}
-            onCreate={() => {
-              setIsChoosingGroup(false);
-              setIsChoosingGroupPurpose(true);
-            }}
-            onCreateOrganisation={() => {
-              setIsChoosingGroup(false);
-              setIsCreatingOrganisation(true);
-            }}
-          />
+          <View style={{ flex: 1 }}>
+            <GroupSelectionScreen
+              onJoin={() => {
+                setIsChoosingGroup(false);
+                setActiveTab("discovery");
+              }}
+              onCreate={() => {
+                setIsChoosingGroup(false);
+                setIsChoosingGroupPurpose(true);
+              }}
+              onCreateOrganisation={() => {
+                setIsChoosingGroup(false);
+                setIsCreatingOrganisation(true);
+              }}
+            />
+            <DevScreenBadge id="MOB-15" />
+          </View>
         </SafeAreaProvider>
       </ErrorBoundary>
     );
@@ -460,17 +476,20 @@ export default function App() {
     return (
       <ErrorBoundary>
         <SafeAreaProvider>
-          <GroupPurposeScreen
-            onSelect={(selection) => {
-              setGroupPurposeSelection(selection);
-              setIsChoosingGroupPurpose(false);
-              setIsCreatingGroup(true);
-            }}
-            onBack={() => {
-              setIsChoosingGroupPurpose(false);
-              setIsChoosingGroup(true);
-            }}
-          />
+          <View style={{ flex: 1 }}>
+            <GroupPurposeScreen
+              onSelect={(selection) => {
+                setGroupPurposeSelection(selection);
+                setIsChoosingGroupPurpose(false);
+                setIsCreatingGroup(true);
+              }}
+              onBack={() => {
+                setIsChoosingGroupPurpose(false);
+                setIsChoosingGroup(true);
+              }}
+            />
+            <DevScreenBadge id="MOB-16" />
+          </View>
         </SafeAreaProvider>
       </ErrorBoundary>
     );
@@ -532,7 +551,7 @@ export default function App() {
     if (viewingMemberProfile)
       return viewingMemberProfile.member_detail.full_name;
     if (isViewingAllMembers) return "Community Members";
-    if (viewingGroupWallet) return "Group Wallet";
+    if (viewingGroupWallet) return (viewingGroupWallet.is_organisation || viewingGroupWallet.entity_type) ? "Organisation Wallet" : "Group Wallet";
     if (isManagingGroup) return "Community Management";
     if (editingPost) return "Edit Proposal";
     if (selectedPost) return "Discussion";
@@ -545,6 +564,43 @@ export default function App() {
     if (activeTab === "wallet") return "Wallet";
     if (activeTab === "profile") return "Profile";
     return "Komunity";
+  };
+
+  /** DEV ONLY – maps current navigation state to a screen ID for DevScreenBadge */
+  const getScreenId = (): string => {
+    // Sub-screens / overlays (highest priority)
+    if (isCreatingOrganisation) return 'MOB-31';
+    if (editingOrganisation)    return 'MOB-34';
+    if (previewingOrganisation) return 'MOB-32';
+    if (viewingOrganisationDetails) return 'MOB-33';
+    if (isCreatingCampaign)     return 'MOB-29';
+    if (viewingCampaign)        return 'MOB-30';
+    if (isCreatingGroup)        return 'MOB-17';
+    if (viewingMemberProfile)   return 'MOB-25';
+    if (isViewingAllMembers)    return 'MOB-24';
+    if (viewingGroupWallet)     return 'MOB-23';
+    if (isManagingGroup)        return 'MOB-21';
+    if (editingPost)            return 'MOB-26'; // editing reuses CreatePostScreen
+    if (selectedPost)           return 'MOB-27';
+    if (isCreatingPost)         return 'MOB-26';
+    if (isInviting)             return 'MOB-13'; // ContactsScreen
+    if (editingGroup)           return 'MOB-22';
+    if (viewingGroupDetails)    return 'MOB-19';
+    if (selectedGroup)          return 'MOB-20'; // GroupFeedScreen
+    // Bottom tabs
+    if (activeTab === 'home')      return 'MOB-07';
+    if (activeTab === 'discovery') {
+      if (previewingGroup)         return 'MOB-18';
+      if (previewingOrganisation)  return 'MOB-32';
+      return 'MOB-08';
+    }
+    if (activeTab === 'wallet') {
+      if (isViewingContributions)  return 'MOB-12';
+      return 'MOB-14';
+    }
+    if (activeTab === 'profile')     return 'MOB-10';
+    if (activeTab === 'fundraisers') return 'MOB-28';
+    return 'MOB-??';
   };
 
   return (
@@ -886,6 +942,9 @@ export default function App() {
               </View>
             )}
           </View>
+
+          {/* DEV: floating screen ID badge */}
+          <DevScreenBadge id={getScreenId()} />
 
           <BottomNavBar
             activeTab={activeTab}

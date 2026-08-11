@@ -316,13 +316,13 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
                     <View style={[
                         styles.verificationCard,
                         organisation.is_verified
-                            ? { backgroundColor: '#f0fdf4', borderColor: '#6ee7b7' }
+                            ? { backgroundColor: '#eef2ff', borderColor: '#818cf8' }
                             : { backgroundColor: '#fffbeb', borderColor: '#fde68a' }
                     ]}>
-                        <Text style={[styles.verificationTitle, { color: organisation.is_verified ? '#065f46' : '#92400e' }]}>
-                            {organisation.is_verified ? '✅ Official Verified Organisation' : '⚠️ Unverified Organisation Profile'}
+                        <Text style={[styles.verificationTitle, { color: organisation.is_verified ? '#3730a3' : '#92400e' }]}>
+                            {organisation.is_verified ? '🛡️ Official Trusted Organisation' : '⚠️ Unverified Organisation Profile'}
                         </Text>
-                        <Text style={[styles.verificationDesc, { color: organisation.is_verified ? '#14532d' : '#78350f' }]}>
+                        <Text style={[styles.verificationDesc, { color: organisation.is_verified ? '#1e1b4b' : '#78350f' }]}>
                             {organisation.is_verified
                                 ? 'Your registry documents are verified. You can launch public emergency campaigns globally.'
                                 : 'You are currently unverified. Verified accounts receive trust seals and access to global fundraisers.'}
@@ -469,16 +469,16 @@ const styles = StyleSheet.create({
     textArea: { height: 120, textAlignVertical: 'top' },
     pillsContainer: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 },
     entityPill: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: '#f9fafb' },
-    entityPillActive: { backgroundColor: '#eff6ff', borderColor: '#2563eb' },
+    entityPillActive: { backgroundColor: '#e0e7ff', borderColor: '#4338ca' },
     entityPillText: { fontSize: 13, color: '#475569', fontWeight: '600' },
-    entityPillTextActive: { color: '#2563eb' },
+    entityPillTextActive: { color: '#4338ca' },
     verificationCard: { padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 24 },
     verificationTitle: { fontSize: 15, fontWeight: 'bold', fontFamily: 'Outfit-Bold' },
     verificationDesc: { fontSize: 13, marginTop: 6, lineHeight: 20, fontFamily: 'Outfit-Regular' },
-    verifyRequestBtn: { backgroundColor: '#2563eb', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 12 },
+    verifyRequestBtn: { backgroundColor: '#4338ca', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 12 },
     verifyRequestBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 13 },
-    footer: { padding: 24, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
-    saveButton: { backgroundColor: '#2563eb', borderRadius: 12, padding: 18, alignItems: 'center', marginBottom: 12 },
+    footer: { padding: 24, borderTopWidth: 1, borderTopColor: '#e0e7ff' },
+    saveButton: { backgroundColor: '#4338ca', borderRadius: 12, padding: 18, alignItems: 'center', marginBottom: 12 },
     saveButtonDisabled: { opacity: 0.5 },
     saveButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, fontFamily: 'Outfit-Bold' },
     cancelButton: { padding: 12, alignItems: 'center' },

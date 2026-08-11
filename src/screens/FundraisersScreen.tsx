@@ -39,7 +39,7 @@ const CampaignCard = ({ campaign, onPress }: { campaign: any; onPress: () => voi
                 </View>
                 {campaign.organisation_detail?.is_verified && (
                     <View style={styles.verifiedBadge}>
-                        <Text style={styles.verifiedText}>✓ Verified</Text>
+                        <Text style={styles.verifiedText}>🏢 Official Org</Text>
                     </View>
                 )}
             </View>
@@ -172,19 +172,19 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 12,
         paddingBottom: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#1e1b4b',
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        borderBottomColor: '#312e81',
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#0f172a',
+        color: '#ffffff',
         fontFamily: 'Outfit-Bold',
     },
     headerSubtitle: {
         fontSize: 13,
-        color: '#64748b',
+        color: '#c7d2fe',
         marginTop: 4,
         fontFamily: 'Outfit-Regular',
     },
@@ -231,12 +231,14 @@ const styles = StyleSheet.create({
     typeBadgeIcon: { fontSize: 14 },
     typeBadgeLabel: { fontSize: 12, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     verifiedBadge: {
-        backgroundColor: '#d1fae5',
+        backgroundColor: '#e0e7ff',
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: 20,
+        borderWidth: 1,
+        borderColor: '#818cf8',
     },
-    verifiedText: { fontSize: 11, color: '#065f46', fontWeight: '700', fontFamily: 'Outfit-Bold' },
+    verifiedText: { fontSize: 11, color: '#3730a3', fontWeight: '700', fontFamily: 'Outfit-Bold' },
     cardTitle: {
         fontSize: 17,
         fontWeight: '800',
@@ -289,7 +291,7 @@ const styles = StyleSheet.create({
     contributeHintText: { fontSize: 14, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
     errorText: { fontSize: 15, color: '#64748b', textAlign: 'center', marginBottom: 16, fontFamily: 'Outfit-Regular' },
-    retryBtn: { backgroundColor: '#dc2626', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 10 },
+    retryBtn: { backgroundColor: '#4338ca', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 10 },
     retryText: { color: '#fff', fontWeight: '700', fontFamily: 'Outfit-Bold' },
     emptyIcon: { fontSize: 48, marginBottom: 12 },
     emptyTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b', marginBottom: 8, fontFamily: 'Outfit-Bold' },

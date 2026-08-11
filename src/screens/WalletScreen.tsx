@@ -18,10 +18,15 @@ const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: s
     custom:      { icon: '✨', color: '#059669', label: 'Custom' },
 };
 
+const RETAIL_PARTNERS = ['Shoprite', 'Pick n Pay', 'Checkers', 'Spar', 'Boxer', 'Flash', '1Voucher'];
+const NETWORK_PROVIDERS = ['MTN', 'Vodacom', 'Cell C', 'Telkom', 'Airtel', 'EcoCash'];
+
 interface Transaction {
     id: number;
     transaction_type: string;
     amount: string;
+    fee_amount?: string;
+    net_amount?: string;
     status: string;
     timestamp: string;
     destination_group_detail?: {
@@ -91,9 +96,9 @@ const WalletScreen = ({
     const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
     const [withdrawBankCode, setWithdrawBankCode] = useState('');
     const [withdrawPhoneNumber, setWithdrawPhoneNumber] = useState('');
-    const [withdrawProvider, setWithdrawProvider] = useState('');
+    const [withdrawProvider, setWithdrawProvider] = useState('MTN');
     const [withdrawVoucherCode, setWithdrawVoucherCode] = useState('');
-    const [withdrawPartner, setWithdrawPartner] = useState('');
+    const [withdrawPartner, setWithdrawPartner] = useState('Shoprite');
     const [withdrawError, setWithdrawError] = useState<string | null>(null);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
 
@@ -298,14 +303,28 @@ const WalletScreen = ({
 
         setIsWithdrawing(true);
         try {
-            await client.post('wallets/withdraw/', {
+            const res = await client.post('wallets/withdraw/', {
                 amount: withdrawAmount,
                 channel: withdrawChannel,
                 metadata,
                 currency: 'ZAR'
             });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Alert.alert('Success', `Withdrawal requested for ${formatCurrency(withdrawAmount)}.`);
+
+            // If voucher withdrawal, show the voucher code prominently
+            if (res.data?.voucher_code) {
+                Alert.alert(
+                    '🎫 Voucher Ready!',
+                    `Withdrawal of ${formatCurrency(withdrawAmount)} successful!\n\n` +
+                    `Your Voucher Code:\n${res.data.voucher_code}\n\n` +
+                    `Redeem at: ${res.data.partner || withdrawPartner}\n\n` +
+                    `Present this code at your chosen retail partner to collect your cash.`,
+                    [{ text: 'OK', style: 'default' }]
+                );
+            } else {
+                Alert.alert('Success', `Withdrawal of ${formatCurrency(withdrawAmount)} requested successfully via ${withdrawChannel.replace(/_/g, ' ')}.`);
+            }
+
             setShowWithdraw(false);
             setWithdrawAmount('');
             setWithdrawAccountNumber('');
@@ -560,6 +579,15 @@ const WalletScreen = ({
                                         )}
                                         {item.transaction_type === 'TRANSFER' && (
                                             <Text style={styles.expandedText}>Transferred to: {detailTarget.replace('To group: ', '').replace('To: ', '')}</Text>
+                                        )}
+                                        {item.withdrawal_metadata?.voucher_code && (
+                                            <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#d1fae5', borderWidth: 1, borderColor: '#a7f3d0' }}>
+                                                <Text style={{ fontSize: 11, color: '#065f46', fontWeight: 'bold' }}>🎫 Voucher Code:</Text>
+                                                <Text style={{ fontSize: 16, fontWeight: '800', color: '#047857', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2 }}>{item.withdrawal_metadata.voucher_code}</Text>
+                                                {item.withdrawal_metadata.partner && (
+                                                    <Text style={{ fontSize: 11, color: '#065f46', marginTop: 2 }}>🏪 Redeem at: {item.withdrawal_metadata.partner}</Text>
+                                                )}
+                                            </View>
                                         )}
                                         <Text style={styles.expandedText}>Details: {detailTarget}</Text>
                                     </View>
@@ -959,7 +987,33 @@ const WalletScreen = ({
                                     placeholderTextColor="#9ca3af"
                                 />
 
-                                <Text style={styles.inputLabel}>Network Provider</Text>
+                                <Text style={styles.inputLabel}>Network Provider (Preselected)</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6, maxHeight: 40 }}>
+                                    <View style={{ flexDirection: 'row', gap: 6, paddingRight: 10 }}>
+                                        {NETWORK_PROVIDERS.map((prov) => (
+                                            <TouchableOpacity
+                                                key={prov}
+                                                style={{
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 6,
+                                                    borderRadius: 16,
+                                                    backgroundColor: withdrawProvider === prov ? '#2563eb' : '#f3f4f6',
+                                                    borderWidth: 1,
+                                                    borderColor: withdrawProvider === prov ? '#2563eb' : '#d1d5db'
+                                                }}
+                                                onPress={() => setWithdrawProvider(prov)}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 12,
+                                                    fontWeight: withdrawProvider === prov ? '700' : '500',
+                                                    color: withdrawProvider === prov ? '#ffffff' : '#374151'
+                                                }}>
+                                                    {withdrawProvider === prov ? `✓ ${prov}` : prov}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </ScrollView>
                                 <TextInput
                                     style={[styles.textInput, withdrawError && styles.inputError]}
                                     placeholder="MTN"
@@ -975,7 +1029,33 @@ const WalletScreen = ({
 
                         {withdrawChannel === 'voucher' && (
                             <>
-                                <Text style={styles.inputLabel}>Retail Partner</Text>
+                                <Text style={styles.inputLabel}>Retail Partner (Preselected)</Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6, maxHeight: 40 }}>
+                                    <View style={{ flexDirection: 'row', gap: 6, paddingRight: 10 }}>
+                                        {RETAIL_PARTNERS.map((partner) => (
+                                            <TouchableOpacity
+                                                key={partner}
+                                                style={{
+                                                    paddingHorizontal: 12,
+                                                    paddingVertical: 6,
+                                                    borderRadius: 16,
+                                                    backgroundColor: withdrawPartner === partner ? '#059669' : '#f3f4f6',
+                                                    borderWidth: 1,
+                                                    borderColor: withdrawPartner === partner ? '#059669' : '#d1d5db'
+                                                }}
+                                                onPress={() => setWithdrawPartner(partner)}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 12,
+                                                    fontWeight: withdrawPartner === partner ? '700' : '500',
+                                                    color: withdrawPartner === partner ? '#ffffff' : '#374151'
+                                                }}>
+                                                    {withdrawPartner === partner ? `✓ ${partner}` : partner}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </ScrollView>
                                 <TextInput
                                     style={[styles.textInput, withdrawError && styles.inputError]}
                                     placeholder="Shoprite"

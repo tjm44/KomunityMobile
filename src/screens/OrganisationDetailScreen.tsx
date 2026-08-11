@@ -86,8 +86,10 @@ const OrganisationDetailScreen = ({
                         <Image source={{ uri: orgDetails.cover_image }} style={styles.coverImage} />
                     ) : (
                         <LinearGradient
-                            colors={['#0f766e', '#115e59']}
+                            colors={['#1e1b4b', '#312e81', '#4338ca']}
                             style={styles.coverImage}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
                         />
                     )}
 
@@ -106,7 +108,7 @@ const OrganisationDetailScreen = ({
                                 <Text style={styles.orgName}>{orgDetails.name}</Text>
                                 {orgDetails.is_verified && (
                                     <View style={styles.verifiedBadge}>
-                                        <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+                                        <Text style={styles.verifiedBadgeText}>🛡️ Official Trusted</Text>
                                     </View>
                                 )}
                             </View>
@@ -154,7 +156,7 @@ const OrganisationDetailScreen = ({
                         </View>
                         <View style={styles.registryRow}>
                             <Text style={styles.registryLabel}>Verification Trust Seal</Text>
-                            <Text style={[styles.registryValue, { color: orgDetails.is_verified ? '#0f766e' : '#b45309' }]}>
+                            <Text style={[styles.registryValue, { color: orgDetails.is_verified ? '#4338ca' : '#b45309' }]}>
                                 {orgDetails.is_verified ? '🛡️ OFFICIAL TRUSTED' : '⚠️ UNVERIFIED PROFILE'}
                             </Text>
                         </View>
@@ -195,13 +197,13 @@ const OrganisationDetailScreen = ({
                             <Text style={styles.cardTitle}>Active Fundraisers</Text>
                             {orgDetails.is_admin && (
                                 <TouchableOpacity style={styles.createCampBtn} onPress={onLaunchFundraiser}>
-                                    <Text style={styles.createCampBtnText}>+ Launch</Text>
+                                    <Text style={styles.createCampBtnText}>🚀 Launch</Text>
                                 </TouchableOpacity>
                             )}
                         </View>
 
                         {loading ? (
-                            <ActivityIndicator color="#0f766e" style={{ padding: 20 }} />
+                            <ActivityIndicator color="#4f46e5" style={{ padding: 20 }} />
                         ) : campaigns.length === 0 ? (
                             <Text style={styles.emptyCampText}>No active fundraisers currently. Check back later.</Text>
                         ) : (
@@ -244,14 +246,14 @@ const styles = StyleSheet.create({
     },
     headerActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.9)', justifyContent: 'center', alignItems: 'center' },
-    backBtnText: { fontSize: 20, fontWeight: 'bold', color: '#0f766e' },
+    backBtnText: { fontSize: 20, fontWeight: 'bold', color: '#1e1b4b' },
     shareBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.9)', justifyContent: 'center', alignItems: 'center' },
     shareIcon: { fontSize: 16 },
     orgInfoWrap: { marginTop: 'auto' },
     orgName: { fontSize: 24, fontWeight: 'bold', color: '#ffffff', fontFamily: 'Outfit-Bold' },
-    verifiedBadge: { backgroundColor: '#ccfbf1', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#2dd4bf' },
-    verifiedBadgeText: { color: '#115e59', fontSize: 11, fontWeight: '700' },
-    entityLabel: { fontSize: 14, color: '#e2e8f0', marginTop: 4, fontWeight: '600', fontFamily: 'Outfit-Regular' },
+    verifiedBadge: { backgroundColor: '#e0e7ff', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#818cf8' },
+    verifiedBadgeText: { color: '#3730a3', fontSize: 11, fontWeight: '700' },
+    entityLabel: { fontSize: 14, color: '#c7d2fe', marginTop: 4, fontWeight: '600', fontFamily: 'Outfit-Regular' },
     dashboardActions: {
         flexDirection: 'row',
         paddingHorizontal: 20,
@@ -260,14 +262,14 @@ const styles = StyleSheet.create({
     },
     mainActionBtn: {
         flex: 2,
-        backgroundColor: '#0f766e',
+        backgroundColor: '#4338ca',
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#0f766e',
+        shadowColor: '#4338ca',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
+        shadowOpacity: 0.25,
         shadowRadius: 6,
         elevation: 3,
     },
@@ -276,23 +278,23 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#ffffff',
         borderWidth: 1.5,
-        borderColor: '#cbd5e1',
+        borderColor: '#818cf8',
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    iconActionText: { color: '#334155', fontWeight: '700', fontSize: 13 },
+    iconActionText: { color: '#3730a3', fontWeight: '700', fontSize: 13 },
     contentBody: { paddingHorizontal: 20, gap: 16 },
-    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#f1f5f9' },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e293b', marginBottom: 12, fontFamily: 'Outfit-Bold' },
+    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#e0e7ff' },
+    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e1b4b', marginBottom: 12, fontFamily: 'Outfit-Bold' },
     descText: { fontSize: 14, color: '#475569', lineHeight: 22, fontFamily: 'Outfit-Regular' },
     registryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     registryLabel: { fontSize: 14, color: '#64748b', fontWeight: '500', fontFamily: 'Outfit-Regular' },
-    registryValue: { fontSize: 14, color: '#0f766e', fontWeight: '700', fontFamily: 'Outfit-Bold' },
+    registryValue: { fontSize: 14, color: '#4338ca', fontWeight: '700', fontFamily: 'Outfit-Bold' },
     campaignHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    createCampBtn: { backgroundColor: '#ccfbf1', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-    createCampBtnText: { color: '#0f766e', fontWeight: '700', fontSize: 12 },
+    createCampBtn: { backgroundColor: '#e0e7ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#818cf8' },
+    createCampBtnText: { color: '#4338ca', fontWeight: '700', fontSize: 12 },
     emptyCampText: { color: '#94a3b8', fontSize: 14, textAlign: 'center', paddingVertical: 20, fontFamily: 'Outfit-Regular' },
     campRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     campTitle: { fontSize: 14, fontWeight: '700', color: '#334155' },

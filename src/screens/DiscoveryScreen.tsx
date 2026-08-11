@@ -316,22 +316,22 @@ const DiscoveryScreen = ({
                     keyExtractor={(item) => `org-${item.id}`}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0f766e']} tintColor="#0f766e" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} tintColor="#4f46e5" />
                     }
                     renderItem={({ item: org }) => (
                         <TouchableOpacity onPress={() => onViewOrganisationPreview?.(org)} activeOpacity={0.85}>
-                            <LinearGradient colors={['#f0fdfa', '#ccfbf1']} style={[styles.groupCard, { borderColor: '#99f6e4' }]}>
+                            <LinearGradient colors={['#eef2ff', '#e0e7ff']} style={[styles.groupCard, { borderColor: '#818cf8', borderWidth: 1.5 }]}>
                                 {org.cover_image ? (
                                     <Image source={{ uri: org.cover_image }} style={styles.coverImage} transition={200} />
                                 ) : (
-                                    <LinearGradient colors={['#0f766e', '#115e59']} style={styles.coverImage} />
+                                    <LinearGradient colors={['#1e1b4b', '#312e81', '#4338ca']} style={styles.coverImage} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
                                 )}
                                 <View style={styles.cardContent}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
                                         <Text style={styles.groupName}>{org.name}</Text>
                                         {org.is_verified && (
                                             <View style={styles.verifiedBadge}>
-                                                <Text style={styles.verifiedBadgeText}>✅ Verified</Text>
+                                                <Text style={styles.verifiedBadgeText}>🛡️ Official Org</Text>
                                             </View>
                                         )}
                                     </View>
@@ -343,7 +343,7 @@ const DiscoveryScreen = ({
                                         {org.description || 'A formal organisation on the Komunity platform.'}
                                     </Text>
                                     <TouchableOpacity
-                                        style={[styles.joinButton, { backgroundColor: '#0f766e' }]}
+                                        style={[styles.joinButton, { backgroundColor: '#4338ca', shadowColor: '#4338ca' }]}
                                         onPress={() => onViewOrganisationPreview?.(org)}
                                     >
                                         <Text style={styles.joinButtonText}>Explore Organisation →</Text>
@@ -535,15 +535,15 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     verifiedBadge: {
-        backgroundColor: '#d1fae5',
+        backgroundColor: '#e0e7ff',
         borderRadius: 20,
         paddingHorizontal: 7,
         paddingVertical: 1,
         borderWidth: 1,
-        borderColor: '#6ee7b7',
+        borderColor: '#818cf8',
     },
     verifiedBadgeText: {
-        color: '#065f46',
+        color: '#3730a3',
         fontSize: 10,
         fontWeight: '700',
     },

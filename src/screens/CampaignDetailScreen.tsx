@@ -94,11 +94,22 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
 
         setDisbursing(true);
         try {
-            await client.post(`campaigns/${campaign.id}/disburse/`, {
+            const res = await client.post(`campaigns/${campaign.id}/disburse/`, {
                 amount: amt,
                 note: withdrawNote,
             });
-            Alert.alert('✅ Withdrawal Successful', `R${amt.toFixed(2)} has been withdrawn from campaign.`);
+
+            if (res.data?.status === 'pending_approval') {
+                const given = res.data?.approvals_given || 1;
+                const needed = res.data?.approvals_needed || 2;
+                Alert.alert(
+                    '📋 Transfer Request Submitted',
+                    `A disbursement request of R${amt.toFixed(2)} has been submitted. It requires approval from group admins before funds are released (${given}/${needed} approvals received).`
+                );
+            } else {
+                Alert.alert('✅ Withdrawal Successful', `R${amt.toFixed(2)} has been withdrawn from campaign.`);
+            }
+
             setShowWithdrawModal(false);
             refresh();
             if (showLedgerModal) fetchLedger();

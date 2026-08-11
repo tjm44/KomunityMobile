@@ -6,6 +6,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 
+import { LinearGradient } from 'expo-linear-gradient';
+
 interface Transaction {
     id: number;
     transaction_type: string;
@@ -25,6 +27,7 @@ interface GroupWalletScreenProps {
 
 const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
     const insets = useSafeAreaInsets();
+    const isOrg = !!(group.is_organisation || group.entity_type);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [balance, setBalance] = useState<string>(group.balance || '0.00');
     const [loading, setLoading] = useState(true);
@@ -37,17 +40,19 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
 
     const fetchData = async () => {
         try {
-            // First, try to get group details for the balance
+            // First, try to get group/org details for the balance
             try {
-                const walletRes = await client.get(`groups/${group.id}/`);
-                setBalance(walletRes.data.balance);
+                const endpoint = isOrg ? `organisations/${group.id}/` : `groups/${group.id}/`;
+                const walletRes = await client.get(endpoint);
+                setBalance(walletRes.data.balance || walletRes.data.total_funds || '0.00');
             } catch (err) {
-                console.error('Error fetching group balance:', err);
+                console.error('Error fetching balance:', err);
             }
 
             // Then try to get transactions
             try {
-                const transRes = await client.get(`groups/${group.id}/transactions/`);
+                const endpoint = isOrg ? `organisations/${group.id}/transactions/` : `groups/${group.id}/transactions/`;
+                const transRes = await client.get(endpoint);
                 setTransactions(transRes.data);
                 setAccessDenied(false);
             } catch (err: any) {
@@ -58,7 +63,7 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
                 }
             }
         } catch (error) {
-            console.error('Error in fetching group wallet data:', error);
+            console.error('Error in fetching wallet data:', error);
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -106,53 +111,94 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
     if (loading) {
         return (
             <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
-                <ActivityIndicator size="large" color="#2563eb" />
+                <ActivityIndicator size="large" color={isOrg ? "#4f46e5" : "#2563eb"} />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <View style={[styles.header, { paddingTop: insets.top }]}>
-                <TouchableOpacity onPress={onBack} style={styles.backButton}>
-                    <Text style={styles.backButtonText}>←</Text>
+            {/* Header */}
+            <View style={[
+                styles.header,
+                { paddingTop: insets.top },
+                isOrg && { backgroundColor: '#1e1b4b', borderBottomColor: '#312e81' }
+            ]}>
+                <TouchableOpacity
+                    onPress={onBack}
+                    style={[styles.backButton, isOrg && { backgroundColor: '#312e81' }]}
+                >
+                    <Text style={[styles.backButtonText, isOrg && { color: '#a5b4fc' }]}>←</Text>
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Community Wallet</Text>
+                <View style={{ alignItems: 'center' }}>
+                    <Text style={[styles.headerTitle, isOrg && { color: '#ffffff' }]}>
+                        {isOrg ? "Organisation Wallet" : "Group Wallet"}
+                    </Text>
+                    {isOrg && (
+                        <Text style={{ fontSize: 10, color: '#a5b4fc', fontWeight: '700', letterSpacing: 0.5 }}>
+                            🏢 VERIFIED TREASURY
+                        </Text>
+                    )}
+                </View>
                 <View style={{ width: 40 }} />
             </View>
 
             <ScrollView
                 style={styles.content}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isOrg ? "#4f46e5" : "#2563eb"} />
                 }
             >
-                {/* Group Balance Card */}
-                <View style={styles.balanceCard}>
-                    <Text style={styles.balanceLabel}>{group.name} Total Funds</Text>
-                    <Text style={styles.balanceAmount}>{formatCurrency(balance)}</Text>
-                    <View style={styles.fundInfo}>
-                        <Text style={styles.fundInfoText}>
-                            Transparently managed for the benefit of all community members.
-                        </Text>
+                {/* Balance Card */}
+                {isOrg ? (
+                    <LinearGradient
+                        colors={['#1e1b4b', '#3730a3', '#4f46e5']}
+                        style={styles.balanceCard}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <Text style={{ fontSize: 12 }}>🏢</Text>
+                            <Text style={[styles.balanceLabel, { color: '#c7d2fe' }]}>
+                                {group.name} Treasury
+                            </Text>
+                        </View>
+                        <Text style={styles.balanceAmount}>{formatCurrency(balance)}</Text>
+                        <View style={[styles.fundInfo, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
+                            <Text style={styles.fundInfoText}>
+                                Secure corporate & NPO treasury managed under verified governance standards.
+                            </Text>
+                        </View>
+                    </LinearGradient>
+                ) : (
+                    <View style={styles.balanceCard}>
+                        <Text style={styles.balanceLabel}>{group.name} Total Funds</Text>
+                        <Text style={styles.balanceAmount}>{formatCurrency(balance)}</Text>
+                        <View style={styles.fundInfo}>
+                            <Text style={styles.fundInfoText}>
+                                Transparently managed for the benefit of all community members.
+                            </Text>
+                        </View>
                     </View>
-                </View>
+                )}
 
                 {/* Transaction History */}
-                <Text style={styles.sectionTitle}>Fund History</Text>
+                <Text style={styles.sectionTitle}>
+                    {isOrg ? "Treasury Activity Log" : "Fund History"}
+                </Text>
 
                 {transactions.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyStateText}>
                             {accessDenied
-                                ? "Visibility restricted to active community members."
-                                : "No transactions yet."}
+                                ? (isOrg ? "Visibility restricted to organisation administrators." : "Visibility restricted to active community members.")
+                                : "No treasury transactions recorded yet."}
                         </Text>
                     </View>
                 ) : (
                     transactions.map((item) => (
                         <View key={item.id} style={styles.transactionItem}>
-                            <View style={styles.itemIconContainer}>
+                            <View style={[styles.itemIconContainer, isOrg && { backgroundColor: '#eef2ff' }]}>
                                 <Text style={styles.itemIcon}>{getTransactionIcon(item.transaction_type)}</Text>
                             </View>
                             <View style={styles.itemContent}>
@@ -167,7 +213,7 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
                                 </View>
                                 <View style={styles.itemFooter}>
                                     <Text style={styles.itemUser}>
-                                        {item.wallet_detail?.full_name || item.wallet_detail?.user_email || 'Member'}
+                                        {item.wallet_detail?.full_name || item.wallet_detail?.user_email || 'Contributor'}
                                     </Text>
                                     <Text style={styles.itemDate}>{formatDate(item.timestamp)}</Text>
                                 </View>

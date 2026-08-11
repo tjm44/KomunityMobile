@@ -56,7 +56,6 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [nextPage, setNextPage] = useState<string | null>(null);
     const [hasMore, setHasMore] = useState(true);
-    const [selectedFilter, setSelectedFilter] = useState<number | null>(null); // deceased member id
 
     const fetchContributions = useCallback(async (page: number = 1) => {
         try {
@@ -133,41 +132,11 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
         }
     };
 
-    // Get unique deceased members / campaigns for filter tabs
-    const deceasedFilters = contributions.reduce<Array<{
-        id: number | string;
-        name: string;
-        groupName: string;
-        profilePicture: string | null;
-        totalRaised: string;
-    }>>((acc, contribution) => {
-        const filterId = contribution.deceased_member || (contribution.campaign_detail ? `campaign-${contribution.campaign_detail.id}` : contribution.id);
-        const name = contribution.campaign_detail?.title || contribution.deceased_member_detail?.deceased_detail?.full_name || 'Community Campaign';
-        const groupName = contribution.group_detail?.name || contribution.deceased_member_detail?.group_detail?.name || 'Community';
-        const profilePicture = contribution.deceased_member_detail?.deceased_detail?.profile_picture || null;
-        
-        if (!acc.find(d => d.id === filterId)) {
-            acc.push({
-                id: filterId,
-                name: name,
-                groupName: groupName,
-                profilePicture: profilePicture,
-                totalRaised: contribution.deceased_member_detail?.total_raised || '0',
-            });
-        }
-        return acc;
-    }, []);
-
-    // Filter contributions
-    const filteredContributions = selectedFilter
-        ? contributions.filter(c => c.deceased_member === selectedFilter)
-        : contributions;
-
     // Calculate summary stats
-    const totalContributed = filteredContributions.reduce(
+    const totalContributed = contributions.reduce(
         (sum, c) => sum + parseFloat(c.amount), 0
     );
-    const totalCount = filteredContributions.length;
+    const totalCount = contributions.length;
 
     if (loading) {
         return (
@@ -214,7 +183,7 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
     return (
         <View style={styles.container}>
             <FlatList
-                data={filteredContributions}
+                data={contributions}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderContribution}
                 refreshControl={
@@ -232,84 +201,15 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
                                 </View>
                                 <View style={styles.summaryDivider} />
                                 <View style={styles.summaryItem}>
-                                    <Text style={styles.summaryLabel}>Contributions</Text>
+                                    <Text style={styles.summaryLabel}>Total Contributions</Text>
                                     <Text style={styles.summaryValue}>{totalCount}</Text>
-                                </View>
-                                <View style={styles.summaryDivider} />
-                                <View style={styles.summaryItem}>
-                                    <Text style={styles.summaryLabel}>Funds</Text>
-                                    <Text style={styles.summaryValue}>{deceasedFilters.length}</Text>
                                 </View>
                             </View>
                         </View>
 
-                        {/* Filter Tabs */}
-                        {deceasedFilters.length > 0 && (
-                            <View style={styles.filterSection}>
-                                <Text style={styles.filterTitle}>FILTER BY FUND</Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={styles.filterScroll}
-                                >
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.filterChip,
-                                            selectedFilter === null && styles.filterChipActive
-                                        ]}
-                                        onPress={() => setSelectedFilter(null)}
-                                    >
-                                        <Text style={[
-                                            styles.filterChipText,
-                                            selectedFilter === null && styles.filterChipTextActive
-                                        ]}>All</Text>
-                                    </TouchableOpacity>
-                                    {deceasedFilters.map((filter) => (
-                                        <TouchableOpacity
-                                            key={filter.id}
-                                            style={[
-                                                styles.filterChip,
-                                                selectedFilter === filter.id && styles.filterChipActive
-                                            ]}
-                                            onPress={() => setSelectedFilter(
-                                                selectedFilter === filter.id ? null : filter.id
-                                            )}
-                                        >
-                                            {filter.profilePicture ? (
-                                                <Image
-                                                    source={{ uri: filter.profilePicture }}
-                                                    style={styles.filterAvatar}
-                                                />
-                                            ) : (
-                                                <View style={[styles.filterAvatar, styles.filterAvatarPlaceholder]}>
-                                                    <Text style={styles.filterAvatarText}>
-                                                        {filter.name[0]?.toUpperCase()}
-                                                    </Text>
-                                                </View>
-                                            )}
-                                            <View>
-                                                <Text style={[
-                                                    styles.filterChipText,
-                                                    selectedFilter === filter.id && styles.filterChipTextActive
-                                                ]} numberOfLines={1}>
-                                                    {filter.name}
-                                                </Text>
-                                                <Text style={[
-                                                    styles.filterChipSubtext,
-                                                    selectedFilter === filter.id && styles.filterChipSubtextActive
-                                                ]}>
-                                                    {filter.groupName}
-                                                </Text>
-                                            </View>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-                            </View>
-                        )}
-
                         {/* List Header */}
                         <Text style={styles.sectionTitle}>
-                            {selectedFilter ? 'Filtered Contributions' : 'All Contributions'}
+                            All Contributions
                         </Text>
                     </>
                 }
