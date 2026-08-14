@@ -29,17 +29,49 @@ interface Transaction {
     net_amount?: string;
     status: string;
     timestamp: string;
+    note?: string;
+    withdrawal_channel?: string;
+    withdrawal_metadata?: {
+        voucher_code?: string;
+        partner?: string;
+        [key: string]: any;
+    };
     destination_group_detail?: {
+        id?: number;
         name: string;
     };
     recipient_wallet_detail?: {
-        user_id: number;
-        full_name: string;
+        user_id?: number;
+        full_name?: string;
+        user_email?: string;
+    };
+    sender_wallet_detail?: {
+        user_id?: number;
+        full_name?: string;
+        user_email?: string;
     };
     wallet_detail?: {
-        user_id: number;
-        user_email: string;
+        user_id?: number;
+        user_email?: string;
         full_name?: string;
+    };
+    fund_campaign_detail?: {
+        id?: number;
+        title: string;
+        campaign_type?: string;
+    };
+    deceased_contribution_detail?: {
+        full_name: string;
+        group?: string;
+    };
+    description?: string;
+    from_label?: {
+        full_name?: string;
+        email?: string;
+    };
+    to_label?: {
+        full_name?: string;
+        email?: string;
     };
 }
 
@@ -507,18 +539,13 @@ const WalletScreen = ({
                 ) : (
                     transactions.map((item) => {
                         const isExpanded = expandedTransactionId === item.id;
-                        const senderLabel = item.transaction_type === 'TRANSFER' && item.wallet_detail
-                            ? item.wallet_detail.full_name || item.wallet_detail.user_email
-                            : item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail
-                                ? item.wallet_detail.full_name || item.wallet_detail.user_email
-                                : null;
-                        const detailTarget = item.destination_group_detail
-                            ? `To group: ${item.destination_group_detail.name}`
-                            : item.recipient_wallet_detail
-                                ? `To: ${item.recipient_wallet_detail.full_name}`
-                                : item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail
-                                    ? `From: ${item.wallet_detail.full_name || item.wallet_detail.user_email}`
-                                    : 'No additional recipient information';
+                        const isDebit = item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT';
+
+                        const label = item.description || (item.transaction_type || 'Transaction').replace(/_/g, ' ');
+                        const fromName = item.from_label?.full_name || item.sender_wallet_detail?.full_name || (item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail ? item.wallet_detail.full_name || item.wallet_detail.user_email : null);
+                        const toName = item.to_label?.full_name || item.recipient_wallet_detail?.full_name || item.destination_group_detail?.name;
+
+                        const flowLine = fromName && toName ? `${fromName} → ${toName}` : fromName ? `From: ${fromName}` : toName ? `To: ${toName}` : null;
 
                         return (
                             <View key={item.id} style={styles.transactionWrapper}>
@@ -531,27 +558,22 @@ const WalletScreen = ({
                                         <Text style={styles.transactionIcon}>{getTransactionIcon(item.transaction_type)}</Text>
                                     </View>
                                     <View style={styles.transactionDetails}>
-                                        <Text style={styles.transactionType}>
-                                            {item.transaction_type.replace('_', ' ')}
+                                        <Text style={styles.transactionType} numberOfLines={1}>
+                                            {label}
                                         </Text>
-                                        {item.destination_group_detail && (
-                                            <Text style={styles.destinationText}>To: {item.destination_group_detail.name}</Text>
-                                        )}
-                                        {item.recipient_wallet_detail && (
-                                            <Text style={styles.destinationText}>To: {item.recipient_wallet_detail.full_name}</Text>
-                                        )}
-                                        {item.transaction_type === 'P2P_RECEIVED' && item.wallet_detail && (
-                                            <Text style={styles.destinationText}>From: {item.wallet_detail.full_name || item.wallet_detail.user_email}</Text>
-                                        )}
+                                        {flowLine ? (
+                                            <Text style={styles.destinationText} numberOfLines={1}>
+                                                {flowLine}
+                                            </Text>
+                                        ) : null}
                                         <Text style={styles.transactionDate}>{formatDate(item.timestamp)}</Text>
                                     </View>
                                     <View style={styles.amountContainer}>
                                         <Text style={[
                                             styles.transactionAmount,
-                                            (item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT') ? styles.negativeAmount : styles.positiveAmount
+                                            isDebit ? styles.negativeAmount : styles.positiveAmount
                                         ]}>
-                                            {(item.transaction_type === 'TRANSFER' || item.transaction_type === 'WITHDRAWAL' || item.transaction_type === 'P2P_SENT') ? '-' : '+'}
-                                            {formatCurrency(item.amount)}
+                                            {isDebit ? '-' : '+'}{formatCurrency(item.amount)}
                                         </Text>
                                         <View style={[
                                             styles.statusBadge,
@@ -569,27 +591,47 @@ const WalletScreen = ({
 
                                 {isExpanded && (
                                     <View style={styles.expandedCard}>
-                                        <Text style={styles.expandedTitle}>More details</Text>
-                                        <Text style={styles.expandedText}>Transaction ID: #{item.id}</Text>
-                                        <Text style={styles.expandedText}>Type: {item.transaction_type.replace(/_/g, ' ')}</Text>
-                                        <Text style={styles.expandedText}>Status: {item.status}</Text>
-                                        <Text style={styles.expandedText}>Date: {new Date(item.timestamp).toLocaleString()}</Text>
-                                        {senderLabel && (
-                                            <Text style={styles.expandedText}>From: {senderLabel}</Text>
-                                        )}
-                                        {item.transaction_type === 'TRANSFER' && (
-                                            <Text style={styles.expandedText}>Transferred to: {detailTarget.replace('To group: ', '').replace('To: ', '')}</Text>
-                                        )}
-                                        {item.withdrawal_metadata?.voucher_code && (
-                                            <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#d1fae5', borderWidth: 1, borderColor: '#a7f3d0' }}>
-                                                <Text style={{ fontSize: 11, color: '#065f46', fontWeight: 'bold' }}>🎫 Voucher Code:</Text>
-                                                <Text style={{ fontSize: 16, fontWeight: '800', color: '#047857', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2 }}>{item.withdrawal_metadata.voucher_code}</Text>
-                                                {item.withdrawal_metadata.partner && (
-                                                    <Text style={{ fontSize: 11, color: '#065f46', marginTop: 2 }}>🏪 Redeem at: {item.withdrawal_metadata.partner}</Text>
-                                                )}
+                                        <Text style={styles.expandedTitle}>Transaction Details</Text>
+                                        <Text style={styles.expandedText}><Text style={{ fontWeight: '700' }}>Transaction ID:</Text> #{item.id}</Text>
+                                        <Text style={styles.expandedText}><Text style={{ fontWeight: '700' }}>Type:</Text> {(item.transaction_type || '').replace(/_/g, ' ')}</Text>
+                                        <Text style={styles.expandedText}><Text style={{ fontWeight: '700' }}>Status:</Text> {item.status}</Text>
+                                        <Text style={styles.expandedText}><Text style={{ fontWeight: '700' }}>Date & Time:</Text> {item.timestamp ? new Date(item.timestamp).toLocaleString() : 'Date unknown'}</Text>
+                                        {fromName ? (
+                                            <Text style={styles.expandedText}><Text style={{ fontWeight: '700' }}>From:</Text> {fromName}</Text>
+                                        ) : null}
+                                        {toName ? (
+                                            <Text style={styles.expandedText}><Text style={{ fontWeight: '700' }}>To:</Text> {toName}</Text>
+                                        ) : null}
+                                        {item.fund_campaign_detail ? (
+                                            <Text style={styles.expandedText}>
+                                                <Text style={{ fontWeight: '700' }}>Campaign:</Text> {item.fund_campaign_detail.title} {item.fund_campaign_detail.campaign_type ? `(${item.fund_campaign_detail.campaign_type})` : ''}
+                                            </Text>
+                                        ) : null}
+                                        {item.deceased_contribution_detail ? (
+                                            <Text style={styles.expandedText}>
+                                                <Text style={{ fontWeight: '700' }}>Bereavement:</Text> {item.deceased_contribution_detail.full_name}{item.deceased_contribution_detail.group ? ` · ${item.deceased_contribution_detail.group}` : ''}
+                                            </Text>
+                                        ) : null}
+                                        {item.note ? (
+                                            <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                                <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569' }}>Note:</Text>
+                                                <Text style={{ fontSize: 12, color: '#334155', marginTop: 2 }}>{item.note}</Text>
                                             </View>
-                                        )}
-                                        <Text style={styles.expandedText}>Details: {detailTarget}</Text>
+                                        ) : null}
+                                        {item.withdrawal_channel ? (
+                                            <Text style={styles.expandedText}>
+                                                <Text style={{ fontWeight: '700' }}>Channel:</Text> {item.withdrawal_channel.replace(/_/g, ' ')}
+                                            </Text>
+                                        ) : null}
+                                        {item.withdrawal_metadata?.voucher_code ? (
+                                            <View style={{ marginTop: 8, padding: 10, borderRadius: 10, backgroundColor: '#d1fae5', borderWidth: 1, borderColor: '#a7f3d0' }}>
+                                                <Text style={{ fontSize: 11, color: '#065f46', fontWeight: 'bold' }}>🎫 Voucher Code:</Text>
+                                                <Text style={{ fontSize: 18, fontWeight: '800', color: '#047857', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2, letterSpacing: 1 }}>{item.withdrawal_metadata.voucher_code}</Text>
+                                                {item.withdrawal_metadata.partner ? (
+                                                    <Text style={{ fontSize: 11, color: '#065f46', marginTop: 4, fontWeight: '500' }}>🏪 Redeem at: {item.withdrawal_metadata.partner}</Text>
+                                                ) : null}
+                                            </View>
+                                        ) : null}
                                     </View>
                                 )}
                             </View>
