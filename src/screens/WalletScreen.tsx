@@ -123,7 +123,7 @@ const WalletScreen = ({
     const [sendError, setSendError] = useState<string | null>(null);
     const [contributeError, setContributeError] = useState<string | null>(null);
     const [showWithdraw, setShowWithdraw] = useState(false);
-    const [withdrawChannel, setWithdrawChannel] = useState<'bank_transfer' | 'mobile_money' | 'voucher'>('bank_transfer');
+    const [withdrawChannel, setWithdrawChannel] = useState<'bank_transfer' | 'mobile_money' | 'voucher' | 'send_money'>('bank_transfer');
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [withdrawAccountNumber, setWithdrawAccountNumber] = useState('');
     const [withdrawBankCode, setWithdrawBankCode] = useState('');
@@ -271,6 +271,7 @@ const WalletScreen = ({
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Alert.alert('Success', `Successfully sent ${formatCurrency(sendAmount)} to ${selectedRecipient.member_detail.full_name}`);
             setShowSendMoney(false);
+            setShowWithdraw(false);
             setSendAmount('');
             setSelectedRecipient(null);
             setSearchQuery('');
@@ -499,14 +500,7 @@ const WalletScreen = ({
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.actionButton}
-                            onPress={() => setShowSendMoney(true)}
-                        >
-                            <Text style={styles.actionIcon}>💸</Text>
-                            <Text style={styles.actionText}>Send</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => setShowWithdraw(true)}
+                            onPress={() => { setWithdrawChannel('bank_transfer'); setShowWithdraw(true); }}
                         >
                             <Text style={styles.actionIcon}>📤</Text>
                             <Text style={styles.actionText}>Withdraw</Text>
@@ -933,7 +927,9 @@ const WalletScreen = ({
                 >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Withdraw Funds</Text>
+                            <Text style={styles.modalTitle}>
+                                {withdrawChannel === 'send_money' ? 'Send Money' : 'Withdraw Funds'}
+                            </Text>
                             <TouchableOpacity onPress={() => {
                                 setShowWithdraw(false);
                                 setWithdrawAmount('');
@@ -944,26 +940,35 @@ const WalletScreen = ({
                                 setWithdrawVoucherCode('');
                                 setWithdrawPartner('');
                                 setWithdrawError(null);
+                                setSelectedRecipient(null);
+                                setSendAmount('');
+                                setSendError(null);
+                                setSearchQuery('');
                             }}>
                                 <Text style={styles.closeButton}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
-                        <Text style={styles.inputLabel}>Withdrawal Channel</Text>
+                        <Text style={styles.inputLabel}>Channel</Text>
                         <View style={styles.channelOptions}>
                             {[
-                                { value: 'bank_transfer', label: 'Bank Transfer', icon: '🏦' },
-                                { value: 'mobile_money', label: 'Mobile Money', icon: '📱' },
-                                { value: 'voucher', label: 'Voucher', icon: '🎫' }
+                                { value: 'bank_transfer', label: 'Bank', icon: '🏦' },
+                                { value: 'mobile_money', label: 'Mobile', icon: '📱' },
+                                { value: 'voucher', label: 'Voucher', icon: '🎫' },
+                                { value: 'send_money', label: 'Send Money', icon: '💸' },
                             ].map((option) => (
                                 <TouchableOpacity
                                     key={option.value}
                                     activeOpacity={0.8}
                                     style={[
                                         styles.channelOption,
-                                        withdrawChannel === option.value && styles.channelOptionSelected
+                                        withdrawChannel === option.value && styles.channelOptionSelected,
+                                        option.value === 'send_money' && withdrawChannel === 'send_money' && { borderColor: '#7c3aed', backgroundColor: '#7c3aed' }
                                     ]}
-                                    onPress={() => setWithdrawChannel(option.value as any)}
+                                    onPress={() => {
+                                        setWithdrawChannel(option.value as any);
+                                        setWithdrawError(null);
+                                    }}
                                 >
                                     <Text style={styles.channelOptionIcon}>{option.icon}</Text>
                                     <Text style={[
@@ -974,18 +979,111 @@ const WalletScreen = ({
                             ))}
                         </View>
 
-                        <Text style={styles.inputLabel}>Amount (ZAR)</Text>
-                        <TextInput
-                            style={[styles.textInput, withdrawError && styles.inputError]}
-                            placeholder="0.00"
-                            keyboardType="decimal-pad"
-                            value={withdrawAmount}
-                            onChangeText={(text) => {
-                                setWithdrawAmount(text);
-                                if (withdrawError) setWithdrawError(null);
-                            }}
-                            placeholderTextColor="#9ca3af"
-                        />
+                        {withdrawChannel !== 'send_money' && <Text style={styles.inputLabel}>Amount (ZAR)</Text>}
+                        {withdrawChannel !== 'send_money' && (
+                            <TextInput
+                                style={[styles.textInput, withdrawError && styles.inputError]}
+                                placeholder="0.00"
+                                keyboardType="decimal-pad"
+                                value={withdrawAmount}
+                                onChangeText={(text) => {
+                                    setWithdrawAmount(text);
+                                    if (withdrawError) setWithdrawError(null);
+                                }}
+                                placeholderTextColor="#9ca3af"
+                            />
+                        )}
+
+                        {withdrawChannel === 'send_money' && (
+                            <View>
+                                {!selectedRecipient ? (
+                                    <>
+                                        <Text style={styles.inputLabel}>Search Member</Text>
+                                        <TextInput
+                                            style={styles.textInput}
+                                            placeholder="Search by name..."
+                                            value={searchQuery}
+                                            onChangeText={setSearchQuery}
+                                            placeholderTextColor="#9ca3af"
+                                        />
+                                        <ScrollView style={[styles.memberList, { maxHeight: 180 }]}>
+                                            {members
+                                                .filter((m: any) =>
+                                                    !searchQuery || m.member_detail?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                                                )
+                                                .map((member: any) => (
+                                                    <TouchableOpacity
+                                                        key={member.id}
+                                                        style={styles.memberItem}
+                                                        onPress={() => { setSelectedRecipient(member); setSearchQuery(''); }}
+                                                    >
+                                                        <View style={styles.memberAvatar}>
+                                                            {member.member_detail?.profile_picture ? (
+                                                                <Image
+                                                                    source={{ uri: getMediaUrl(member.member_detail.profile_picture) }}
+                                                                    style={styles.avatarImg}
+                                                                />
+                                                            ) : (
+                                                                <Text style={styles.avatarInitial}>
+                                                                    {member.member_detail?.full_name?.[0]?.toUpperCase() || '?'}
+                                                                </Text>
+                                                            )}
+                                                        </View>
+                                                        <Text style={styles.memberName}>{member.member_detail?.full_name}</Text>
+                                                    </TouchableOpacity>
+                                                ))
+                                            }
+                                        </ScrollView>
+                                    </>
+                                ) : (
+                                    <>
+                                        <View style={styles.selectedRecipient}>
+                                            <View style={styles.memberAvatar}>
+                                                {selectedRecipient.member_detail?.profile_picture ? (
+                                                    <Image
+                                                        source={{ uri: getMediaUrl(selectedRecipient.member_detail.profile_picture) }}
+                                                        style={styles.avatarImg}
+                                                    />
+                                                ) : (
+                                                    <Text style={styles.avatarInitial}>
+                                                        {selectedRecipient.member_detail?.full_name?.[0]?.toUpperCase()}
+                                                    </Text>
+                                                )}
+                                            </View>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={styles.recipientName}>{selectedRecipient.member_detail?.full_name}</Text>
+                                                <TouchableOpacity onPress={() => setSelectedRecipient(null)}>
+                                                    <Text style={styles.changeRecipient}>Change recipient</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+
+                                        <Text style={styles.inputLabel}>Amount (ZAR)</Text>
+                                        <TextInput
+                                            style={[styles.textInput, sendError && styles.inputError]}
+                                            placeholder="0.00"
+                                            keyboardType="decimal-pad"
+                                            value={sendAmount}
+                                            onChangeText={(text) => { setSendAmount(text); if (sendError) setSendError(null); }}
+                                            placeholderTextColor="#9ca3af"
+                                        />
+                                        {sendError && <Text style={styles.errorText}>{sendError}</Text>}
+
+                                        <View style={styles.presets}>
+                                            {['5', '10', '25', '50'].map((amt) => (
+                                                <TouchableOpacity
+                                                    key={amt}
+                                                    style={styles.presetBtn}
+                                                    onPress={() => setSendAmount(amt)}
+                                                >
+                                                    <Text style={styles.presetText}>R{amt}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    </>
+                                )}
+                            </View>
+                        )}
 
                         {withdrawChannel === 'bank_transfer' && (
                             <>
@@ -1113,17 +1211,33 @@ const WalletScreen = ({
 
                         {withdrawError && <Text style={styles.errorText}>{withdrawError}</Text>}
 
-                        <TouchableOpacity
-                            style={[styles.submitButton, isWithdrawing && styles.disabledButton]}
-                            onPress={handleWithdraw}
-                            disabled={isWithdrawing}
-                        >
-                            {isWithdrawing ? (
-                                <ActivityIndicator color="#ffffff" />
-                            ) : (
-                                <Text style={styles.submitButtonText}>Submit Withdrawal</Text>
-                            )}
-                        </TouchableOpacity>
+                        {withdrawChannel !== 'send_money' && (
+                            <TouchableOpacity
+                                style={[styles.submitButton, isWithdrawing && styles.disabledButton]}
+                                onPress={handleWithdraw}
+                                disabled={isWithdrawing}
+                            >
+                                {isWithdrawing ? (
+                                    <ActivityIndicator color="#ffffff" />
+                                ) : (
+                                    <Text style={styles.submitButtonText}>Submit Withdrawal</Text>
+                                )}
+                            </TouchableOpacity>
+                        )}
+
+                        {withdrawChannel === 'send_money' && selectedRecipient && (
+                            <TouchableOpacity
+                                style={[styles.submitButton, { backgroundColor: '#7c3aed' }, isSending && styles.disabledButton]}
+                                onPress={handleSendMoney}
+                                disabled={isSending}
+                            >
+                                {isSending ? (
+                                    <ActivityIndicator color="#ffffff" />
+                                ) : (
+                                    <Text style={styles.submitButtonText}>Send Money</Text>
+                                )}
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
@@ -1323,15 +1437,23 @@ const styles = StyleSheet.create({
     },
     actionButton: {
         alignItems: 'center',
+        backgroundColor: 'rgba(255, 255, 255, 0.12)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.35)',
+        borderRadius: 14,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        minWidth: 64,
     },
     actionIcon: {
-        fontSize: 24,
-        marginBottom: 4,
+        fontSize: 22,
+        marginBottom: 5,
     },
     actionText: {
         color: '#ffffff',
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 0.3,
     },
     sectionTitle: {
         fontSize: 18,

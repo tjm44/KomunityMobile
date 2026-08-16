@@ -32,6 +32,8 @@ interface HomeScreenProps {
   onViewWallet?: () => void;
   onDiscover?: () => void;
   onCreateGroup?: () => void;
+  onOpenNotifications?: () => void;
+  unreadNotificationCount?: number;
 }
 
 const HomeScreen = ({
@@ -40,13 +42,18 @@ const HomeScreen = ({
   onViewWallet,
   onDiscover,
   onCreateGroup,
+  onOpenNotifications,
+  unreadNotificationCount,
 }: HomeScreenProps) => {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { registerToken } = usePushNotifications();
   const [searchVisible, setSearchVisible] = useState(false);
   const [activeGroupId, setActiveGroupId] = useState<number | null>(null);
+
+  const effectiveUnreadCount = unreadNotificationCount ?? unreadCount;
 
   useEffect(() => {
     fetchData();
@@ -70,6 +77,14 @@ const HomeScreen = ({
       const groupsRes = await client.get("groups/mine/");
       const fetchedGroups = groupsRes.data as Group[];
       setGroups(fetchedGroups);
+
+      // Also fetch unread notification count
+      try {
+        const notifRes = await client.get("notifications/unread_count/");
+        setUnreadCount(notifRes.data.unread_count || 0);
+      } catch (err) {
+        console.log("Error fetching unread notification count:", err);
+      }
 
       const activeGroups = fetchedGroups.filter((g) => g.is_selected);
       if (activeGroups.length === 1) {
@@ -131,6 +146,19 @@ const HomeScreen = ({
             style={styles.searchButton}
           >
             <Text style={{ fontSize: 22 }}>🔍</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={onOpenNotifications}
+            style={[styles.searchButton, { marginLeft: 10, position: 'relative' }]}
+          >
+            <Text style={{ fontSize: 22 }}>🔔</Text>
+            {effectiveUnreadCount > 0 && (
+              <View style={styles.headerBadge}>
+                <Text style={styles.headerBadgeText}>
+                  {effectiveUnreadCount > 99 ? '99+' : effectiveUnreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -564,6 +592,25 @@ const styles = StyleSheet.create({
     color: "#16a34a",
     fontWeight: "bold",
     fontSize: 13,
+  },
+  headerBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#ffffff',
+  },
+  headerBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
 

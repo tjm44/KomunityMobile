@@ -140,10 +140,6 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                         </View>
 
                         <View style={styles.bannerActions}>
-                            <TouchableOpacity style={styles.bannerPrimaryButton} onPress={onViewFeed}>
-                                <Text style={styles.bannerPrimaryButtonText}>Jump to Feed</Text>
-                            </TouchableOpacity>
-
                             <TouchableOpacity style={styles.bannerSecondaryButton} onPress={onViewWallet}>
                                 <View style={styles.iconCircle}>
                                     <Text style={styles.iconText}>💳</Text>
@@ -174,9 +170,6 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                                 </TouchableOpacity>
                             )}
 
-                            <TouchableOpacity style={styles.bannerDangerButton} onPress={handleLeaveGroup}>
-                                <Text style={styles.bannerDangerButtonText}>Leave</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -504,7 +497,9 @@ const styles = StyleSheet.create({
     bannerActions: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-evenly',
         marginTop: 16,
+        width: '100%',
     },
     bannerPrimaryButton: {
         flex: 2,
@@ -525,10 +520,12 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
     bannerSecondaryButton: {
+        flex: 1,
         backgroundColor: '#ffffff',
-        padding: 10,
+        paddingVertical: 10,
         borderRadius: 10,
-        marginRight: 8,
+        marginHorizontal: 4,
+        alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,

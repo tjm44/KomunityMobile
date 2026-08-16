@@ -4,6 +4,7 @@ import {
   View,
   ActivityIndicator,
   Text,
+  TouchableOpacity,
   StyleSheet as RNStyleSheet,
   BackHandler,
 } from "react-native";
@@ -50,6 +51,7 @@ import OrganisationDetailScreen from "./src/screens/OrganisationDetailScreen";
 import EditOrganisationScreen from "./src/screens/EditOrganisationScreen";
 import OrganisationPreviewScreen from "./src/screens/OrganisationPreviewScreen";
 import VerifyIdentityPromptScreen from "./src/screens/VerifyIdentityPromptScreen";
+import NotificationScreen from "./src/screens/NotificationScreen";
 import client, { setAuthToken, loadToken, clearToken } from "./src/api/client";
 
 export default function App() {
@@ -102,6 +104,19 @@ export default function App() {
   const [isPromptingVerification, setIsPromptingVerification] = React.useState(false);
   const [autoShowKycOnProfile, setAutoShowKycOnProfile] = React.useState(false);
 
+  // Notification Screen State
+  const [viewingNotifications, setViewingNotifications] = React.useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
+
+  const fetchUnreadNotificationCount = React.useCallback(async () => {
+    try {
+      const notifRes = await client.get("notifications/unread_count/");
+      setUnreadNotificationCount(notifRes.data.unread_count || 0);
+    } catch (err) {
+      console.log("Error fetching unread notification count:", err);
+    }
+  }, []);
+
   const activeTab_ref = React.useRef<"home" | "discovery" | "wallet" | "profile" | "fundraisers">("home");
   const [activeTab, setActiveTab] = React.useState<
     "home" | "discovery" | "wallet" | "profile" | "fundraisers"
@@ -131,6 +146,7 @@ export default function App() {
     setViewingOrganisationDetails(null);
     setEditingOrganisation(null);
     setPreviewingOrganisation(null);
+    setViewingNotifications(false);
   }, []);
 
   const handleDeepLink = React.useCallback(
@@ -202,6 +218,7 @@ export default function App() {
       if (isChoosingGroup) return false;
 
       // Sub-screen navigation — mirrors getCurrentBackAction()
+      if (viewingNotifications) { setViewingNotifications(false); return true; }
       if (isCreatingGroup) { setIsCreatingGroup(false); setIsChoosingGroupPurpose(true); return true; }
       if (isChoosingGroupPurpose) { setIsChoosingGroupPurpose(false); return true; }
       if (viewingCampaign) { setViewingCampaign(null); return true; }
@@ -274,6 +291,7 @@ export default function App() {
             setNeedsProfileSetup(true);
           }
           setIsLoggedIn(true);
+          fetchUnreadNotificationCount();
         }
       } catch (error) {
         // Token is invalid or expired — clear it and show login
@@ -304,6 +322,7 @@ export default function App() {
   const handleLoginSuccess = async () => {
     await checkProfileStatus();
     setIsLoggedIn(true);
+    fetchUnreadNotificationCount();
   };
 
   const handleSignUpSuccess = async () => {
@@ -496,6 +515,7 @@ export default function App() {
   }
 
   const getCurrentBackAction = () => {
+    if (viewingNotifications) return () => setViewingNotifications(false);
     if (isCreatingOrganisation) return () => setIsCreatingOrganisation(false);
     if (editingOrganisation) return () => setEditingOrganisation(null);
     if (viewingOrganisationDetails) return () => setViewingOrganisationDetails(null);
@@ -517,6 +537,7 @@ export default function App() {
   };
 
   const shouldShowTopNavBar = () => {
+    if (viewingNotifications) return false;
     if (isCreatingOrganisation) return true;
     if (editingOrganisation) return true;
     if (viewingOrganisationDetails) return true;
@@ -541,6 +562,7 @@ export default function App() {
   };
 
   const getCurrentTitle = () => {
+    if (viewingNotifications) return "Notifications";
     if (isCreatingOrganisation) return "Register Organisation";
     if (editingOrganisation) return "Edit Organisation";
     if (viewingOrganisationDetails) return viewingOrganisationDetails.name;
@@ -569,6 +591,7 @@ export default function App() {
   /** DEV ONLY – maps current navigation state to a screen ID for DevScreenBadge */
   const getScreenId = (): string => {
     // Sub-screens / overlays (highest priority)
+    if (viewingNotifications)   return 'MOB-35';
     if (isCreatingOrganisation) return 'MOB-31';
     if (editingOrganisation)    return 'MOB-34';
     if (previewingOrganisation) return 'MOB-32';
@@ -615,10 +638,47 @@ export default function App() {
             <TopNavBar
               title={getCurrentTitle()}
               onBack={getCurrentBackAction()}
+              rightComponent={
+                <TouchableOpacity
+                  onPress={() => setViewingNotifications(true)}
+                  style={{ position: 'relative', padding: 4 }}
+                >
+                  <Text style={{ fontSize: 20 }}>🔔</Text>
+                  {unreadNotificationCount > 0 && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: -2,
+                        right: -4,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 9,
+                        minWidth: 16,
+                        height: 16,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        paddingHorizontal: 3,
+                        borderWidth: 1.5,
+                        borderColor: '#ffffff',
+                      }}
+                    >
+                      <Text style={{ color: '#ffffff', fontSize: 9, fontWeight: 'bold' }}>
+                        {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              }
             />
           )}
           <View style={{ flex: 1, marginBottom: 70 }}>
-            {isCreatingOrganisation ? (
+            {viewingNotifications ? (
+              <AnimatedScreen animation="slideRight">
+                <NotificationScreen
+                  onBack={() => setViewingNotifications(false)}
+                  onNotificationsRead={fetchUnreadNotificationCount}
+                />
+              </AnimatedScreen>
+            ) : isCreatingOrganisation ? (
               <AnimatedScreen animation="slideUp">
                 <CreateOrganisationScreen
                   onBack={() => setIsCreatingOrganisation(false)}
@@ -865,6 +925,7 @@ export default function App() {
                     onViewWallet={() => setActiveTab("wallet")}
                     onDiscover={() => setActiveTab("discovery")}
                     onCreateGroup={() => setIsChoosingGroupPurpose(true)}
+                    onOpenNotifications={() => setViewingNotifications(true)}
                   />
                 )}
                 {activeTab === "discovery" && (
@@ -951,8 +1012,10 @@ export default function App() {
             onTabPress={(tab) => {
               resetSubScreens();
               setActiveTab(tab);
+              fetchUnreadNotificationCount();
             }}
             profilePicture={userProfile?.profile_picture}
+            unreadNotificationCount={unreadNotificationCount}
           />
           </LinearGradient>
       </SafeAreaProvider>

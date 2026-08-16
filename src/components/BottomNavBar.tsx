@@ -13,6 +13,7 @@ interface BottomNavBarProps {
     onTabPress: (tab: TabName) => void;
     onBack?: () => void;
     profilePicture?: string | null;
+    unreadNotificationCount?: number;
 }
 
 const TABS: Array<{
@@ -29,7 +30,7 @@ const TABS: Array<{
     { key: 'profile',     label: 'Profile',                          color: '#2563eb' },
 ];
 
-const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture }: BottomNavBarProps) => {
+const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNotificationCount }: BottomNavBarProps) => {
     const insets = useSafeAreaInsets();
 
     const handlePress = (tab: TabName) => {
@@ -99,12 +100,21 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture }: BottomN
                         style={styles.navItem}
                         onPress={() => handlePress(tab.key)}
                     >
-                        <Feather
-                            name={tab.icon!}
-                            size={22}
-                            color={tabColor}
-                            style={{ marginBottom: 4 }}
-                        />
+                        <View style={styles.iconWrap}>
+                            <Feather
+                                name={tab.icon!}
+                                size={22}
+                                color={tabColor}
+                                style={{ marginBottom: 4 }}
+                            />
+                            {tab.key === 'home' && unreadNotificationCount ? unreadNotificationCount > 0 ? (
+                                <View style={styles.badge}>
+                                    <Text style={styles.badgeText}>
+                                        {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                                    </Text>
+                                </View>
+                            ) : null : null}
+                        </View>
                         <Text style={[styles.navText, isActive && { color: tab.color }]}>{tab.label}</Text>
                     </TouchableOpacity>
                 );
@@ -134,6 +144,30 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    iconWrap: {
+        position: 'relative',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    badge: {
+        position: 'absolute',
+        top: -4,
+        right: -8,
+        backgroundColor: '#ef4444',
+        borderRadius: 9,
+        minWidth: 16,
+        height: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 3,
+        borderWidth: 1.5,
+        borderColor: '#ffffff',
+    },
+    badgeText: {
+        color: '#ffffff',
+        fontSize: 9,
+        fontWeight: 'bold',
     },
     backIcon: { fontSize: 22, marginBottom: 4, color: '#2563eb', fontWeight: 'bold' },
     navText: { fontSize: 10, fontWeight: '600', color: '#6b7280' },
