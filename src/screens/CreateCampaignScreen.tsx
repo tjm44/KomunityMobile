@@ -27,7 +27,11 @@ const CAMPAIGN_TYPES = [
     { key: 'bereavement', label: 'Bereavement', icon: '🕊️', color: '#7c3aed' },
     { key: 'excess',      label: 'Insurance Excess', icon: '🚗', color: '#0284c7' },
     { key: 'emergency',   label: 'Emergency', icon: '🆘', color: '#dc2626' },
-    { key: 'custom',      label: 'Custom', icon: '✨', color: '#059669' },
+    { key: 'custom',      label: 'Custom Fund', icon: '✨', color: '#6366f1' },
+    { key: 'church',      label: 'Church / Tithe / Pledge', icon: '⛪', color: '#0284c7' },
+    { key: 'stokvel',     label: 'Stokvel Cycle Fund', icon: '💰', color: '#059669' },
+    { key: 'student',     label: 'Student Event & Relief', icon: '🎓', color: '#d97706' },
+    { key: 'sports',      label: 'Sports Kit & Dues', icon: '⚽', color: '#10b981' },
 ];
 
 const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreenProps) => {

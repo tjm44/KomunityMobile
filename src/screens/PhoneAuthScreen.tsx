@@ -25,16 +25,20 @@ interface PhoneAuthProps {
 type AuthStep = 'phone' | 'pin' | 'otp' | 'create_pin';
 
 const COUNTRY_CODES = [
-  { code: '+254', label: '🇰🇪 Kenya (+254)' },
   { code: '+27', label: '🇿🇦 South Africa (+27)' },
+  { code: '+254', label: '🇰🇪 Kenya (+254)' },
   { code: '+234', label: '🇳🇬 Nigeria (+234)' },
+  { code: '+263', label: '🇿🇼 Zimbabwe (+263)' },
+  { code: '+267', label: '🇧🇼 Botswana (+267)' },
+  { code: '+260', label: '🇿🇲 Zambia (+260)' },
+  { code: '+258', label: '🇲🇿 Mozambique (+258)' },
   { code: '+1', label: '🇺🇸 USA/Canada (+1)' },
   { code: '+44', label: '🇬🇧 UK (+44)' },
 ];
 
 const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
   const [step, setStep] = useState<AuthStep>('phone');
-  const [countryCode, setCountryCode] = useState('+254');
+  const [countryCode, setCountryCode] = useState('+27');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [pin, setPin] = useState('');
@@ -77,6 +81,19 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
     const cleaned = phoneNumber.replace(/[^0-9]/g, '');
     const formattedNum = cleaned.startsWith('0') ? cleaned.substring(1) : cleaned;
     return `${countryCode}${formattedNum}`;
+  };
+
+  // Auto-format phone number with spaces as user types
+  // SA format: 061 325 2589  (3-3-4)
+  const formatPhoneNumber = (raw: string) => {
+    // Strip everything except digits
+    const digits = raw.replace(/[^0-9]/g, '');
+    // Limit to 10 digits (SA local number)
+    const capped = digits.slice(0, 10);
+    // Apply 3-3-4 spacing: 061 325 2589
+    if (capped.length <= 3) return capped;
+    if (capped.length <= 6) return `${capped.slice(0, 3)} ${capped.slice(3)}`;
+    return `${capped.slice(0, 3)} ${capped.slice(3, 6)} ${capped.slice(6)}`;
   };
 
   // Step 1: Check phone status (PIN vs OTP flow)
@@ -320,12 +337,13 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
 
                   <TextInput
                     style={styles.phoneInput}
-                    placeholder="712 345 678"
+                    placeholder="061 325 2589"
                     placeholderTextColor="#64748b"
                     keyboardType="phone-pad"
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
+                    onChangeText={(text) => setPhoneNumber(formatPhoneNumber(text))}
                     autoFocus
+                    maxLength={13}
                   />
                 </View>
 

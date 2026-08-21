@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, RefreshControl, Share } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Alert, RefreshControl, Share, Modal, TextInput, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -54,6 +54,26 @@ const DiscoveryScreen = ({
     const [joiningId, setJoiningId] = useState<number | null>(null);
     const [activeTab, setActiveTab] = useState<'communities' | 'organisations'>('communities');
 
+    // Bereavement Modal State
+    const [showBereavementModal, setShowBereavementModal] = useState(false);
+    const [targetBereavementGroup, setTargetBereavementGroup] = useState<Group | null>(null);
+    const [bName, setBName] = useState('');
+    const [bRel, setBRel] = useState('Spouse');
+    const [bPhone, setBPhone] = useState('');
+    const [joinMsg, setJoinMsg] = useState('');
+    const [dependents, setDependents] = useState<Array<{ name: string; relationship: string; date_of_birth: string }>>([]);
+
+    // Excess Modal State
+    const [showExcessModal, setShowExcessModal] = useState(false);
+    const [targetExcessGroup, setTargetExcessGroup] = useState<Group | null>(null);
+    const [vMakeModel, setVMakeModel] = useState('');
+    const [vReg, setVReg] = useState('');
+    const [vInsurer, setVInsurer] = useState('');
+    const [vPolicy, setVPolicy] = useState('');
+    const [vVin, setVVin] = useState('');
+    const [vLicense, setVLicense] = useState('');
+    const [excessJoinMsg, setExcessJoinMsg] = useState('');
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -92,35 +112,52 @@ const DiscoveryScreen = ({
     };
 
     const handleJoinGroup = (group: Group) => {
-        Alert.alert(
-            'Join Community',
-            `Are you sure you want to ${group.requires_approval ? 'request to join' : 'join'} ${group.name}?`,
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Confirm',
-                    onPress: () => performJoin(group)
-                }
-            ]
-        );
+        if (group.purpose === 'bereavement') {
+            setTargetBereavementGroup(group);
+            setShowBereavementModal(true);
+        } else if (group.purpose === 'excess') {
+            setTargetExcessGroup(group);
+            setShowExcessModal(true);
+        } else {
+            Alert.alert(
+                'Join Community',
+                `Are you sure you want to ${group.requires_approval ? 'request to join' : 'join'} ${group.name}?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Confirm',
+                        onPress: () => performJoin(group)
+                    }
+                ]
+            );
+        }
     };
 
-    const performJoin = async (group: Group) => {
+    const performJoin = async (group: Group, customPayload?: any) => {
         setJoiningId(group.id);
         try {
-            const response = await client.post(`groups/${group.id}/join/`);
+            const response = await client.post(`groups/${group.id}/join/`, customPayload || {});
             const status = response.data.status;
 
             if (status === 'active') {
                 Alert.alert('Welcome!', `You have successfully joined ${group.name}.`);
+                setShowBereavementModal(false);
+                setTargetBereavementGroup(null);
+                setShowExcessModal(false);
+                setTargetExcessGroup(null);
                 onGroupJoined();
             } else if (status === 'pending') {
                 Alert.alert('Request Sent', 'Your request to join has been sent to the community admins.');
+                setShowBereavementModal(false);
+                setTargetBereavementGroup(null);
+                setShowExcessModal(false);
+                setTargetExcessGroup(null);
                 fetchData();
             }
         } catch (error: any) {
-            console.error('Error joining group:', error);
-            const msg = error.response?.data?.error || '';
+            console.error('Error joining group:', error, error.response?.data);
+            const data = error.response?.data;
+            const msg = (typeof data === 'string' ? data : (data?.error || data?.detail || (data && typeof data === 'object' ? Object.values(data).flat().join(', ') : ''))) || '';
             if (msg.toLowerCase().includes('verified') || msg.toLowerCase().includes('restrict')) {
                 Alert.alert(
                     'Verification Required',
@@ -140,6 +177,62 @@ const DiscoveryScreen = ({
         } finally {
             setJoiningId(null);
         }
+    };
+
+    const handleBereavementSubmit = () => {
+        if (!targetBereavementGroup) return;
+        if (!bName.trim()) {
+            Alert.alert('Required Field', 'Please enter Next of Kin / Beneficiary full name.');
+            return;
+        }
+        if (!bPhone.trim()) {
+            Alert.alert('Required Field', 'Please enter Next of Kin contact phone number.');
+            return;
+        }
+        performJoin(targetBereavementGroup, {
+            beneficiary_name: bName.trim(),
+            beneficiary_relationship: bRel,
+            beneficiary_phone: bPhone.trim(),
+            join_message: joinMsg.trim(),
+            dependents: dependents.filter(d => d.name.trim().length > 0)
+        });
+    };
+
+    const handleExcessSubmit = () => {
+        if (!targetExcessGroup) return;
+        if (!vMakeModel.trim()) {
+            Alert.alert('Required Field', 'Please enter Vehicle Make & Model.');
+            return;
+        }
+        if (!vReg.trim()) {
+            Alert.alert('Required Field', 'Please enter Vehicle Registration Number.');
+            return;
+        }
+        if (!vInsurer.trim()) {
+            Alert.alert('Required Field', 'Please enter Insurance Provider Name.');
+            return;
+        }
+        if (!vPolicy.trim()) {
+            Alert.alert('Required Field', 'Please enter Policy Number.');
+            return;
+        }
+        if (!vVin.trim()) {
+            Alert.alert('Required Field', 'Please enter VIN / Chassis Number for fraud prevention.');
+            return;
+        }
+        if (!vLicense.trim()) {
+            Alert.alert('Required Field', "Please enter Driver's License / Owner ID Number.");
+            return;
+        }
+        performJoin(targetExcessGroup, {
+            vehicle_make_model: vMakeModel.trim(),
+            vehicle_registration: vReg.trim().toUpperCase(),
+            insurer_name: vInsurer.trim(),
+            policy_number: vPolicy.trim(),
+            vin_number: vVin.trim().toUpperCase(),
+            driver_license_number: vLicense.trim(),
+            join_message: excessJoinMsg.trim()
+        });
     };
 
     const getButtonConfig = (group: Group) => {
@@ -267,7 +360,16 @@ const DiscoveryScreen = ({
                                                                 item.purpose === 'custom' ? '#059669' : '#7c3aed'
                                                         }
                                                     ]}>
-                                                        {({'bereavement': '🕊️ Bereavement Fund', 'excess': '🚗 Insurance Excess', 'emergency': '🆘 Emergency / Disaster Fundraiser', 'custom': '✨ Custom Fund'} as any)[item.purpose] ?? item.purpose}
+                                                        {({
+                                                            'bereavement': '🕊️ Bereavement Fund',
+                                                            'excess': '🚗 Insurance Excess',
+                                                            'emergency': '🆘 Emergency Fundraiser',
+                                                            'custom': '✨ Custom Fund',
+                                                            'church': '⛪ Church Group',
+                                                            'stokvel': '💰 Stokvel & Savings',
+                                                            'student': '🎓 Student Body',
+                                                            'sports': '⚽ Sports Club',
+                                                        } as any)[item.purpose] ?? item.purpose}
                                                     </Text>
                                                 </View>
                                             )}
@@ -359,6 +461,252 @@ const DiscoveryScreen = ({
                     }
                 />
             )}
+            {/* 🕊️ BEREAVEMENT GROUP JOIN REGISTRATION MODAL */}
+            <Modal
+                visible={showBereavementModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setShowBereavementModal(false);
+                    setTargetBereavementGroup(null);
+                }}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>🕊️ Join Bereavement Fund</Text>
+                            <TouchableOpacity onPress={() => {
+                                setShowBereavementModal(false);
+                                setTargetBereavementGroup(null);
+                            }}>
+                                <Text style={styles.modalCloseText}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                            <Text style={styles.modalSubtitle}>{targetBereavementGroup?.name}</Text>
+                            <Text style={styles.modalDesc}>Please fill in your primary beneficiary details before joining.</Text>
+
+                            {/* Section 1: Beneficiary */}
+                            <Text style={styles.fieldSectionTitle}>1. Primary Beneficiary (Next of Kin)</Text>
+                            
+                            <Text style={styles.inputLabel}>Beneficiary Full Name *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. Jane Mary Doe"
+                                placeholderTextColor="#94a3b8"
+                                value={bName}
+                                onChangeText={setBName}
+                            />
+
+                            <Text style={styles.inputLabel}>Relationship *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. Spouse, Child, Parent, Sibling"
+                                placeholderTextColor="#94a3b8"
+                                value={bRel}
+                                onChangeText={setBRel}
+                            />
+
+                            <Text style={styles.inputLabel}>Contact Phone Number *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. +27 82 123 4567"
+                                placeholderTextColor="#94a3b8"
+                                keyboardType="phone-pad"
+                                value={bPhone}
+                                onChangeText={setBPhone}
+                            />
+
+                            {/* Section 2: Join Message */}
+                            <Text style={[styles.fieldSectionTitle, { marginTop: 16 }]}>2. Join Message (Optional)</Text>
+                            <TextInput
+                                style={[styles.textInput, { height: 70 }]}
+                                placeholder="Introduce yourself or leave a message for admins..."
+                                placeholderTextColor="#94a3b8"
+                                multiline
+                                value={joinMsg}
+                                onChangeText={setJoinMsg}
+                            />
+
+                            {/* Dependents Section */}
+                            <View style={styles.dependentsHeaderRow}>
+                                <Text style={styles.fieldSectionTitle}>3. Covered Dependents ({dependents.length})</Text>
+                                <TouchableOpacity
+                                    style={styles.addDepBtn}
+                                    onPress={() => setDependents([...dependents, { name: '', relationship: 'Child', date_of_birth: '2000-01-01' }])}
+                                >
+                                    <Text style={styles.addDepBtnText}>+ Add</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {dependents.map((dep, idx) => (
+                                <View key={idx} style={styles.depCard}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+                                        <Text style={{ fontWeight: '700', fontSize: 12, color: '#475569' }}>Dependent #{idx + 1}</Text>
+                                        <TouchableOpacity onPress={() => setDependents(dependents.filter((_, i) => i !== idx))}>
+                                            <Text style={{ color: '#ef4444', fontSize: 12 }}>Remove</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <TextInput
+                                        style={[styles.textInput, { marginBottom: 6 }]}
+                                        placeholder="Full Name"
+                                        placeholderTextColor="#94a3b8"
+                                        value={dep.name}
+                                        onChangeText={(val) => {
+                                            const updated = [...dependents];
+                                            updated[idx].name = val;
+                                            setDependents(updated);
+                                        }}
+                                    />
+                                    <TextInput
+                                        style={styles.textInput}
+                                        placeholder="Relationship (e.g. Child, Spouse)"
+                                        placeholderTextColor="#94a3b8"
+                                        value={dep.relationship}
+                                        onChangeText={(val) => {
+                                            const updated = [...dependents];
+                                            updated[idx].relationship = val;
+                                            setDependents(updated);
+                                        }}
+                                    />
+                                </View>
+                            ))}
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity style={styles.cancelModalBtn} onPress={() => {
+                                setShowBereavementModal(false);
+                                setTargetBereavementGroup(null);
+                            }}>
+                                <Text style={styles.cancelModalBtnText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.submitModalBtn} onPress={handleBereavementSubmit} disabled={joiningId !== null}>
+                                {joiningId !== null ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.submitModalBtnText}>Confirm &amp; Join</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* 🚗 INSURANCE EXCESS JOIN REGISTRATION MODAL */}
+            <Modal
+                visible={showExcessModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setShowExcessModal(false);
+                    setTargetExcessGroup(null);
+                }}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>🚗 Join Insurance Excess</Text>
+                            <TouchableOpacity onPress={() => {
+                                setShowExcessModal(false);
+                                setTargetExcessGroup(null);
+                            }}>
+                                <Text style={styles.modalCloseText}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                            <Text style={styles.modalSubtitle}>{targetExcessGroup?.name}</Text>
+                            <Text style={styles.modalDesc}>Register your vehicle &amp; policy details for anti-fraud protection.</Text>
+
+                            <Text style={styles.fieldSectionTitle}>1. Insured Vehicle Information</Text>
+                            
+                            <Text style={styles.inputLabel}>Vehicle Make &amp; Model *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. 2022 Toyota Hilux 2.8 GD-6"
+                                placeholderTextColor="#94a3b8"
+                                value={vMakeModel}
+                                onChangeText={setVMakeModel}
+                            />
+
+                            <Text style={styles.inputLabel}>Registration Number *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. CA 987-654"
+                                placeholderTextColor="#94a3b8"
+                                value={vReg}
+                                onChangeText={(text) => setVReg(text.toUpperCase())}
+                            />
+
+                            <Text style={styles.inputLabel}>VIN / Chassis Number *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. AHT1234567890"
+                                placeholderTextColor="#94a3b8"
+                                value={vVin}
+                                onChangeText={(text) => setVVin(text.toUpperCase())}
+                            />
+
+                            <Text style={[styles.fieldSectionTitle, { marginTop: 16 }]}>2. Insurance Provider &amp; Policy</Text>
+
+                            <Text style={styles.inputLabel}>Insurer / Provider *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. Santam / OUTsurance"
+                                placeholderTextColor="#94a3b8"
+                                value={vInsurer}
+                                onChangeText={setVInsurer}
+                            />
+
+                            <Text style={styles.inputLabel}>Policy Number *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. POL-99887766"
+                                placeholderTextColor="#94a3b8"
+                                value={vPolicy}
+                                onChangeText={setVPolicy}
+                            />
+
+                            <Text style={[styles.fieldSectionTitle, { marginTop: 16 }]}>3. Owner / Driver Verification</Text>
+                            <Text style={styles.inputLabel}>Driver&apos;s License / ID Number *</Text>
+                            <TextInput
+                                style={styles.textInput}
+                                placeholder="e.g. 9001015800087"
+                                placeholderTextColor="#94a3b8"
+                                value={vLicense}
+                                onChangeText={setVLicense}
+                            />
+
+                            <Text style={[styles.fieldSectionTitle, { marginTop: 16 }]}>4. Notes (Optional)</Text>
+                            <TextInput
+                                style={[styles.textInput, { height: 60 }]}
+                                placeholder="Add notes for group admins..."
+                                placeholderTextColor="#94a3b8"
+                                multiline
+                                value={excessJoinMsg}
+                                onChangeText={setExcessJoinMsg}
+                            />
+                        </ScrollView>
+
+                        <View style={styles.modalFooter}>
+                            <TouchableOpacity style={styles.cancelModalBtn} onPress={() => {
+                                setShowExcessModal(false);
+                                setTargetExcessGroup(null);
+                            }}>
+                                <Text style={styles.cancelModalBtnText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.submitModalBtn, { backgroundColor: '#0284c7' }]} onPress={handleExcessSubmit} disabled={joiningId !== null}>
+                                {joiningId !== null ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <Text style={styles.submitModalBtnText}>Register &amp; Join</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -585,6 +933,135 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginBottom: 4,
         fontFamily: 'Outfit-Regular',
+    },
+    // Bereavement Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.65)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: '#ffffff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        maxHeight: '85%',
+        paddingBottom: 24,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f1f5f9',
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#1e293b',
+    },
+    modalCloseText: {
+        fontSize: 20,
+        color: '#94a3b8',
+        padding: 4,
+    },
+    modalBody: {
+        paddingHorizontal: 20,
+        paddingTop: 12,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#7c3aed',
+    },
+    modalDesc: {
+        fontSize: 13,
+        color: '#64748b',
+        marginBottom: 16,
+        marginTop: 2,
+    },
+    fieldSectionTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#334155',
+        marginBottom: 8,
+    },
+    inputLabel: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#475569',
+        marginBottom: 4,
+        marginTop: 6,
+    },
+    textInput: {
+        backgroundColor: '#f8fafc',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        fontSize: 14,
+        color: '#0f172a',
+    },
+    dependentsHeaderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    addDepBtn: {
+        backgroundColor: '#f3e8ff',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    addDepBtnText: {
+        color: '#7c3aed',
+        fontWeight: '700',
+        fontSize: 12,
+    },
+    depCard: {
+        backgroundColor: '#f8fafc',
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+        borderRadius: 12,
+        padding: 10,
+        marginBottom: 8,
+    },
+    modalFooter: {
+        flexDirection: 'row',
+        gap: 12,
+        paddingHorizontal: 20,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: '#f1f5f9',
+    },
+    cancelModalBtn: {
+        flex: 1,
+        paddingVertical: 12,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#cbd5e1',
+        alignItems: 'center',
+    },
+    cancelModalBtnText: {
+        color: '#64748b',
+        fontWeight: '600',
+    },
+    submitModalBtn: {
+        flex: 2,
+        backgroundColor: '#7c3aed',
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    submitModalBtnText: {
+        color: '#ffffff',
+        fontWeight: '700',
+        fontSize: 15,
     },
 });
 

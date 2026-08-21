@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export type GroupPurpose = 'bereavement' | 'excess' | 'custom' | 'emergency';
+export type GroupPurpose = 'bereavement' | 'excess' | 'custom' | 'emergency' | 'church' | 'stokvel' | 'student' | 'sports';
 
 export interface PurposeSelection {
     purpose: GroupPurpose;
@@ -44,12 +44,44 @@ const PURPOSE_OPTIONS: PurposeOption[] = [
         bgColor: '#f0f9ff',
     },
     {
+        key: 'church',
+        icon: '⛪',
+        label: 'Church / Religious Group',
+        description: 'Manage tithes, offerings, building funds, and faith pledges across campaigns.',
+        color: '#0284c7',
+        bgColor: '#f0f9ff',
+    },
+    {
+        key: 'stokvel',
+        icon: '💰',
+        label: 'Stokvel & Savings',
+        description: 'Rotating payouts (ROSCA/Mahodisana), grocery savings, and investment pools.',
+        color: '#059669',
+        bgColor: '#f0fdf4',
+    },
+    {
+        key: 'student',
+        icon: '🎓',
+        label: 'Student Body & Society',
+        description: 'Faculty societies, residence committees, event ticketing, and emergency aid.',
+        color: '#d97706',
+        bgColor: '#fffbeb',
+    },
+    {
+        key: 'sports',
+        icon: '⚽',
+        label: 'Sports Club & Team',
+        description: 'Collect player dues, match fees, equipment funds, and tournament travel fees.',
+        color: '#10b981',
+        bgColor: '#ecfdf5',
+    },
+    {
         key: 'custom',
         icon: '✨',
         label: 'Custom Fund',
         description: 'Define your own group fund purpose — any reason your community needs.',
-        color: '#059669',
-        bgColor: '#f0fdf4',
+        color: '#6366f1',
+        bgColor: '#eef2ff',
     },
 ];
 

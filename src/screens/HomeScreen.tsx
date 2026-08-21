@@ -139,7 +139,14 @@ const HomeScreen = ({
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-        <Text style={styles.headerTitle}>My Hub</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Image
+            source={require("../../assets/logo-icon.png")}
+            style={{ width: 32, height: 32 }}
+            contentFit="contain"
+          />
+          <Text style={styles.headerTitle}>My Hub</Text>
+        </View>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <TouchableOpacity
             onPress={() => setSearchVisible(true)}

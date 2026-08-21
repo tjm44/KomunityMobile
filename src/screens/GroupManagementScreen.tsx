@@ -54,7 +54,11 @@ const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: s
     bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement' },
     excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
     emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency' },
-    custom:      { icon: '✨', color: '#059669', label: 'Custom' },
+    custom:      { icon: '✨', color: '#6366f1', label: 'Custom' },
+    church:      { icon: '⛪', color: '#0284c7', label: 'Church' },
+    stokvel:     { icon: '💰', color: '#059669', label: 'Stokvel' },
+    student:     { icon: '🎓', color: '#d97706', label: 'Student Body' },
+    sports:      { icon: '⚽', color: '#10b981', label: 'Sports Club' },
 };
 
 const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, onCreateCampaign, onSelectCampaign, refreshKey }: GroupManagementProps) => {
