@@ -59,9 +59,14 @@ const DiscoveryScreen = ({
     const [targetBereavementGroup, setTargetBereavementGroup] = useState<Group | null>(null);
     const [bName, setBName] = useState('');
     const [bRel, setBRel] = useState('Spouse');
+    const [showBRelPicker, setShowBRelPicker] = useState(false);
     const [bPhone, setBPhone] = useState('');
     const [joinMsg, setJoinMsg] = useState('');
     const [dependents, setDependents] = useState<Array<{ name: string; relationship: string; date_of_birth: string }>>([]);
+    const [openDepRelIdx, setOpenDepRelIdx] = useState<number | null>(null);
+
+    const BENEFICIARY_RELATIONSHIPS = ['Spouse', 'Child', 'Parent', 'Sibling', 'Relative', 'Friend', 'Other'];
+    const DEPENDENT_RELATIONSHIPS = ['Spouse', 'Child', 'Parent', 'Sibling', 'In-Law', 'Other'];
 
     // Excess Modal State
     const [showExcessModal, setShowExcessModal] = useState(false);
@@ -500,13 +505,28 @@ const DiscoveryScreen = ({
                             />
 
                             <Text style={styles.inputLabel}>Relationship *</Text>
-                            <TextInput
+                            <TouchableOpacity
                                 style={styles.textInput}
-                                placeholder="e.g. Spouse, Child, Parent, Sibling"
-                                placeholderTextColor="#94a3b8"
-                                value={bRel}
-                                onChangeText={setBRel}
-                            />
+                                onPress={() => setShowBRelPicker(!showBRelPicker)}
+                            >
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 14, color: '#0f172a' }}>{bRel}</Text>
+                                    <Text style={{ color: '#94a3b8', fontSize: 12 }}>{showBRelPicker ? '▲' : '▼'}</Text>
+                                </View>
+                            </TouchableOpacity>
+                            {showBRelPicker && (
+                                <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                                    {BENEFICIARY_RELATIONSHIPS.map((rel) => (
+                                        <TouchableOpacity
+                                            key={rel}
+                                            style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: '#f1f5f9', backgroundColor: bRel === rel ? '#ede9fe' : 'transparent' }}
+                                            onPress={() => { setBRel(rel); setShowBRelPicker(false); }}
+                                        >
+                                            <Text style={{ fontSize: 14, color: bRel === rel ? '#7c3aed' : '#0f172a', fontWeight: bRel === rel ? '700' : '400' }}>{rel}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
 
                             <Text style={styles.inputLabel}>Contact Phone Number *</Text>
                             <TextInput
@@ -559,17 +579,33 @@ const DiscoveryScreen = ({
                                             setDependents(updated);
                                         }}
                                     />
-                                    <TextInput
+                                    <TouchableOpacity
                                         style={styles.textInput}
-                                        placeholder="Relationship (e.g. Child, Spouse)"
-                                        placeholderTextColor="#94a3b8"
-                                        value={dep.relationship}
-                                        onChangeText={(val) => {
-                                            const updated = [...dependents];
-                                            updated[idx].relationship = val;
-                                            setDependents(updated);
-                                        }}
-                                    />
+                                        onPress={() => setOpenDepRelIdx(openDepRelIdx === idx ? null : idx)}
+                                    >
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Text style={{ fontSize: 14, color: dep.relationship ? '#0f172a' : '#94a3b8' }}>{dep.relationship || 'Relationship'}</Text>
+                                            <Text style={{ color: '#94a3b8', fontSize: 12 }}>{openDepRelIdx === idx ? '▲' : '▼'}</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                    {openDepRelIdx === idx && (
+                                        <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                                            {DEPENDENT_RELATIONSHIPS.map((rel) => (
+                                                <TouchableOpacity
+                                                    key={rel}
+                                                    style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: '#f1f5f9', backgroundColor: dep.relationship === rel ? '#ede9fe' : 'transparent' }}
+                                                    onPress={() => {
+                                                        const updated = [...dependents];
+                                                        updated[idx].relationship = rel;
+                                                        setDependents(updated);
+                                                        setOpenDepRelIdx(null);
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 14, color: dep.relationship === rel ? '#7c3aed' : '#0f172a', fontWeight: dep.relationship === rel ? '700' : '400' }}>{rel}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </View>
+                                    )}
                                 </View>
                             ))}
                         </ScrollView>

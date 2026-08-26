@@ -245,8 +245,8 @@ export default function NotificationScreen({ onBack, onNotificationsRead }: Noti
         </View>
       ) : (
         <FlatList
-          data={filteredNotifications}
-          keyExtractor={item => item.id.toString()}
+          data={filteredNotifications || []}
+          keyExtractor={(item, index) => (item && item.id != null ? item.id.toString() : `notif-${index}`)}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={

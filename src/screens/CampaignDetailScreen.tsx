@@ -306,7 +306,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
             )}
 
             {/* LEDGER MODAL */}
-            <Modal visible={showLedgerModal} animationType="slide" transparent>
+            <Modal visible={showLedgerModal} animationType="slide" transparent onRequestClose={() => setShowLedgerModal(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalCard, { maxHeight: '85%' }]}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -363,7 +363,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
             </Modal>
 
             {/* WITHDRAWAL MODAL */}
-            <Modal visible={showWithdrawModal} animationType="slide" transparent>
+            <Modal visible={showWithdrawModal} animationType="slide" transparent onRequestClose={() => setShowWithdrawModal(false)}>
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
                         <Text style={styles.modalTitle}>💸 Withdraw Campaign Funds</Text>

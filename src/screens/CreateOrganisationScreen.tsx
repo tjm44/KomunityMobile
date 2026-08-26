@@ -280,7 +280,7 @@ const CreateOrganisationScreen = ({
             </KeyboardAvoidingView>
 
             {/* Admin 2 Selection Modal */}
-            <Modal visible={showAdmin2Modal} animationType="slide" transparent={true}>
+            <Modal visible={showAdmin2Modal} animationType="slide" transparent={true} onRequestClose={() => setShowAdmin2Modal(false)}>
                 <SafeAreaView style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Select Second Admin</Text>
@@ -317,7 +317,7 @@ const CreateOrganisationScreen = ({
             </Modal>
 
             {/* Admin 3 Selection Modal */}
-            <Modal visible={showAdmin3Modal} animationType="slide" transparent={true}>
+            <Modal visible={showAdmin3Modal} animationType="slide" transparent={true} onRequestClose={() => setShowAdmin3Modal(false)}>
                 <SafeAreaView style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Select Third Admin</Text>

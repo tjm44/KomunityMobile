@@ -499,6 +499,7 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                 visible={isReviewingImage}
                 transparent={false}
                 animationType="slide"
+                onRequestClose={() => setIsReviewingImage(false)}
             >
                 <SafeAreaView style={styles.reviewContainer}>
                     <View style={styles.reviewHeader}>

@@ -84,7 +84,7 @@ export const SMSCreditPurchaseModal: React.FC<SMSCreditPurchaseModalProps> = ({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
             <View style={styles.overlay}>
                 <View style={styles.container}>
                     <Text style={styles.title}>💬 Buy SMS Notification Credits</Text>

@@ -213,16 +213,29 @@ export default function App() {
         return false; // Let OS handle (exit app)
       }
 
-      // Profile setup / group selection flows
+      // Overlays / prompts
+      if (isPromptingVerification) {
+        setIsPromptingVerification(false);
+        return true;
+      }
+      if (isChoosingGroup) {
+        setIsChoosingGroup(false);
+        return true;
+      }
+
+      // Profile setup flow - keep user on profile setup if incomplete
       if (needsProfileSetup) return false;
-      if (isChoosingGroup) return false;
 
       // Sub-screen navigation — mirrors getCurrentBackAction()
       if (viewingNotifications) { setViewingNotifications(false); return true; }
+      if (isCreatingOrganisation) { setIsCreatingOrganisation(false); return true; }
+      if (editingOrganisation) { setEditingOrganisation(null); return true; }
+      if (previewingOrganisation) { setPreviewingOrganisation(null); return true; }
+      if (viewingOrganisationDetails) { setViewingOrganisationDetails(null); return true; }
+      if (isCreatingCampaign) { setIsCreatingCampaign(null); return true; }
+      if (viewingCampaign) { setViewingCampaign(null); return true; }
       if (isCreatingGroup) { setIsCreatingGroup(false); setIsChoosingGroupPurpose(true); return true; }
       if (isChoosingGroupPurpose) { setIsChoosingGroupPurpose(false); return true; }
-      if (viewingCampaign) { setViewingCampaign(null); return true; }
-      if (isCreatingCampaign) { setIsCreatingCampaign(null); return true; }
       if (isViewingContributions) { setIsViewingContributions(false); return true; }
       if (editingGroup) { setEditingGroup(null); return true; }
       if (viewingMemberProfile) { setViewingMemberProfile(null); return true; }
@@ -244,7 +257,7 @@ export default function App() {
         return true;
       }
 
-      // Already on home with no sub-screens — let OS default (minimize/exit)
+      // Already on home tab with no active sub-screens — let OS handle (minimize/exit app)
       return false;
     };
 
@@ -259,8 +272,17 @@ export default function App() {
     isResettingPassword,
     showWelcome,
     needsProfileSetup,
+    isPromptingVerification,
     isChoosingGroup,
+    viewingNotifications,
+    isCreatingOrganisation,
+    editingOrganisation,
+    previewingOrganisation,
+    viewingOrganisationDetails,
+    isCreatingCampaign,
+    viewingCampaign,
     isCreatingGroup,
+    isChoosingGroupPurpose,
     isViewingContributions,
     editingGroup,
     viewingMemberProfile,

@@ -50,7 +50,7 @@ const ImageCarousel = ({ images }: { images: { id: number; image: string }[] }) 
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item, index) => (item && item.id != null ? item.id.toString() : `img-${index}`)}
                 onScroll={onScroll}
                 renderItem={({ item }) => (
                     <Image

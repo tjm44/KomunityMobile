@@ -309,58 +309,62 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
         }
     };
 
-    const renderMemberItem = ({ item }: { item: Member }) => (
-        <TouchableOpacity
-            style={styles.requestCard}
-            onPress={() => onSelectMember(item)}
-            activeOpacity={0.7}
-        >
-            <View style={styles.memberInfo}>
-                <View style={styles.avatarCircle}>
-                    {item.member_detail.profile_picture ? (
-                        <Image
-                            source={{ uri: getMediaUrl(item.member_detail.profile_picture) }}
-                            style={styles.avatarImg}
-                        />
-                    ) : (
-                        <Text style={styles.avatarInitial}>
-                            {item.member_detail.full_name[0].toUpperCase()}
+    const renderMemberItem = ({ item }: { item: Member }) => {
+        const fullName = item.member_detail?.full_name || 'Member';
+        const profilePic = item.member_detail?.profile_picture;
+        return (
+            <TouchableOpacity
+                style={styles.requestCard}
+                onPress={() => onSelectMember(item)}
+                activeOpacity={0.7}
+            >
+                <View style={styles.memberInfo}>
+                    <View style={styles.avatarCircle}>
+                        {profilePic ? (
+                            <Image
+                                source={{ uri: getMediaUrl(profilePic) }}
+                                style={styles.avatarImg}
+                            />
+                        ) : (
+                            <Text style={styles.avatarInitial}>
+                                {fullName.charAt(0).toUpperCase()}
+                            </Text>
+                        )}
+                    </View>
+                    <View style={styles.memberMeta}>
+                        <Text style={styles.memberName}>{fullName}</Text>
+                        <Text style={styles.requestDate}>
+                            {item.date_joined ? `Joined ${new Date(item.date_joined).toLocaleDateString()}` : ''}
                         </Text>
+                    </View>
+                    {item.is_deceased && (
+                        <View style={styles.deceasedBadge}>
+                            <Text style={styles.deceasedBadgeText}>DECEASED</Text>
+                        </View>
                     )}
                 </View>
-                <View style={styles.memberMeta}>
-                    <Text style={styles.memberName}>{item.member_detail.full_name}</Text>
-                    <Text style={styles.requestDate}>
-                        Joined {new Date(item.date_joined).toLocaleDateString()}
-                    </Text>
-                </View>
-                {item.is_deceased && (
-                    <View style={styles.deceasedBadge}>
-                        <Text style={styles.deceasedBadgeText}>DECEASED</Text>
+
+                {activeTab === 'pending' && (
+                    <View style={styles.actions}>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.approveButton, processingId === item.id && styles.disabledButton]}
+                            onPress={() => handleApprove(item.id)}
+                            disabled={processingId !== null}
+                        >
+                            <Text style={styles.approveButtonText}>Approve</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.rejectButton, processingId === item.id && styles.disabledButton]}
+                            onPress={() => handleReject(item.id)}
+                            disabled={processingId !== null}
+                        >
+                            <Text style={styles.rejectButtonText}>Reject</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
-            </View>
-
-            {activeTab === 'pending' && (
-                <View style={styles.actions}>
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.approveButton, processingId === item.id && styles.disabledButton]}
-                        onPress={() => handleApprove(item.id)}
-                        disabled={processingId !== null}
-                    >
-                        <Text style={styles.approveButtonText}>Approve</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.actionButton, styles.rejectButton, processingId === item.id && styles.disabledButton]}
-                        onPress={() => handleReject(item.id)}
-                        disabled={processingId !== null}
-                    >
-                        <Text style={styles.rejectButtonText}>Reject</Text>
-                    </TouchableOpacity>
-                </View>
-            )}
-        </TouchableOpacity>
-    );
+            </TouchableOpacity>
+        );
+    };
 
     const renderTransferRequestItem = ({ item }: { item: any }) => (
         <View style={styles.requestCard}>
@@ -368,9 +372,9 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                 <Text style={styles.transferTitle}>Transfer to {item.recipient_profile_detail?.full_name || 'Member'}</Text>
                 <Text style={styles.transferStatus}>{item.status}</Text>
             </View>
-            <Text style={styles.transferAmount}>${parseFloat(item.amount).toFixed(2)}</Text>
+            <Text style={styles.transferAmount}>${parseFloat(item.amount || 0).toFixed(2)}</Text>
             <Text style={styles.transferMeta}>Requested by {item.requested_by_detail?.full_name || 'Admin'}</Text>
-            <Text style={styles.transferMeta}>Approvals: {item.approvals_count}/3</Text>
+            <Text style={styles.transferMeta}>Approvals: {item.approvals_count ?? 0}/3</Text>
             <View style={styles.transferActions}>
                 {item.status === 'PENDING' && !item.current_user_has_approved && (
                     <TouchableOpacity
@@ -388,95 +392,99 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
         </View>
     );
 
-    const renderDeceasedItem = ({ item }: { item: DeceasedMember }) => (
-        <View style={styles.requestCard}>
-            <View style={styles.memberInfo}>
-                <View style={styles.avatarCircle}>
-                    {item.deceased_detail.profile_picture ? (
-                        <Image
-                            source={{ uri: getMediaUrl(item.deceased_detail.profile_picture) }}
-                            style={styles.avatarImg}
-                        />
-                    ) : (
-                        <Text style={styles.avatarInitial}>
-                            {item.deceased_detail.full_name[0].toUpperCase()}
-                        </Text>
-                    )}
-                </View>
-                <View style={styles.memberMeta}>
-                    <Text style={styles.memberName}>{item.deceased_detail.full_name}</Text>
-                    <Text style={styles.requestDate}>Fund Management</Text>
-                </View>
-                {parseFloat(item.total_disbursed) > 0 ? (
-                    <TouchableOpacity
-                        style={[styles.deceasedBadge, { backgroundColor: '#d1fae5', borderColor: '#6ee7b7' }]}
-                        onPress={onViewWallet}
-                    >
-                        <Text style={[styles.deceasedBadgeText, { color: '#065f46' }]}>
-                            {parseFloat(item.balance) === 0 ? 'PAID' : 'PARTIALLY PAID'} 🔗
-                        </Text>
-                    </TouchableOpacity>
-                ) : (
-                    <View style={styles.deceasedBadge}>
-                        <Text style={styles.deceasedBadgeText}>ACTIVE</Text>
+    const renderDeceasedItem = ({ item }: { item: DeceasedMember }) => {
+        const deceasedName = item.deceased_detail?.full_name || 'Member';
+        const profilePic = item.deceased_detail?.profile_picture;
+        return (
+            <View style={styles.requestCard}>
+                <View style={styles.memberInfo}>
+                    <View style={styles.avatarCircle}>
+                        {profilePic ? (
+                            <Image
+                                source={{ uri: getMediaUrl(profilePic) }}
+                                style={styles.avatarImg}
+                            />
+                        ) : (
+                            <Text style={styles.avatarInitial}>
+                                {deceasedName.charAt(0).toUpperCase()}
+                            </Text>
+                        )}
                     </View>
-                )}
-            </View>
-
-            {/* Comprehensive Stats Section */}
-            <View style={styles.statsGrid}>
-                <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Raised</Text>
-                    <Text style={styles.statValue}>${item.total_raised}</Text>
-                </View>
-                <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Disbursed</Text>
-                    <Text style={[styles.statValue, { color: '#ef4444' }]}>${item.total_disbursed}</Text>
-                </View>
-                <View style={styles.statBox}>
-                    <Text style={styles.statLabel}>Wallet Balance</Text>
-                    <Text style={[styles.statValue, { color: '#10b981' }]}>${item.balance}</Text>
-                </View>
-            </View>
-
-            <View style={styles.beneficiarySection}>
-                <View style={styles.beneficiaryHeader}>
-                    <Text style={styles.beneficiaryTitle}>Beneficiary Details</Text>
-                    {!item.funds_disbursed && (
-                        <TouchableOpacity onPress={() => setIsAssigningBeneficiary(item.id)}>
-                            <Text style={styles.assignLink}>
-                                {item.beneficiary_detail ? 'Change' : 'Assign Beneficiary'}
+                    <View style={styles.memberMeta}>
+                        <Text style={styles.memberName}>{deceasedName}</Text>
+                        <Text style={styles.requestDate}>Fund Management</Text>
+                    </View>
+                    {parseFloat(item.total_disbursed || '0') > 0 ? (
+                        <TouchableOpacity
+                            style={[styles.deceasedBadge, { backgroundColor: '#d1fae5', borderColor: '#6ee7b7' }]}
+                            onPress={onViewWallet}
+                        >
+                            <Text style={[styles.deceasedBadgeText, { color: '#065f46' }]}>
+                                {parseFloat(item.balance || '0') === 0 ? 'PAID' : 'PARTIALLY PAID'} 🔗
                             </Text>
                         </TouchableOpacity>
+                    ) : (
+                        <View style={styles.deceasedBadge}>
+                            <Text style={styles.deceasedBadgeText}>ACTIVE</Text>
+                        </View>
                     )}
                 </View>
-                {item.beneficiary_detail ? (
-                    <View style={styles.beneficiaryNameContainer}>
-                        <Text style={styles.beneficiaryEmoji}>👤</Text>
-                        <Text style={styles.beneficiaryName}>{item.beneficiary_detail.full_name}</Text>
+
+                {/* Comprehensive Stats Section */}
+                <View style={styles.statsGrid}>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statLabel}>Raised</Text>
+                        <Text style={styles.statValue}>${item.total_raised ?? '0'}</Text>
                     </View>
-                ) : (
-                    <View style={styles.emptyBeneficiary}>
-                        <Text style={styles.emptyBeneficiaryText}>No beneficiary assigned yet.</Text>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statLabel}>Disbursed</Text>
+                        <Text style={[styles.statValue, { color: '#ef4444' }]}>${item.total_disbursed ?? '0'}</Text>
                     </View>
+                    <View style={styles.statBox}>
+                        <Text style={styles.statLabel}>Wallet Balance</Text>
+                        <Text style={[styles.statValue, { color: '#10b981' }]}>${item.balance ?? '0'}</Text>
+                    </View>
+                </View>
+
+                <View style={styles.beneficiarySection}>
+                    <View style={styles.beneficiaryHeader}>
+                        <Text style={styles.beneficiaryTitle}>Beneficiary Details</Text>
+                        {!item.funds_disbursed && (
+                            <TouchableOpacity onPress={() => setIsAssigningBeneficiary(item.id)}>
+                                <Text style={styles.assignLink}>
+                                    {item.beneficiary_detail ? 'Change' : 'Assign Beneficiary'}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                    {item.beneficiary_detail ? (
+                        <View style={styles.beneficiaryNameContainer}>
+                            <Text style={styles.beneficiaryEmoji}>👤</Text>
+                            <Text style={styles.beneficiaryName}>{item.beneficiary_detail.full_name}</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.emptyBeneficiary}>
+                            <Text style={styles.emptyBeneficiaryText}>No beneficiary assigned yet.</Text>
+                        </View>
+                    )}
+                </View>
+
+                {parseFloat(item.balance || '0') > 0 && (
+                    <TouchableOpacity
+                        style={[styles.disburseButton, processingId === item.id && styles.disabledButton]}
+                        onPress={() => handleDisburse(item.id)}
+                        disabled={processingId !== null}
+                    >
+                        {processingId === item.id ? (
+                            <ActivityIndicator color="#ffffff" size="small" />
+                        ) : (
+                            <Text style={styles.disburseButtonText}>Disburse ${item.balance}</Text>
+                        )}
+                    </TouchableOpacity>
                 )}
             </View>
-
-            {parseFloat(item.balance) > 0 && (
-                <TouchableOpacity
-                    style={[styles.disburseButton, processingId === item.id && styles.disabledButton]}
-                    onPress={() => handleDisburse(item.id)}
-                    disabled={processingId !== null}
-                >
-                    {processingId === item.id ? (
-                        <ActivityIndicator color="#ffffff" size="small" />
-                    ) : (
-                        <Text style={styles.disburseButtonText}>Disburse ${item.balance}</Text>
-                    )}
-                </TouchableOpacity>
-            )}
-        </View>
-    );
+        );
+    };
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -570,14 +578,14 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
 
                     <FlatList
                         data={
-                            activeTab === 'pending' ? pendingMembers :
+                            (activeTab === 'pending' ? pendingMembers :
                             activeTab === 'members' ? activeMembers :
                             activeTab === 'payouts' ? deceasedMembers :
                             activeTab === 'campaigns' ? openCampaigns :
                             activeTab === 'closed' ? closedCampaigns :
-                            transferRequests
+                            transferRequests) || []
                         }
-                        keyExtractor={(item) => item.id.toString()}
+                        keyExtractor={(item, index) => (item && item.id != null ? item.id.toString() : `item-${index}`)}
                         contentContainerStyle={styles.listContent}
                         refreshControl={
                             <RefreshControl
@@ -588,6 +596,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                             />
                         }
                         renderItem={({ item }) => {
+                            if (!item) return null;
                             if (activeTab === 'payouts') {
                                 return renderDeceasedItem({ item: item as DeceasedMember });
                             }

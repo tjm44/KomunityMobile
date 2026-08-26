@@ -12,6 +12,7 @@ import client, { fetchFormData, appendFileToFormData, getMediaUrl } from '../api
 
 interface Profile {
     id: number;
+    phone?: string;
     email: string;
     profile?: {
         id: number;
@@ -77,7 +78,6 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
     // Editable fields
     const [firstName, setFirstName] = useState('');
     const [surname, setSurname] = useState('');
-    const [phone, setPhone] = useState('');
     const [dob, setDob] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [culturalBackground, setCulturalBackground] = useState('');
@@ -104,7 +104,6 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
             // Initialize editable fields
             setFirstName(data.profile?.first_name || '');
             setSurname(data.profile?.surname || '');
-            setPhone(data.profile?.phone || '');
 
             if (data.profile?.date_of_birth) {
                 setDob(new Date(data.profile.date_of_birth));
@@ -215,7 +214,6 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
             const formData = new FormData();
             formData.append('first_name', firstName);
             formData.append('surname', surname);
-            formData.append('phone', phone);
             if (dob) formData.append('date_of_birth', dob.toISOString().split('T')[0]);
             formData.append('cultural_background', culturalBackground);
             formData.append('religious_affiliation', religiousAffiliation);
@@ -441,19 +439,9 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
 
                     <View style={styles.infoRow}>
                         <Text style={styles.infoLabel}>Phone</Text>
-                        {isEditing ? (
-                            <TextInput
-                                style={styles.editInput}
-                                value={phone}
-                                onChangeText={setPhone}
-                                placeholder="Phone"
-                                keyboardType="phone-pad"
-                            />
-                        ) : (
-                            <Text style={styles.infoValue}>
-                                {profile?.profile?.phone || 'Not set'}
-                            </Text>
-                        )}
+                        <Text style={[styles.infoValue, isEditing && styles.readOnlyText]}>
+                            {profile?.phone || profile?.profile?.phone || 'Not set'}
+                        </Text>
                     </View>
 
                     <View style={styles.infoRow}>
@@ -599,6 +587,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                 visible={isReviewingImage}
                 transparent={false}
                 animationType="slide"
+                onRequestClose={() => setIsReviewingImage(false)}
             >
                 <SafeAreaView style={styles.reviewContainer}>
                     <View style={styles.reviewHeader}>
@@ -665,6 +654,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                 visible={showKycModal}
                 transparent={true}
                 animationType="fade"
+                onRequestClose={() => setShowKycModal(false)}
             >
                 <View style={styles.kycOverlay}>
                     <View style={styles.kycContent}>

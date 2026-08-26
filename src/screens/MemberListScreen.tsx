@@ -96,8 +96,8 @@ const MemberListScreen = ({ group, onBack, onSelectMember }: MemberListProps) =>
                 </View>
             ) : (
                 <FlatList
-                    data={members}
-                    keyExtractor={(item) => item.id.toString()}
+                    data={members || []}
+                    keyExtractor={(item, index) => (item && item.id != null ? item.id.toString() : `member-${index}`)}
                     renderItem={renderMemberItem}
                     contentContainerStyle={styles.listContent}
                     ListEmptyComponent={

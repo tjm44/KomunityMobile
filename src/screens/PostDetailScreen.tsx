@@ -198,17 +198,17 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
             {post.images?.length > 0 && (
                 <View style={{ height: 300, marginBottom: 15 }}>
                     <FlatList
-                        data={post.images} horizontal pagingEnabled
+                        data={post.images || []} horizontal pagingEnabled
                         showsHorizontalScrollIndicator={false}
                         renderItem={({ item }) => (
                             <Image source={{ uri: getMediaUrl(item.image) }} style={[styles.postImage, { width: width - 30 }]} />
                         )}
-                        keyExtractor={i => i.id.toString()}
+                        keyExtractor={(i, idx) => (i && i.id != null ? i.id.toString() : `img-${idx}`)}
                         onMomentumScrollEnd={(e) => {
                             setActiveImageIndex(Math.round(e.nativeEvent.contentOffset.x / (width - 30)));
                         }}
                     />
-                    {post.images.length > 1 && (
+                    {post.images && post.images.length > 1 && (
                         <View style={styles.imageBadge}>
                             <Text style={styles.imageBadgeText}>{activeImageIndex + 1}/{post.images.length}</Text>
                         </View>
@@ -236,19 +236,19 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
 
     const renderComment = ({ item }: { item: Comment }) => (
         <View style={styles.commentRow}>
-            <Image source={{ uri: getMediaUrl(item.author_detail.profile_picture) }} style={[styles.avatar, { width: 34, height: 34 }]} />
+            <Image source={{ uri: getMediaUrl(item.author_detail?.profile_picture) }} style={[styles.avatar, { width: 34, height: 34 }]} />
             <View style={{ flex: 1, marginLeft: 10 }}>
                 <LinearGradient
                     colors={['#ffffff', '#dcfce7']}
                     style={styles.bubble}
                 >
-                    <Text style={styles.commentAuthor}>{item.author_detail.full_name}</Text>
+                    <Text style={styles.commentAuthor}>{item.author_detail?.full_name || 'Member'}</Text>
                     <Text style={styles.commentText}>{item.content}</Text>
                 </LinearGradient>
                 <View style={styles.actions}>
                     <Text style={styles.date}>{formatDate(item.created_at)}</Text>
                     <TouchableOpacity onPress={() => openReplyInput(item)}><Text style={styles.actionText}>Reply</Text></TouchableOpacity>
-                    {currentUserProfile?.id === item.author_detail.id && (
+                    {currentUserProfile?.id === item.author_detail?.id && (
                         <>
                             <TouchableOpacity onPress={() => openEditCommentInput(item)}><Text style={styles.actionText}>Edit</Text></TouchableOpacity>
                             <TouchableOpacity onPress={() => handleDeleteComment(item.id)}><Text style={[styles.actionText, { color: '#ef4444' }]}>Delete</Text></TouchableOpacity>
@@ -258,16 +258,16 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                 {/* Replies */}
                 {item.replies?.map(r => (
                     <View key={r.id} style={{ flexDirection: 'row', marginTop: 12 }}>
-                        <Image source={{ uri: getMediaUrl(r.author_detail.profile_picture) }} style={[styles.avatar, { width: 28, height: 28 }]} />
+                        <Image source={{ uri: getMediaUrl(r.author_detail?.profile_picture) }} style={[styles.avatar, { width: 28, height: 28 }]} />
                         <View style={{ flex: 1, marginLeft: 10 }}>
                             <LinearGradient
                                 colors={['#ffffff', '#dcfce7']}
                                 style={styles.bubble}
                             >
-                                <Text style={styles.commentAuthor}>{r.author_detail.full_name}</Text>
+                                <Text style={styles.commentAuthor}>{r.author_detail?.full_name || 'Member'}</Text>
                                 <Text style={styles.commentText}>{r.content}</Text>
                             </LinearGradient>
-                            {currentUserProfile?.id === r.author_detail.id && (
+                            {currentUserProfile?.id === r.author_detail?.id && (
                                 <View style={styles.actions}>
                                     <Text style={styles.date}>{formatDate(r.created_at)}</Text>
                                     <TouchableOpacity onPress={() => openEditReplyInput(r)}><Text style={styles.actionText}>Edit</Text></TouchableOpacity>
@@ -299,8 +299,8 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
             ) : (
                 <FlatList
                     ref={flatListRef}
-                    data={comments}
-                    keyExtractor={item => item.id.toString()}
+                    data={comments || []}
+                    keyExtractor={(item, idx) => (item && item.id != null ? item.id.toString() : `comment-${idx}`)}
                     renderItem={renderComment}
                     ListHeaderComponent={() => (
                         <View style={{ backgroundColor: 'transparent' }}>

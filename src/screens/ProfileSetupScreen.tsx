@@ -9,7 +9,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import client, { fetchFormData, appendFileToFormData } from '../api/client';
 
-import { validatePhone, validateName, validateDateOfBirth, validateEmail } from '../utils/validation';
+import { validateName, validateDateOfBirth, validateEmail } from '../utils/validation';
 
 interface ProfileSetupProps {
     onComplete: () => void;
@@ -19,7 +19,6 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
     const insets = useSafeAreaInsets();
     const [firstName, setFirstName] = useState('');
     const [surname, setSurname] = useState('');
-    const [phone, setPhone] = useState('');
     const [dob, setDob] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [culturalBackground, setCulturalBackground] = useState('');
@@ -131,7 +130,6 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
             email: validateEmail(userEmail),
             firstName: validateName(firstName, 'First Name'),
             surname: validateName(surname, 'Surname'),
-            phone: validatePhone(phone),
             dob: validateDateOfBirth(dob),
         };
 
@@ -151,10 +149,9 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
 
             // Updated profile
             const formData = new FormData();
-            formData.append('email', userEmail.trim());
+            if (userEmail.trim()) formData.append('email', userEmail.trim());
             formData.append('first_name', firstName.trim());
             formData.append('surname', surname.trim());
-            formData.append('phone', phone.trim());
             if (dob) formData.append('date_of_birth', dob.toISOString().split('T')[0]);
             formData.append('cultural_background', culturalBackground.trim());
             formData.append('religious_affiliation', religiousAffiliation.trim());
@@ -308,21 +305,6 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
                             )}
                         </View>
 
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Phone Number</Text>
-                            <TextInput
-                                style={[styles.input, errors.phone && styles.inputError]}
-                                placeholder="e.g. +1 234 567 8900"
-                                value={phone}
-                                onChangeText={(text) => {
-                                    setPhone(text);
-                                    if (errors.phone) setErrors((prev: any) => ({ ...prev, phone: null }));
-                                }}
-                                keyboardType="phone-pad"
-                            />
-                            {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
-                        </View>
-
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>Cultural & Religious (Optional)</Text>
                         </View>
@@ -400,6 +382,7 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
                 visible={isReviewingImage}
                 transparent={false}
                 animationType="slide"
+                onRequestClose={() => setIsReviewingImage(false)}
             >
                 <SafeAreaView style={styles.reviewContainer}>
                     <View style={styles.reviewHeader}>

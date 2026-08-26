@@ -3,14 +3,20 @@ import { View, Text, StyleSheet } from 'react-native';
 
 interface DevScreenBadgeProps {
   id: string;
+  visible?: boolean;
 }
+
+/**
+ * Set SHOW_DEV_BADGE to false to hide temporary screen index badges from all mobile app screens.
+ */
+export const SHOW_DEV_BADGE = false;
 
 /**
  * DEV ONLY – displays the screen/modal ID (e.g. "MOB-07") as a floating badge.
  * Rendered in App.tsx and driven by the current navigation state.
  */
-const DevScreenBadge: React.FC<DevScreenBadgeProps> = ({ id }) => {
-  if (!__DEV__) return null;
+const DevScreenBadge: React.FC<DevScreenBadgeProps> = ({ id, visible = SHOW_DEV_BADGE }) => {
+  if (!visible || !__DEV__) return null;
   return (
     <View style={styles.badge} pointerEvents="none">
       <Text style={styles.text}>{id}</Text>
