@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { colors, gradients } from '../constants/theme';
 
 interface GroupSelectionProps {
     onJoin: () => void;
@@ -22,7 +24,7 @@ const GroupSelectionScreen = ({ onJoin, onCreate, onCreateOrganisation }: GroupS
                 <View style={styles.options}>
                     {/* Join existing */}
                     <TouchableOpacity style={styles.card} onPress={onJoin}>
-                        <View style={[styles.iconContainer, { backgroundColor: '#eff6ff' }]}>
+                        <View style={[styles.iconContainer, { backgroundColor: colors.surfaceLight }]}>
                             <Text style={styles.icon}>🔍</Text>
                         </View>
                         <View style={styles.cardText}>
@@ -36,7 +38,7 @@ const GroupSelectionScreen = ({ onJoin, onCreate, onCreateOrganisation }: GroupS
 
                     {/* Create new */}
                     <TouchableOpacity style={styles.card} onPress={onCreate}>
-                        <View style={[styles.iconContainer, { backgroundColor: '#ecfdf5' }]}>
+                        <View style={[styles.iconContainer, { backgroundColor: colors.successLight }]}>
                             <Text style={styles.icon}>➕</Text>
                         </View>
                         <View style={styles.cardText}>
@@ -51,18 +53,18 @@ const GroupSelectionScreen = ({ onJoin, onCreate, onCreateOrganisation }: GroupS
 
                     {/* Register Organisation */}
                     {onCreateOrganisation && (
-                        <TouchableOpacity style={[styles.card, { borderColor: '#99f6e4' }]} onPress={onCreateOrganisation}>
-                            <View style={[styles.iconContainer, { backgroundColor: '#f0fdfa' }]}> 
+                        <TouchableOpacity style={[styles.card, { borderColor: colors.accent }]} onPress={onCreateOrganisation}>
+                            <View style={[styles.iconContainer, { backgroundColor: colors.surfaceTeal }]}> 
                                 <Text style={styles.icon}>🏢</Text>
                             </View>
                             <View style={styles.cardText}>
-                                <Text style={[styles.cardTitle, { color: '#0f766e' }]}>Register an Organisation</Text>
+                                <Text style={[styles.cardTitle, { color: colors.accentDark }]}>Register an Organisation</Text>
                                 <Text style={styles.cardSubtitle}>
                                     Set up a formal, verified legal entity (NGO, Church, NPO, Corporate)
                                     to manage wallets and coordinate campaigns.
                                 </Text>
                             </View>
-                            <Text style={[styles.arrow, { color: '#0f766e' }]}>›</Text>
+                            <Text style={[styles.arrow, { color: colors.accentDark }]}>›</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -74,8 +76,8 @@ const GroupSelectionScreen = ({ onJoin, onCreate, onCreateOrganisation }: GroupS
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     content: {
         flex: 1,
         padding: 24,
@@ -87,13 +89,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 12,
         fontFamily: 'Outfit-Bold',
     },
     subtitle: {
         fontSize: 18,
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 28,
         fontFamily: 'Outfit-Regular',
     },
@@ -103,11 +105,11 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 20,
         padding: 20,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.05,
@@ -131,19 +133,19 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 4,
         fontFamily: 'Outfit-Bold',
     },
     cardSubtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 20,
         fontFamily: 'Outfit-Regular',
     },
     arrow: {
         fontSize: 24,
-        color: '#d1d5db',
+        color: colors.border,
         marginLeft: 8,
     },
     registerOrgContainer: {
@@ -151,15 +153,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     registerOrgButton: {
-        backgroundColor: '#0f766e',
+        backgroundColor: colors.accentDark,
         paddingHorizontal: 18,
         paddingVertical: 12,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#085f52',
+        borderColor: colors.accentDark,
     },
     registerOrgButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '700',
         fontSize: 16,
     },

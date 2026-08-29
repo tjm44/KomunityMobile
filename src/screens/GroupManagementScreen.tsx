@@ -5,8 +5,10 @@ import {
     TextInput
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client, { getMediaUrl } from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
+import { colors, gradients } from '../constants/theme';
 
 interface Member {
     id: number;
@@ -51,14 +53,14 @@ interface GroupManagementProps {
 }
 
 const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
-    bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement' },
-    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
-    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency' },
-    custom:      { icon: '✨', color: '#6366f1', label: 'Custom' },
-    church:      { icon: '⛪', color: '#0284c7', label: 'Church' },
-    stokvel:     { icon: '💰', color: '#059669', label: 'Stokvel' },
-    student:     { icon: '🎓', color: '#d97706', label: 'Student Body' },
-    sports:      { icon: '⚽', color: '#10b981', label: 'Sports Club' },
+    bereavement: { icon: '🕊️', color: colors.primary, label: 'Bereavement' },
+    excess:      { icon: '🚗', color: colors.primaryLight, label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: colors.danger, label: 'Emergency' },
+    custom:      { icon: '✨', color: colors.primaryLight, label: 'Custom' },
+    church:      { icon: '⛪', color: colors.primaryLight, label: 'Church' },
+    stokvel:     { icon: '💰', color: colors.success, label: 'Stokvel' },
+    student:     { icon: '🎓', color: colors.warning, label: 'Student Body' },
+    sports:      { icon: '⚽', color: colors.success, label: 'Sports Club' },
 };
 
 const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, onCreateCampaign, onSelectCampaign, refreshKey }: GroupManagementProps) => {
@@ -416,10 +418,10 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                     </View>
                     {parseFloat(item.total_disbursed || '0') > 0 ? (
                         <TouchableOpacity
-                            style={[styles.deceasedBadge, { backgroundColor: '#d1fae5', borderColor: '#6ee7b7' }]}
+                            style={[styles.deceasedBadge, { backgroundColor: colors.successLight, borderColor: colors.accent }]}
                             onPress={onViewWallet}
                         >
-                            <Text style={[styles.deceasedBadgeText, { color: '#065f46' }]}>
+                            <Text style={[styles.deceasedBadgeText, { color: colors.success }]}>
                                 {parseFloat(item.balance || '0') === 0 ? 'PAID' : 'PARTIALLY PAID'} 🔗
                             </Text>
                         </TouchableOpacity>
@@ -438,11 +440,11 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                     </View>
                     <View style={styles.statBox}>
                         <Text style={styles.statLabel}>Disbursed</Text>
-                        <Text style={[styles.statValue, { color: '#ef4444' }]}>${item.total_disbursed ?? '0'}</Text>
+                        <Text style={[styles.statValue, { color: colors.danger }]}>${item.total_disbursed ?? '0'}</Text>
                     </View>
                     <View style={styles.statBox}>
                         <Text style={styles.statLabel}>Wallet Balance</Text>
-                        <Text style={[styles.statValue, { color: '#10b981' }]}>${item.balance ?? '0'}</Text>
+                        <Text style={[styles.statValue, { color: colors.success }]}>${item.balance ?? '0'}</Text>
                     </View>
                 </View>
 
@@ -591,7 +593,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                             <RefreshControl
                                 refreshing={refreshing}
                                 onRefresh={onRefresh}
-                                colors={['#2563eb']}
+                                colors={[colors.primaryLight]}
                                 tintColor="#2563eb"
                             />
                         }
@@ -620,8 +622,8 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                                                 <Text style={styles.campaignBadgeIcon}>{meta.icon}</Text>
                                                 <Text style={[styles.campaignBadgeLabel, { color: meta.color }]}>{meta.label}</Text>
                                             </View>
-                                            <View style={[styles.campaignStatusPill, { backgroundColor: isClosed ? '#fee2e2' : '#d1fae5' }]}>
-                                                <Text style={[styles.campaignStatusText, { color: isClosed ? '#991b1b' : '#065f46' }]}>
+                                            <View style={[styles.campaignStatusPill, { backgroundColor: isClosed ? colors.dangerLight : colors.successLight }]}>
+                                                <Text style={[styles.campaignStatusText, { color: isClosed ? colors.danger : colors.success }]}>
                                                     {isClosed ? '🔒 Closed' : '● Open'}
                                                 </Text>
                                             </View>
@@ -722,7 +724,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                                                 style={styles.pickerBtn}
                                                 onPress={() => setShowMemberPicker(!showMemberPicker)}
                                             >
-                                                <Text style={[styles.pickerBtnText, !selectedRecipient && { color: '#94a3b8' }]}>
+                                                <Text style={[styles.pickerBtnText, !selectedRecipient && { color: colors.textMuted }]}>
                                                     {selectedRecipient
                                                         ? `👤 ${selectedRecipient.member_detail.full_name}`
                                                         : 'Select a member...'}
@@ -777,7 +779,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                                                         style={styles.pickerBtn}
                                                         onPress={() => setShowCampaignPicker(!showCampaignPicker)}
                                                     >
-                                                        <Text style={[styles.pickerBtnText, !selectedCampaign && { color: '#94a3b8' }]}>
+                                                        <Text style={[styles.pickerBtnText, !selectedCampaign && { color: colors.textMuted }]}>
                                                             {selectedCampaign
                                                                 ? `${CAMPAIGN_TYPE_META[selectedCampaign.campaign_type]?.icon || '✨'} ${selectedCampaign.title}`
                                                                 : 'Select campaign / fund...'}
@@ -820,7 +822,7 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                                                                         </Text>
                                                                         <View>
                                                                             <Text style={styles.memberName}>{campaign.title}</Text>
-                                                                            <Text style={{ fontSize: 12, color: '#64748b' }}>
+                                                                            <Text style={{ fontSize: 12, color: colors.textSecondary }}>
                                                                                 Balance: R{parseFloat(campaign.balance).toFixed(2)}
                                                                             </Text>
                                                                         </View>
@@ -921,8 +923,8 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
-    },
+    backgroundColor: colors.background,
+            },
     centered: {
         flex: 1,
         justifyContent: 'center',
@@ -934,42 +936,42 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     subHeader: {
         padding: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     groupName: {
         fontSize: 14,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         marginBottom: 12,
     },
     campaignCreateBtn: {
-        backgroundColor: '#059669',
+        backgroundColor: colors.success,
         borderRadius: 10,
         paddingHorizontal: 14,
         paddingVertical: 8,
@@ -977,7 +979,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     campaignCreateBtnText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 13,
         fontWeight: '700',
     },
@@ -993,36 +995,36 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 20,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         marginRight: 8,
         justifyContent: 'center',
         alignItems: 'center',
     },
     activeTab: {
-        backgroundColor: '#2563eb',
-        borderColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primaryLight,
         elevation: 2,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
     },
     tabText: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     activeTabText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '700',
     },
     listContent: {
         padding: 16,
     },
     requestCard: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -1041,20 +1043,20 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
         overflow: 'hidden',
         borderWidth: 2,
-        borderColor: '#2563eb',
+        borderColor: colors.primaryLight,
     },
     avatarImg: {
         width: '100%',
         height: '100%',
     },
     avatarInitial: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -1064,22 +1066,22 @@ const styles = StyleSheet.create({
     memberName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     requestDate: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     deceasedBadge: {
-        backgroundColor: '#fee2e2',
+        backgroundColor: colors.dangerLight,
         paddingHorizontal: 8,
         paddingVertical: 4,
         borderRadius: 4,
         borderWidth: 1,
-        borderColor: '#fecaca',
+        borderColor: colors.dangerLight,
     },
     deceasedBadgeText: {
-        color: '#b91c1c',
+        color: colors.danger,
         fontSize: 10,
         fontWeight: 'bold',
     },
@@ -1094,22 +1096,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     approveButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         marginRight: 8,
     },
     rejectButton: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         marginLeft: 8,
     },
     approveButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
     rejectButtonText: {
-        color: '#4b5563',
+        color: colors.textSecondary,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -1121,14 +1123,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontSize: 16,
         textAlign: 'center',
     },
     // Payout Stats styles
     statsGrid: {
         flexDirection: 'row',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderRadius: 8,
         padding: 12,
         marginBottom: 16,
@@ -1139,7 +1141,7 @@ const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: 10,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: 'bold',
         textTransform: 'uppercase',
         marginBottom: 4,
@@ -1147,7 +1149,7 @@ const styles = StyleSheet.create({
     statValue: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     beneficiarySection: {
         marginBottom: 16,
@@ -1161,19 +1163,18 @@ const styles = StyleSheet.create({
     beneficiaryTitle: {
         fontSize: 12,
         fontWeight: 'bold',
-        color: '#6b7280',
+        color: colors.textSecondary,
         textTransform: 'uppercase',
     },
     assignLink: {
         fontSize: 12,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     beneficiaryNameContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#eff6ff',
-        padding: 8,
+                padding: 8,
         borderRadius: 6,
     },
     beneficiaryEmoji: {
@@ -1182,29 +1183,29 @@ const styles = StyleSheet.create({
     beneficiaryName: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     emptyBeneficiary: {
         padding: 8,
         borderWidth: 1,
-        borderColor: '#f3f4f6',
+        borderColor: colors.surfaceLight,
         borderStyle: 'dashed',
         borderRadius: 6,
     },
     emptyBeneficiaryText: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontStyle: 'italic',
     },
     disburseButton: {
-        backgroundColor: '#10b981',
+        backgroundColor: colors.success,
         borderRadius: 8,
         paddingVertical: 12,
         alignItems: 'center',
         marginTop: 8,
     },
     disburseButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -1221,7 +1222,7 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     modalContent: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 16,
         width: '100%',
         maxHeight: '85%',
@@ -1231,17 +1232,17 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     modalSubtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginBottom: 20,
     },
     modalLabel: {
         fontSize: 14,
-        color: '#111827',
+        color: colors.textPrimary,
         fontWeight: '600',
         marginBottom: 8,
     },
@@ -1253,42 +1254,42 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     modalMemberAvatar: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
     modalAvatarText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
     modalMemberName: {
         flex: 1,
         fontSize: 15,
-        color: '#1f2937',
+        color: colors.textPrimary,
         fontWeight: '600',
     },
     modalSelectText: {
         fontSize: 12,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     modalCloseButton: {
         paddingVertical: 12,
         alignItems: 'center',
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
+        borderTopColor: colors.surfaceLight,
     },
     modalCloseButtonText: {
         fontSize: 16,
-        color: '#ef4444',
+        color: colors.danger,
         fontWeight: 'bold',
     },
     createTransferButton: {
@@ -1296,26 +1297,26 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingVertical: 12,
         borderRadius: 12,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         alignItems: 'center',
     },
     createTransferButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '700',
         fontSize: 14,
     },
     selectedMemberItem: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
     },
     textInput: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 10,
         marginBottom: 12,
-        color: '#111827',
+        color: colors.textPrimary,
     },
     modalFormScroll: {
         flexGrow: 1,
@@ -1326,11 +1327,11 @@ const styles = StyleSheet.create({
         paddingBottom: 16,
     },
     inputError: {
-        borderColor: '#ef4444',
+        borderColor: colors.danger,
         borderWidth: 1.5,
     },
     errorText: {
-        color: '#ef4444',
+        color: colors.danger,
         fontSize: 13,
         marginTop: -8,
         marginBottom: 8,
@@ -1338,7 +1339,7 @@ const styles = StyleSheet.create({
     },
     modalCancelButton: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 12,
         paddingVertical: 12,
         alignItems: 'center',
@@ -1346,12 +1347,12 @@ const styles = StyleSheet.create({
     },
     modalCancelButtonText: {
         fontSize: 15,
-        color: '#4b5563',
+        color: colors.textSecondary,
         fontWeight: 'bold',
     },
     modalSubmitButton: {
         flex: 1,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 12,
         paddingVertical: 12,
         alignItems: 'center',
@@ -1359,7 +1360,7 @@ const styles = StyleSheet.create({
     },
     modalSubmitButtonText: {
         fontSize: 15,
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
     },
     modalButtonsRow: {
@@ -1368,9 +1369,9 @@ const styles = StyleSheet.create({
         marginTop: 12,
     },
     pickerBtn: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 14,
         flexDirection: 'row',
@@ -1380,17 +1381,17 @@ const styles = StyleSheet.create({
     },
     pickerBtnText: {
         fontSize: 15,
-        color: '#111827',
+        color: colors.textPrimary,
     },
     pickerArrow: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: colors.textMuted,
     },
     memberDropdownList: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         marginTop: 4,
         maxHeight: 220,
         marginBottom: 12,
@@ -1403,27 +1404,22 @@ const styles = StyleSheet.create({
     memberRow: {
         padding: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
     memberRowSelected: {
-        backgroundColor: '#eff6ff',
-    },
-    memberName: {
-        fontSize: 15,
-        color: '#1f2937',
-        marginLeft: 8,
+        backgroundColor: colors.surfaceLight,
     },
     memberCheck: {
         fontSize: 16,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     noMembersText: {
         padding: 16,
-        color: '#9ca3af',
+        color: colors.textMuted,
         textAlign: 'center',
         fontStyle: 'italic',
     },
@@ -1431,24 +1427,24 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalAvatarTextSmall: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 11,
     },
     // ── Campaign card styles ──────────────────────────────────────────────────
     campaignCard: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 16,
         padding: 16,
         marginHorizontal: 16,
         marginBottom: 12,
         borderWidth: 1,
-        borderColor: '#f1f5f9',
+        borderColor: colors.borderLight,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.06,
@@ -1488,12 +1484,12 @@ const styles = StyleSheet.create({
     campaignTitle: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#0f172a',
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     campaignDesc: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         marginBottom: 8,
         lineHeight: 18,
     },
@@ -1510,15 +1506,15 @@ const styles = StyleSheet.create({
     },
     campaignTarget: {
         fontSize: 13,
-        color: '#94a3b8',
+        color: colors.textMuted,
     },
     campaignContributors: {
         fontSize: 13,
-        color: '#94a3b8',
+        color: colors.textMuted,
     },
     campaignProgressTrack: {
         height: 5,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
         borderRadius: 3,
         overflow: 'hidden',
     },
@@ -1528,7 +1524,7 @@ const styles = StyleSheet.create({
     },
     campaignCardClosed: {
         opacity: 0.75,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         borderStyle: 'dashed',
     },
     closeCampaignButton: {
@@ -1536,14 +1532,56 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 10,
         borderWidth: 1.5,
-        borderColor: '#fca5a5',
-        backgroundColor: '#fff1f2',
+        borderColor: colors.dangerLight,
+        backgroundColor: colors.dangerLight,
         alignItems: 'center',
     },
     closeCampaignButtonText: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#991b1b',
+        color: colors.danger,
+    },
+    transferHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 6,
+    },
+    transferTitle: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: colors.textPrimary,
+        flex: 1,
+    },
+    transferStatus: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: colors.primaryLight,
+        backgroundColor: colors.surfaceLight,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 6,
+    },
+    transferAmount: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: colors.primary,
+        marginBottom: 6,
+    },
+    transferMeta: {
+        fontSize: 12,
+        color: colors.textSecondary,
+        marginBottom: 2,
+    },
+    transferActions: {
+        marginTop: 10,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    transferExecutedText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: colors.success,
     },
 });
 

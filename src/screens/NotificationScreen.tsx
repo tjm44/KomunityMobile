@@ -8,9 +8,11 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 export interface NotificationItem {
   id: number;
@@ -85,27 +87,27 @@ export default function NotificationScreen({ onBack, onNotificationsRead }: Noti
   };
 
   const getIconForType = (type: string | null) => {
-    if (!type) return { icon: 'notifications-outline', color: '#3b82f6', bg: '#dbeafe' };
+    if (!type) return { icon: 'notifications-outline', color: colors.primaryLight, bg: colors.surfaceLight };
     
     switch (type.toLowerCase()) {
       case 'contribution_sent':
       case 'contribution_received':
       case 'funds_disbursed':
       case 'wallet_transfer_executed':
-        return { icon: 'wallet-outline', color: '#10b981', bg: '#d1fae5' };
+        return { icon: 'wallet-outline', color: colors.success, bg: colors.successLight };
       case 'member_joined':
       case 'membership_approved':
       case 'member_promoted':
-        return { icon: 'people-outline', color: '#6366f1', bg: '#e0e7ff' };
+        return { icon: 'people-outline', color: colors.primaryLight, bg: colors.surfaceLight };
       case 'deceased_declared':
       case 'campaign_created':
       case 'campaign_contribution':
       case 'campaign_disbursed':
-        return { icon: 'heart-outline', color: '#ef4444', bg: '#fee2e2' };
+        return { icon: 'heart-outline', color: colors.danger, bg: colors.dangerLight };
       case 'new_post':
-        return { icon: 'chatbubbles-outline', color: '#8b5cf6', bg: '#ede9fe' };
+        return { icon: 'chatbubbles-outline', color: colors.primaryLight, bg: '#ede9fe' };
       default:
-        return { icon: 'notifications-outline', color: '#3b82f6', bg: '#dbeafe' };
+        return { icon: 'notifications-outline', color: colors.primaryLight, bg: colors.surfaceLight };
     }
   };
 
@@ -250,7 +252,7 @@ export default function NotificationScreen({ onBack, onNotificationsRead }: Noti
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryLight]} />
           }
         />
       )}
@@ -261,8 +263,8 @@ export default function NotificationScreen({ onBack, onNotificationsRead }: Noti
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-  },
+    backgroundColor: colors.background,
+      },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -270,14 +272,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 54,
     paddingBottom: 16,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: colors.border,
   },
   backButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.borderLight,
   },
   titleWrapper: {
     flexDirection: 'row',
@@ -287,55 +289,55 @@ const styles = StyleSheet.create({
   topTitle: {
     fontSize: 18,
     fontFamily: 'Outfit-Bold',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   filterBar: {
     flexDirection: 'row',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: colors.borderLight,
   },
   filterTab: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: colors.borderLight,
   },
   activeFilterTab: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primaryLight,
   },
   filterTabText: {
     fontSize: 13,
     fontFamily: 'Outfit-Regular',
-    color: '#64748b',
+    color: colors.textSecondary,
     fontWeight: '600',
   },
   activeFilterTabText: {
-    color: '#ffffff',
+    color: colors.white,
     fontFamily: 'Outfit-Bold',
   },
   filterBadge: {
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.danger,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 10,
   },
   filterBadgeText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 11,
     fontWeight: 'bold',
   },
   badge: {
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.danger,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 12,
   },
   badgeText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -346,11 +348,12 @@ const styles = StyleSheet.create({
   markAllText: {
     fontSize: 13,
     fontFamily: 'Outfit-Regular',
-    color: '#2563eb',
+    color: colors.primaryLight,
     fontWeight: '600',
   },
   centerContainer: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -359,7 +362,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#e2e8f0',
+    backgroundColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -367,13 +370,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontFamily: 'Outfit-Bold',
-    color: '#334155',
+    color: colors.textSecondary,
     marginBottom: 8,
   },
   emptySub: {
     fontSize: 14,
     fontFamily: 'Outfit-Regular',
-    color: '#64748b',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -384,11 +387,11 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: colors.borderLight,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
@@ -396,8 +399,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   unreadCard: {
-    backgroundColor: '#f0f7ff',
-    borderColor: '#bfdbfe',
+    backgroundColor: colors.surfaceLight,
+    borderColor: colors.accentLight,
   },
   iconContainer: {
     width: 42,
@@ -409,6 +412,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   headerRow: {
     flexDirection: 'row',
@@ -419,28 +423,28 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontFamily: 'Outfit-Regular',
-    color: '#334155',
+    color: colors.textSecondary,
     flex: 1,
     marginRight: 8,
   },
   unreadTitle: {
     fontFamily: 'Outfit-Bold',
-    color: '#0f172a',
+    color: colors.textPrimary,
   },
   timeText: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: colors.textMuted,
   },
   message: {
     fontSize: 13.5,
-    color: '#475569',
+    color: colors.textSecondary,
     lineHeight: 19,
   },
   unreadDot: {
     width: 9,
     height: 9,
     borderRadius: 4.5,
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primaryLight,
     marginLeft: 8,
     marginTop: 4,
   },

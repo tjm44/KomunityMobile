@@ -7,9 +7,11 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client, { fetchFormData, appendFileToFormData } from '../api/client';
 
 import { validateName, validateDateOfBirth, validateEmail } from '../utils/validation';
+import { colors, gradients } from '../constants/theme';
 
 interface ProfileSetupProps {
     onComplete: () => void;
@@ -211,15 +213,15 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
                                     marginTop: 10,
                                     paddingHorizontal: 16,
                                     paddingVertical: 8,
-                                    backgroundColor: '#eff6ff',
+                                    backgroundColor: colors.surfaceLight,
                                     borderRadius: 20,
                                     borderWidth: 1,
-                                    borderColor: '#bfdbfe',
+                                    borderColor: colors.accentLight,
                                 }}
                                 onPress={pickImage}
                                 activeOpacity={0.8}
                             >
-                                <Text style={{ fontSize: 13, fontWeight: '600', color: '#2563eb' }}>
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: colors.primaryLight }}>
                                     📷 {profilePicture ? 'Change Profile Photo' : 'Upload Profile Photo'}
                                 </Text>
                             </TouchableOpacity>
@@ -427,8 +429,8 @@ const ProfileSetupScreen = ({ onComplete }: ProfileSetupProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     scrollContent: {
         flexGrow: 1,
         padding: 24,
@@ -440,12 +442,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     form: {
         flex: 1,
@@ -462,39 +464,39 @@ const styles = StyleSheet.create({
         height: 120,
         borderRadius: 60,
         borderWidth: 4,
-        borderColor: '#f3f4f6',
+        borderColor: colors.surfaceLight,
     },
     avatarPlaceholder: {
         width: 120,
         height: 120,
         borderRadius: 60,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderStyle: 'dashed',
     },
     avatarLabel: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     editBadge: {
         position: 'absolute',
         bottom: 4,
         right: 4,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         width: 32,
         height: 32,
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
     },
     editBadgeText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 20,
         fontWeight: 'bold',
         marginTop: -2,
@@ -505,7 +507,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     sectionHeader: {
@@ -513,33 +515,33 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         paddingBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     input: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 14,
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
         justifyContent: 'center',
     },
     inputError: {
-        borderColor: '#ef4444',
-        backgroundColor: '#fef2f2',
+        borderColor: colors.danger,
+        backgroundColor: colors.dangerLight,
     },
     readOnlyInput: {
-        backgroundColor: '#f1f5f9',
-        color: '#64748b',
+        backgroundColor: colors.borderLight,
+        color: colors.textSecondary,
     },
     errorText: {
-        color: '#ef4444',
+        color: colors.danger,
         fontSize: 12,
         marginTop: 4,
         marginLeft: 4,
@@ -547,63 +549,63 @@ const styles = StyleSheet.create({
     },
     dateText: {
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
     },
     placeholderText: {
-        color: '#9ca3af',
+        color: colors.textMuted,
     },
     textArea: {
         height: 120,
         textAlignVertical: 'top',
     },
     button: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 12,
         padding: 18,
         alignItems: 'center',
         marginTop: 12,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 2,
     },
     buttonDisabled: {
-        backgroundColor: '#93c5fd',
+        backgroundColor: colors.accentLight,
     },
     buttonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 18,
     },
     photoCompleteBtn: {
         marginTop: 20,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 12,
         paddingHorizontal: 24,
         borderRadius: 25,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 5,
     },
     photoCompleteText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
     footer: {
         padding: 24,
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
-        backgroundColor: '#ffffff',
+        borderTopColor: colors.surfaceLight,
+        backgroundColor: colors.white,
     },
     // Review Modal Styles
     reviewContainer: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     reviewHeader: {
         padding: 24,
         alignItems: 'center',
@@ -611,27 +613,27 @@ const styles = StyleSheet.create({
     reviewTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     reviewSubtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 4,
     },
     reviewContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     reviewFrame: {
         width: 300,
         height: 300,
         borderRadius: 150,
         overflow: 'hidden',
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border,
         borderWidth: 4,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -653,13 +655,13 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     reviewConfirmBtn: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 18,
         borderRadius: 12,
         alignItems: 'center',
     },
     reviewConfirmText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -668,7 +670,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     reviewCancelText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontSize: 14,
     },

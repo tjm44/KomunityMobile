@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { colors } from '../constants/theme';
 
 interface TopNavBarProps {
     title: string;
@@ -43,9 +44,9 @@ const TopNavBar = ({ title, onBack, rightComponent }: TopNavBarProps) => {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.cardBackground,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.border,
     },
     content: {
         height: 56,
@@ -69,19 +70,19 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backIcon: {
         fontSize: 20,
-        color: '#2563eb',
+        color: colors.primary,
         fontWeight: 'bold',
     },
     title: {
         fontSize: 18,
         fontFamily: 'Outfit-Bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
 });
 

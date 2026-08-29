@@ -5,7 +5,9 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client, { getMediaUrl } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -191,33 +193,33 @@ const MemberProfileScreen = ({ membership, isAdmin, onBack, onStatusChange }: Me
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
-    },
+    backgroundColor: colors.background,
+            },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         padding: 4,
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     profileHero: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         alignItems: 'center',
         paddingVertical: 30,
         marginBottom: 8,
@@ -231,64 +233,64 @@ const styles = StyleSheet.create({
         height: 120,
         borderRadius: 60,
         borderWidth: 3,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     placeholderAvatar: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#2563eb',
+        borderColor: colors.primaryLight,
     },
     placeholderInitial: {
         fontSize: 48,
         fontWeight: 'bold',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     deceasedBadge: {
         position: 'absolute',
         bottom: 0,
-        backgroundColor: '#ef4444',
+        backgroundColor: colors.danger,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
     },
     deceasedBadgeText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 10,
         fontWeight: 'bold',
     },
     name: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
         marginBottom: 8,
     },
     roleBadge: {
-        backgroundColor: '#dbeafe',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 16,
     },
     roleText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontSize: 12,
         fontWeight: 'bold',
     },
     section: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         padding: 16,
         marginBottom: 8,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
         paddingBottom: 8,
     },
     infoRow: {
@@ -298,32 +300,32 @@ const styles = StyleSheet.create({
     },
     infoLabel: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     infoValue: {
         fontSize: 14,
-        color: '#111827',
+        color: colors.textPrimary,
         fontWeight: '500',
     },
     bioText: {
         fontSize: 15,
-        color: '#4b5563',
+        color: colors.textSecondary,
         lineHeight: 22,
     },
     deceasedButton: {
         margin: 16,
-        backgroundColor: '#ef4444',
+        backgroundColor: colors.danger,
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',
-        shadowColor: '#ef4444',
+        shadowColor: colors.danger,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 4,
     },
     deceasedButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -337,21 +339,21 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#dbeafe',
-        backgroundColor: '#ffffff',
+        borderColor: colors.surfaceLight,
+        backgroundColor: colors.white,
         alignItems: 'center',
     },
     activeRoleBtn: {
-        backgroundColor: '#2563eb',
-        borderColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primaryLight,
     },
     roleActionText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     activeRoleText: {
-        color: '#ffffff',
+        color: colors.white,
     },
 });
 

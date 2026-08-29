@@ -4,7 +4,9 @@ import {
     Alert, KeyboardAvoidingView, Platform, ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface PasswordResetProps {
     onBackToLogin: () => void;
@@ -134,10 +136,11 @@ const PasswordResetScreen = ({ onBackToLogin }: PasswordResetProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     innerContainer: {
         flex: 1,
+    backgroundColor: colors.background,
         justifyContent: 'center',
         padding: 30,
     },
@@ -152,53 +155,53 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
         textAlign: 'center',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 12,
     },
     description: {
         fontSize: 15,
         textAlign: 'center',
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 22,
         marginBottom: 32,
         paddingHorizontal: 10,
     },
     emailHighlight: {
         fontWeight: 'bold',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     spamNote: {
         fontSize: 13,
         textAlign: 'center',
-        color: '#9ca3af',
+        color: colors.textMuted,
         marginBottom: 32,
     },
     input: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         padding: 16,
         borderRadius: 12,
         marginBottom: 16,
         fontSize: 16,
     },
     primaryButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         padding: 18,
         borderRadius: 12,
         alignItems: 'center',
         marginTop: 10,
         elevation: 2,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
     },
     buttonDisabled: {
-        backgroundColor: '#93c5fd',
+        backgroundColor: colors.accentLight,
     },
     primaryButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -208,10 +211,10 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     secondaryButtonText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontSize: 16,
     },
@@ -220,7 +223,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     backLinkText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '600',
         fontSize: 15,
     },

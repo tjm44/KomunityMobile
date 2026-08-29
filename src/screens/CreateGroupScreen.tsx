@@ -4,19 +4,21 @@ import {
     ScrollView, Alert, ActivityIndicator, Switch, Platform, KeyboardAvoidingView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
 import { validateName } from '../utils/validation';
 import type { GroupPurpose } from './GroupPurposeScreen';
+import { colors, gradients } from '../constants/theme';
 
 const PURPOSE_META: Record<GroupPurpose, { label: string; icon: string; color: string }> = {
-    bereavement: { label: 'Bereavement Fund', icon: '🕊️', color: '#7c3aed' },
-    excess:      { label: 'Insurance Excess', icon: '🚗', color: '#0284c7' },
-    custom:      { label: 'Custom Fund', icon: '✨', color: '#6366f1' },
-    emergency:   { label: 'Emergency Fund', icon: '🆘', color: '#dc2626' },
-    church:      { label: 'Church / Religious', icon: '⛪', color: '#0284c7' },
-    stokvel:     { label: 'Stokvel & Savings', icon: '💰', color: '#059669' },
-    student:     { label: 'Student Body', icon: '🎓', color: '#d97706' },
-    sports:      { label: 'Sports Club', icon: '⚽', color: '#10b981' },
+    bereavement: { label: 'Bereavement Fund', icon: '🕊️', color: colors.primary },
+    excess:      { label: 'Insurance Excess', icon: '🚗', color: colors.primaryLight },
+    custom:      { label: 'Custom Fund', icon: '✨', color: colors.primaryLight },
+    emergency:   { label: 'Emergency Fund', icon: '🆘', color: colors.danger },
+    church:      { label: 'Church / Religious', icon: '⛪', color: colors.primaryLight },
+    stokvel:     { label: 'Stokvel & Savings', icon: '💰', color: colors.success },
+    student:     { label: 'Student Body', icon: '🎓', color: colors.warning },
+    sports:      { label: 'Sports Club', icon: '⚽', color: colors.success },
 };
 
 interface CreateGroupScreenProps {
@@ -35,7 +37,7 @@ const PillPicker = ({ label, options, value, onChange, color }: {
     color: string;
 }) => (
     <View style={{ marginBottom: 12 }}>
-        <Text style={[styles.label, { fontSize: 13, color: '#374151', marginBottom: 6 }]}>{label}</Text>
+        <Text style={[styles.label, { fontSize: 13, color: colors.textSecondary, marginBottom: 6 }]}>{label}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
             {options.map(opt => {
                 const isActive = value === opt.value;
@@ -107,7 +109,7 @@ const CreateGroupScreen = ({
     const [matchFeePerGame, setMatchFeePerGame] = useState('');
     const [kitEquipmentFundEnabled, setKitEquipmentFundEnabled] = useState(true);
 
-    const meta = purpose ? PURPOSE_META[purpose] : { label: 'Select Fund Type', icon: '❓', color: '#64748b' };
+    const meta = purpose ? PURPOSE_META[purpose] : { label: 'Select Fund Type', icon: '❓', color: colors.textSecondary };
     const canCreate = !!purpose;
 
     const handleCreateGroup = async () => {
@@ -239,9 +241,9 @@ const CreateGroupScreen = ({
 
                     {/* ── BEREAVEMENT ── */}
                     {purpose === 'bereavement' && (
-                        <View style={[styles.profileSection, { borderLeftColor: '#7c3aed', backgroundColor: '#f5f3ff' }]}>
-                            <Text style={[styles.profileSectionTitle, { color: '#7c3aed' }]}>🕊️ Bereavement Fund Settings</Text>
-                            <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 10, fontFamily: 'Outfit-Regular', lineHeight: 18 }}>
+                        <View style={[styles.profileSection, { borderLeftColor: colors.primary, backgroundColor: colors.surfaceLight }]}>
+                            <Text style={[styles.profileSectionTitle, { color: colors.primary }]}>🕊️ Bereavement Fund Settings</Text>
+                            <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 10, fontFamily: 'Outfit-Regular', lineHeight: 18 }}>
                                 Beneficiary details, payout amounts, and dependent info are collected from each member when they join the group.
                             </Text>
                             <PillPicker
@@ -260,26 +262,26 @@ const CreateGroupScreen = ({
 
                     {/* ── CHURCH ── */}
                     {purpose === 'church' && (
-                        <View style={[styles.profileSection, { borderLeftColor: '#0284c7', backgroundColor: '#f0f9ff' }]}>
-                            <Text style={[styles.profileSectionTitle, { color: '#0284c7' }]}>⛪ Church & Ministry Settings</Text>
+                        <View style={[styles.profileSection, { borderLeftColor: colors.primaryLight, backgroundColor: colors.surfaceLight }]}>
+                            <Text style={[styles.profileSectionTitle, { color: colors.primaryLight }]}>⛪ Church & Ministry Settings</Text>
                             <TextInput style={styles.input} placeholder="Denomination (e.g. Pentecostal)" value={denomination} onChangeText={setDenomination} />
                             <TextInput style={[styles.input, { marginTop: 8 }]} placeholder="Branch / Parish Name" value={branchParishName} onChangeText={setBranchParishName} />
                             <TextInput style={[styles.input, { marginTop: 8 }]} placeholder="Default Monthly Tithe (R, optional)" value={defaultTitheAmount} onChangeText={setDefaultTitheAmount} keyboardType="numeric" />
                             <View style={[styles.settingRow, { marginBottom: 0, marginTop: 12, backgroundColor: 'transparent', padding: 0 }]}>
-                                <Text style={{ fontSize: 14, color: '#374151', flex: 1, fontFamily: 'Outfit-Regular' }}>Enable Faith Pledges</Text>
-                                <Switch value={enableFaithPledges} onValueChange={setEnableFaithPledges} trackColor={{ false: '#d1d5db', true: '#0284c766' }} thumbColor={enableFaithPledges ? '#0284c7' : '#f4f3f4'} />
+                                <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Enable Faith Pledges</Text>
+                                <Switch value={enableFaithPledges} onValueChange={setEnableFaithPledges} trackColor={{ false: colors.border, true: '#0284c766' }} thumbColor={enableFaithPledges ? colors.primaryLight : '#f4f3f4'} />
                             </View>
                             <View style={[styles.settingRow, { marginBottom: 0, marginTop: 8, backgroundColor: 'transparent', padding: 0 }]}>
-                                <Text style={{ fontSize: 14, color: '#374151', flex: 1, fontFamily: 'Outfit-Regular' }}>Section 18A Tax Receipts</Text>
-                                <Switch value={enableTaxReceipts} onValueChange={setEnableTaxReceipts} trackColor={{ false: '#d1d5db', true: '#0284c766' }} thumbColor={enableTaxReceipts ? '#0284c7' : '#f4f3f4'} />
+                                <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Section 18A Tax Receipts</Text>
+                                <Switch value={enableTaxReceipts} onValueChange={setEnableTaxReceipts} trackColor={{ false: colors.border, true: '#0284c766' }} thumbColor={enableTaxReceipts ? colors.primaryLight : '#f4f3f4'} />
                             </View>
                         </View>
                     )}
 
                     {/* ── STOKVEL ── */}
                     {purpose === 'stokvel' && (
-                        <View style={[styles.profileSection, { borderLeftColor: '#059669', backgroundColor: '#f0fdf4' }]}>
-                            <Text style={[styles.profileSectionTitle, { color: '#059669' }]}>💰 Stokvel Savings & Pool Settings</Text>
+                        <View style={[styles.profileSection, { borderLeftColor: colors.success, backgroundColor: colors.successLight }]}>
+                            <Text style={[styles.profileSectionTitle, { color: colors.success }]}>💰 Stokvel Savings & Pool Settings</Text>
                             <PillPicker
                                 label="Stokvel Category"
                                 value={stokvelType}
@@ -321,16 +323,16 @@ const CreateGroupScreen = ({
                                 <TextInput style={[styles.input, { flex: 1 }]} placeholder="Late Fee Penalty (R)" value={penaltyLateFee} onChangeText={setPenaltyLateFee} keyboardType="numeric" />
                             </View>
                             <View style={[styles.settingRow, { marginBottom: 0, marginTop: 12, backgroundColor: 'transparent', padding: 0 }]}>
-                                <Text style={{ fontSize: 14, color: '#374151', flex: 1, fontFamily: 'Outfit-Regular' }}>Allow Member Loans / Borrowing</Text>
-                                <Switch value={borrowingAllowed} onValueChange={setBorrowingAllowed} trackColor={{ false: '#d1d5db', true: '#05996966' }} thumbColor={borrowingAllowed ? '#059669' : '#f4f3f4'} />
+                                <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Allow Member Loans / Borrowing</Text>
+                                <Switch value={borrowingAllowed} onValueChange={setBorrowingAllowed} trackColor={{ false: colors.border, true: '#05996966' }} thumbColor={borrowingAllowed ? colors.success : '#f4f3f4'} />
                             </View>
                         </View>
                     )}
 
                     {/* ── STUDENT ── */}
                     {purpose === 'student' && (
-                        <View style={[styles.profileSection, { borderLeftColor: '#d97706', backgroundColor: '#fffbeb' }]}>
-                            <Text style={[styles.profileSectionTitle, { color: '#d97706' }]}>🎓 Student Society Settings</Text>
+                        <View style={[styles.profileSection, { borderLeftColor: colors.warning, backgroundColor: colors.warningLight }]}>
+                            <Text style={[styles.profileSectionTitle, { color: colors.warning }]}>🎓 Student Society Settings</Text>
                             <TextInput style={styles.input} placeholder="Institution Name (e.g. UCT / Wits)" value={institutionName} onChangeText={setInstitutionName} />
                             <TextInput style={[styles.input, { marginTop: 8 }]} placeholder="Campus Name" value={campusName} onChangeText={setCampusName} />
                             <View style={{ marginTop: 12 }}>
@@ -361,16 +363,16 @@ const CreateGroupScreen = ({
                             </View>
                             <TextInput style={styles.input} placeholder="Membership Fee (R)" value={studentMembershipFee} onChangeText={setStudentMembershipFee} keyboardType="numeric" />
                             <View style={[styles.settingRow, { marginBottom: 0, marginTop: 12, backgroundColor: 'transparent', padding: 0 }]}>
-                                <Text style={{ fontSize: 14, color: '#374151', flex: 1, fontFamily: 'Outfit-Regular' }}>Require Student Reg Number</Text>
-                                <Switch value={studentIdRequired} onValueChange={setStudentIdRequired} trackColor={{ false: '#d1d5db', true: '#d9770666' }} thumbColor={studentIdRequired ? '#d97706' : '#f4f3f4'} />
+                                <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Require Student Reg Number</Text>
+                                <Switch value={studentIdRequired} onValueChange={setStudentIdRequired} trackColor={{ false: colors.border, true: '#d9770666' }} thumbColor={studentIdRequired ? colors.warning : '#f4f3f4'} />
                             </View>
                         </View>
                     )}
 
                     {/* ── SPORTS ── */}
                     {purpose === 'sports' && (
-                        <View style={[styles.profileSection, { borderLeftColor: '#10b981', backgroundColor: '#ecfdf5' }]}>
-                            <Text style={[styles.profileSectionTitle, { color: '#10b981' }]}>⚽ Sports Club Settings</Text>
+                        <View style={[styles.profileSection, { borderLeftColor: colors.success, backgroundColor: colors.successLight }]}>
+                            <Text style={[styles.profileSectionTitle, { color: colors.success }]}>⚽ Sports Club Settings</Text>
                             <PillPicker
                                 label="Sport Category"
                                 value={sportCategory}
@@ -417,16 +419,16 @@ const CreateGroupScreen = ({
                                 <TextInput style={[styles.input, { flex: 1 }]} placeholder="Per Match Fee (R)" value={matchFeePerGame} onChangeText={setMatchFeePerGame} keyboardType="numeric" />
                             </View>
                             <View style={[styles.settingRow, { marginBottom: 0, marginTop: 12, backgroundColor: 'transparent', padding: 0 }]}>
-                                <Text style={{ fontSize: 14, color: '#374151', flex: 1, fontFamily: 'Outfit-Regular' }}>Enable Kit & Equipment Fund</Text>
-                                <Switch value={kitEquipmentFundEnabled} onValueChange={setKitEquipmentFundEnabled} trackColor={{ false: '#d1d5db', true: '#10b98166' }} thumbColor={kitEquipmentFundEnabled ? '#10b981' : '#f4f3f4'} />
+                                <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Enable Kit & Equipment Fund</Text>
+                                <Switch value={kitEquipmentFundEnabled} onValueChange={setKitEquipmentFundEnabled} trackColor={{ false: colors.border, true: '#10b98166' }} thumbColor={kitEquipmentFundEnabled ? colors.success : '#f4f3f4'} />
                             </View>
                         </View>
                     )}
 
                     {/* ── EMERGENCY notice ── */}
                     {purpose === 'emergency' && (
-                        <View style={[styles.infoBox, { backgroundColor: '#fef2f2', borderColor: '#fecaca' }]}>
-                            <Text style={[styles.infoText, { color: '#991b1b' }]}>
+                        <View style={[styles.infoBox, { backgroundColor: colors.dangerLight, borderColor: colors.dangerLight }]}>
+                            <Text style={[styles.infoText, { color: colors.danger }]}>
                                 🆘 Emergency Fundraisers are only available to verified NGO or Church accounts.
                                 Once created, your campaign will be publicly visible to all Komunity users.
                             </Text>
@@ -442,8 +444,8 @@ const CreateGroupScreen = ({
                         <Switch
                             value={requiresApproval}
                             onValueChange={setRequiresApproval}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={requiresApproval ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={requiresApproval ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -455,8 +457,8 @@ const CreateGroupScreen = ({
                         <Switch
                             value={verifiedMembersOnly}
                             onValueChange={setVerifiedMembersOnly}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={verifiedMembersOnly ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={verifiedMembersOnly ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -494,7 +496,7 @@ const CreateGroupScreen = ({
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#ffffff' },
+    container: { flex: 1, backgroundColor: colors.white },
     scrollContent: { padding: 24 },
     purposeBadge: {
         flexDirection: 'row',
@@ -507,22 +509,22 @@ const styles = StyleSheet.create({
     },
     purposeIcon: { fontSize: 28 },
     purposeLabel: { fontSize: 15, fontWeight: '700', fontFamily: 'Outfit-Bold' },
-    purposeDesc: { fontSize: 12, color: '#64748b', marginTop: 2, fontFamily: 'Outfit-Regular' },
+    purposeDesc: { fontSize: 12, color: colors.textSecondary, marginTop: 2, fontFamily: 'Outfit-Regular' },
     formSection: { marginBottom: 24 },
-    label: { fontSize: 16, fontWeight: 'bold', color: '#374151', marginBottom: 8, fontFamily: 'Outfit-Bold' },
+    label: { fontSize: 16, fontWeight: 'bold', color: colors.textSecondary, marginBottom: 8, fontFamily: 'Outfit-Bold' },
     input: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 16,
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
         fontFamily: 'Outfit-Regular',
     },
     textArea: { height: 120, textAlignVertical: 'top' },
-    inputError: { borderColor: '#ef4444', backgroundColor: '#fef2f2' },
-    errorText: { color: '#ef4444', fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' },
+    inputError: { borderColor: colors.danger, backgroundColor: colors.dangerLight },
+    errorText: { color: colors.danger, fontSize: 12, marginTop: 4, marginLeft: 4, fontWeight: '500' },
     profileSection: {
         padding: 14,
         borderRadius: 12,
@@ -539,48 +541,48 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         padding: 16,
         borderRadius: 12,
         marginBottom: 24,
     },
     settingText: { flex: 1, marginRight: 16 },
-    settingLabel: { fontSize: 16, fontWeight: 'bold', color: '#111827', fontFamily: 'Outfit-Bold' },
-    settingDescription: { fontSize: 14, color: '#6b7280', marginTop: 2, fontFamily: 'Outfit-Regular' },
+    settingLabel: { fontSize: 16, fontWeight: 'bold', color: colors.textPrimary, fontFamily: 'Outfit-Bold' },
+    settingDescription: { fontSize: 14, color: colors.textSecondary, marginTop: 2, fontFamily: 'Outfit-Regular' },
     infoBox: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
         marginBottom: 16,
     },
-    infoText: { fontSize: 14, color: '#1e40af', lineHeight: 20, fontFamily: 'Outfit-Regular' },
-    footer: { padding: 24, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+    infoText: { fontSize: 14, color: colors.primary, lineHeight: 20, fontFamily: 'Outfit-Regular' },
+    footer: { padding: 24, borderTopWidth: 1, borderTopColor: colors.surfaceLight },
     createButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 12,
         padding: 18,
         alignItems: 'center',
         marginBottom: 12,
     },
     buttonDisabled: { opacity: 0.5 },
-    createButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 17, fontFamily: 'Outfit-Bold' },
+    createButtonText: { color: colors.white, fontWeight: 'bold', fontSize: 17, fontFamily: 'Outfit-Bold' },
     cancelButton: { padding: 12, alignItems: 'center' },
-    cancelButtonText: { color: '#6b7280', fontSize: 15, fontWeight: '500', fontFamily: 'Outfit-Regular' },
+    cancelButtonText: { color: colors.textSecondary, fontSize: 15, fontWeight: '500', fontFamily: 'Outfit-Regular' },
     entityPill: {
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
-        backgroundColor: '#f9fafb',
+        borderColor: colors.border,
+        backgroundColor: colors.background,
         marginBottom: 8,
         marginRight: 6,
     },
     entityPillText: {
         fontSize: 13,
-        color: '#475569',
+        color: colors.textSecondary,
         fontWeight: '500',
         fontFamily: 'Outfit-Regular',
     },

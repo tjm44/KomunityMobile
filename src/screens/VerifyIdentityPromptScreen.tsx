@@ -6,6 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface VerifyIdentityPromptScreenProps {
     profileId: number;
@@ -54,7 +55,7 @@ const VerifyIdentityPromptScreen = ({
         >
             <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 20 }]}>
                 <LinearGradient
-                    colors={['#eff6ff', '#dbeafe']}
+                    colors={[...gradients.screenBackground]}
                     style={styles.headerBadgeContainer}
                 >
                     <Text style={styles.badgeEmoji}>🛡️</Text>
@@ -169,7 +170,7 @@ const VerifyIdentityPromptScreen = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
     },
     scrollContent: {
         paddingHorizontal: 24,
@@ -190,14 +191,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         textAlign: 'center',
         marginBottom: 10,
         fontFamily: 'Outfit-Bold',
     },
     subtitle: {
         fontSize: 15,
-        color: '#6b7280',
+        color: colors.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 30,
@@ -206,11 +207,11 @@ const styles = StyleSheet.create({
     },
     benefitsContainer: {
         width: '100%',
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderRadius: 16,
         padding: 20,
         borderWidth: 1,
-        borderColor: '#f1f5f9',
+        borderColor: colors.borderLight,
         marginBottom: 30,
     },
     benefitItem: {
@@ -228,13 +229,13 @@ const styles = StyleSheet.create({
     benefitTitle: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#1e293b',
+        color: colors.textPrimary,
         marginBottom: 4,
         fontFamily: 'Outfit-Bold',
     },
     benefitDesc: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         lineHeight: 18,
         fontFamily: 'Outfit-Regular',
     },
@@ -243,46 +244,46 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     primaryBtn: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         width: '100%',
         paddingVertical: 15,
         borderRadius: 12,
         alignItems: 'center',
     },
     primaryBtnText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 16,
         fontWeight: 'bold',
         fontFamily: 'Outfit-Bold',
     },
     secondaryBtn: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         width: '100%',
         paddingVertical: 15,
         borderRadius: 12,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
     },
     secondaryBtnText: {
-        color: '#64748b',
+        color: colors.textSecondary,
         fontSize: 15,
         fontWeight: '600',
         fontFamily: 'Outfit-Regular',
     },
     formContainer: {
         width: '100%',
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderRadius: 16,
         padding: 20,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         alignSelf: 'stretch',
     },
     formTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#1e293b',
+        color: colors.textPrimary,
         marginBottom: 16,
         textAlign: 'center',
         fontFamily: 'Outfit-Bold',
@@ -290,7 +291,7 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#475569',
+        color: colors.textSecondary,
         marginBottom: 8,
         fontFamily: 'Outfit-Bold',
     },
@@ -304,26 +305,26 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 8,
         borderWidth: 1.5,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
         alignItems: 'center',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
     },
     tabActive: {
-        borderColor: '#2563eb',
-        backgroundColor: '#eff6ff',
+        borderColor: colors.primaryLight,
+        backgroundColor: colors.surfaceLight,
     },
     tabText: {
         fontSize: 14,
-        color: '#475569',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     tabTextActive: {
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     input: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1.5,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
         borderRadius: 8,
         padding: 12,
         fontSize: 15,

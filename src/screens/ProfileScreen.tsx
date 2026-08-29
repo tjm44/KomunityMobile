@@ -7,7 +7,9 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client, { fetchFormData, appendFileToFormData, getMediaUrl } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 
 interface Profile {
@@ -378,12 +380,12 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     <Text style={styles.profileEmail}>{profile?.email}</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
                         {profile?.profile?.is_verified ? (
-                            <View style={[styles.roleBadge, { backgroundColor: '#d1fae5' }]}>
-                                <Text style={[styles.roleText, { color: '#065f46' }]}>🛡️ VERIFIED</Text>
+                            <View style={[styles.roleBadge, { backgroundColor: colors.successLight }]}>
+                                <Text style={[styles.roleText, { color: colors.success }]}>🛡️ VERIFIED</Text>
                             </View>
                         ) : (
-                            <View style={[styles.roleBadge, { backgroundColor: '#fee2e2' }]}>
-                                <Text style={[styles.roleText, { color: '#dc2626' }]}>⚠️ UNVERIFIED</Text>
+                            <View style={[styles.roleBadge, { backgroundColor: colors.dangerLight }]}>
+                                <Text style={[styles.roleText, { color: colors.danger }]}>⚠️ UNVERIFIED</Text>
                             </View>
                         )}
                         {profile?.profile?.active_role && (
@@ -773,8 +775,8 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
-    },
+    backgroundColor: colors.background,
+            },
     centered: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -785,37 +787,37 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     content: {
         flex: 1,
     },
     profileHeader: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         alignItems: 'center',
         paddingVertical: 32,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     avatarContainer: {
         marginBottom: 16,
@@ -830,32 +832,32 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#2563eb',
+        borderColor: colors.primaryLight,
     },
     avatarText: {
         fontSize: 40,
         fontWeight: 'bold',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     editBadge: {
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         width: 32,
         height: 32,
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
     },
     editBadgeText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 14,
         fontWeight: 'bold',
     },
@@ -864,10 +866,10 @@ const styles = StyleSheet.create({
         marginBottom: 6,
         paddingHorizontal: 16,
         paddingVertical: 8,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#bfdbfe',
+        borderColor: colors.accentLight,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
@@ -875,44 +877,44 @@ const styles = StyleSheet.create({
     changePhotoButtonText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     profileName: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     profileEmail: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     roleBadge: {
-        backgroundColor: '#dbeafe',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 16,
         marginTop: 4,
     },
     roleText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontSize: 12,
         fontWeight: 'bold',
     },
     section: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         marginTop: 16,
         paddingHorizontal: 16,
         paddingVertical: 20,
         borderTopWidth: 1,
         borderBottomWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 16,
     },
     infoRow: {
@@ -921,60 +923,60 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     infoLabel: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     infoValue: {
         fontSize: 14,
-        color: '#111827',
+        color: colors.textPrimary,
         fontWeight: '600',
         textAlign: 'right',
         flex: 1,
         marginLeft: 16,
     },
     readOnlyText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '400',
     },
     bioText: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.textSecondary,
         lineHeight: 20,
     },
     actionButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 14,
         borderRadius: 8,
         alignItems: 'center',
         marginBottom: 12,
     },
     actionButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 16,
         fontWeight: '600',
     },
     logoutButton: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#ef4444',
+        borderColor: colors.danger,
     },
     logoutText: {
-        color: '#ef4444',
+        color: colors.danger,
     },
     editInput: {
         flex: 1,
         fontSize: 14,
-        color: '#111827',
+        color: colors.textPrimary,
         fontWeight: '600',
         textAlign: 'right',
         marginLeft: 16,
         paddingVertical: 4,
         borderBottomWidth: 1,
-        borderBottomColor: '#2563eb',
+        borderBottomColor: colors.primaryLight,
     },
     bioInput: {
         textAlign: 'left',
@@ -987,24 +989,24 @@ const styles = StyleSheet.create({
         marginLeft: 16,
     },
     cancelButton: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#6b7280',
+        borderColor: colors.textSecondary,
     },
     cancelText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     disabledButton: {
         opacity: 0.5,
     },
     headerSaveButton: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 8,
     },
     headerSaveText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -1013,16 +1015,16 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         padding: 16,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: colors.border,
     },
     // Review Modal Styles
     reviewContainer: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     reviewHeader: {
         padding: 24,
         alignItems: 'center',
@@ -1030,27 +1032,27 @@ const styles = StyleSheet.create({
     reviewTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     reviewSubtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 4,
     },
     reviewContent: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     reviewFrame: {
         width: 280,
         height: 280,
         borderRadius: 140,
         overflow: 'hidden',
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border,
         borderWidth: 4,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -1072,13 +1074,13 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     reviewConfirmBtn: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 18,
         borderRadius: 12,
         alignItems: 'center',
     },
     reviewConfirmText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -1087,7 +1089,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     reviewCancelText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontSize: 14,
     },
@@ -1098,7 +1100,7 @@ const styles = StyleSheet.create({
         padding: 24,
     },
     kycContent: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 20,
         padding: 24,
         shadowColor: '#000',
@@ -1110,14 +1112,14 @@ const styles = StyleSheet.create({
     kycTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         textAlign: 'center',
         marginBottom: 8,
         fontFamily: 'Outfit-Bold',
     },
     kycSubtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
         marginBottom: 20,
@@ -1126,7 +1128,7 @@ const styles = StyleSheet.create({
     kycLabel: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 8,
         marginTop: 12,
         fontFamily: 'Outfit-Bold',
@@ -1141,31 +1143,31 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderRadius: 10,
         borderWidth: 1.5,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     kycTypePillActive: {
-        borderColor: '#2563eb',
-        backgroundColor: '#eff6ff',
+        borderColor: colors.primaryLight,
+        backgroundColor: colors.surfaceLight,
     },
     kycTypePillText: {
         fontSize: 14,
-        color: '#475569',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontFamily: 'Outfit-Bold',
     },
     kycTypePillTextActive: {
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     kycInput: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1.5,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 10,
         padding: 14,
         fontSize: 15,
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 20,
         fontFamily: 'Outfit-Regular',
     },
@@ -1180,19 +1182,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     kycCancelButton: {
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
     },
     kycVerifyButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
     },
     kycCancelText: {
-        color: '#475569',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontSize: 15,
         fontFamily: 'Outfit-Bold',
     },
     kycVerifyText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 15,
         fontFamily: 'Outfit-Bold',
@@ -1201,13 +1203,13 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     menuButtonText: {
         fontSize: 22,
-        color: '#4b5563',
+        color: colors.textSecondary,
         fontWeight: 'bold',
         marginTop: -4,
     },
@@ -1218,7 +1220,7 @@ const styles = StyleSheet.create({
     menuDropdown: {
         position: 'absolute',
         right: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         paddingVertical: 8,
         minWidth: 180,
@@ -1228,7 +1230,7 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 5,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     menuItem: {
         paddingVertical: 12,
@@ -1236,19 +1238,51 @@ const styles = StyleSheet.create({
     },
     menuItemText: {
         fontSize: 14,
-        color: '#374151',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     menuItemLogout: {
-        backgroundColor: '#fee2e2',
+        backgroundColor: colors.dangerLight,
     },
     menuItemLogoutText: {
-        color: '#dc2626',
+        color: colors.danger,
     },
     menuDivider: {
         height: 1,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border,
         marginVertical: 4,
+    },
+    orgCard: {
+        backgroundColor: colors.white,
+        borderRadius: 12,
+        padding: 14,
+        marginBottom: 10,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    orgCardContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    orgMeta: {
+        flex: 1,
+    },
+    orgName: {
+        fontSize: 15,
+        fontWeight: 'bold',
+        color: colors.textPrimary,
+    },
+    orgSubtitle: {
+        fontSize: 11,
+        color: colors.primary,
+        fontWeight: '600',
+        marginTop: 2,
+    },
+    feedButtonText: {
+        fontSize: 18,
+        color: colors.primary,
+        fontWeight: 'bold',
     },
 });
 

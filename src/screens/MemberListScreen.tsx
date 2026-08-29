@@ -5,7 +5,9 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client, { getMediaUrl } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface Member {
     id: number;
@@ -114,8 +116,8 @@ const MemberListScreen = ({ group, onBack, onSelectMember }: MemberListProps) =>
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
-    },
+    backgroundColor: colors.background,
+            },
     centered: {
         flex: 1,
         justifyContent: 'center',
@@ -127,50 +129,50 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     subHeader: {
         padding: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     groupName: {
         fontSize: 14,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         marginBottom: 4,
     },
     memberCount: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     listContent: {
         padding: 16,
     },
     memberCard: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
@@ -188,20 +190,20 @@ const styles = StyleSheet.create({
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
         overflow: 'hidden',
         borderWidth: 2,
-        borderColor: '#2563eb',
+        borderColor: colors.primaryLight,
     },
     avatarImg: {
         width: '100%',
         height: '100%',
     },
     avatarInitial: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -211,30 +213,30 @@ const styles = StyleSheet.create({
     memberName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     memberRole: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 1,
     },
     deceasedBadge: {
-        backgroundColor: '#fee2e2',
+        backgroundColor: colors.dangerLight,
         paddingHorizontal: 6,
         paddingVertical: 2,
         borderRadius: 4,
         borderWidth: 1,
-        borderColor: '#fecaca',
+        borderColor: colors.dangerLight,
         marginRight: 12,
     },
     deceasedBadgeText: {
-        color: '#b91c1c',
+        color: colors.danger,
         fontSize: 9,
         fontWeight: 'bold',
     },
     chevron: {
         fontSize: 20,
-        color: '#9ca3af',
+        color: colors.textMuted,
         marginLeft: 8,
     },
     emptyContainer: {
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontSize: 16,
         textAlign: 'center',
     },

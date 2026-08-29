@@ -6,16 +6,18 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import client, { getMediaUrl } from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
 import { validateAmount, validatePhone } from '../utils/validation';
+import { colors, gradients } from '../constants/theme';
 
 const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
-    bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement' },
-    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
-    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency' },
-    custom:      { icon: '✨', color: '#059669', label: 'Custom' },
+    bereavement: { icon: '🕊️', color: colors.primary, label: 'Bereavement' },
+    excess:      { icon: '🚗', color: colors.primaryLight, label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: colors.danger, label: 'Emergency' },
+    custom:      { icon: '✨', color: colors.success, label: 'Custom' },
 };
 
 const RETAIL_PARTNERS = ['Shoprite', 'Pick n Pay', 'Checkers', 'Spar', 'Boxer', 'Flash', '1Voucher'];
@@ -607,9 +609,9 @@ const WalletScreen = ({
                                             </Text>
                                         ) : null}
                                         {item.note ? (
-                                            <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#e2e8f0' }}>
-                                                <Text style={{ fontSize: 11, fontWeight: '700', color: '#475569' }}>Note:</Text>
-                                                <Text style={{ fontSize: 12, color: '#334155', marginTop: 2 }}>{item.note}</Text>
+                                            <View style={{ marginTop: 6, padding: 8, borderRadius: 8, backgroundColor: colors.borderLight, borderWidth: 1, borderColor: colors.border }}>
+                                                <Text style={{ fontSize: 11, fontWeight: '700', color: colors.textSecondary }}>Note:</Text>
+                                                <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 2 }}>{item.note}</Text>
                                             </View>
                                         ) : null}
                                         {item.withdrawal_channel ? (
@@ -618,11 +620,11 @@ const WalletScreen = ({
                                             </Text>
                                         ) : null}
                                         {item.withdrawal_metadata?.voucher_code ? (
-                                            <View style={{ marginTop: 8, padding: 10, borderRadius: 10, backgroundColor: '#d1fae5', borderWidth: 1, borderColor: '#a7f3d0' }}>
-                                                <Text style={{ fontSize: 11, color: '#065f46', fontWeight: 'bold' }}>🎫 Voucher Code:</Text>
-                                                <Text style={{ fontSize: 18, fontWeight: '800', color: '#047857', fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2, letterSpacing: 1 }}>{item.withdrawal_metadata.voucher_code}</Text>
+                                            <View style={{ marginTop: 8, padding: 10, borderRadius: 10, backgroundColor: colors.successLight, borderWidth: 1, borderColor: colors.successLight }}>
+                                                <Text style={{ fontSize: 11, color: colors.success, fontWeight: 'bold' }}>🎫 Voucher Code:</Text>
+                                                <Text style={{ fontSize: 18, fontWeight: '800', color: colors.success, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', marginTop: 2, letterSpacing: 1 }}>{item.withdrawal_metadata.voucher_code}</Text>
                                                 {item.withdrawal_metadata.partner ? (
-                                                    <Text style={{ fontSize: 11, color: '#065f46', marginTop: 4, fontWeight: '500' }}>🏪 Redeem at: {item.withdrawal_metadata.partner}</Text>
+                                                    <Text style={{ fontSize: 11, color: colors.success, marginTop: 4, fontWeight: '500' }}>🏪 Redeem at: {item.withdrawal_metadata.partner}</Text>
                                                 ) : null}
                                             </View>
                                         ) : null}
@@ -653,37 +655,37 @@ const WalletScreen = ({
                         </View>
 
                         {/* Method Selection Tabs */}
-                        <View style={{ flexDirection: 'row', backgroundColor: '#f3f4f6', padding: 4, borderRadius: 8, marginBottom: 16 }}>
+                        <View style={{ flexDirection: 'row', backgroundColor: colors.surfaceLight, padding: 4, borderRadius: 8, marginBottom: 16 }}>
                             <TouchableOpacity
                                 style={{
                                     flex: 1,
                                     paddingVertical: 8,
                                     borderRadius: 6,
-                                    backgroundColor: topUpMethod === 'voucher' ? '#2563eb' : 'transparent',
+                                    backgroundColor: topUpMethod === 'voucher' ? colors.primaryLight : 'transparent',
                                     alignItems: 'center'
                                 }}
                                 onPress={() => { setTopUpMethod('voucher'); setTopUpError(null); }}
                             >
-                                <Text style={{ color: topUpMethod === 'voucher' ? '#ffffff' : '#4b5563', fontWeight: 'bold' }}>🎫 1Voucher</Text>
+                                <Text style={{ color: topUpMethod === 'voucher' ? colors.white : colors.textSecondary, fontWeight: 'bold' }}>🎫 1Voucher</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={{
                                     flex: 1,
                                     paddingVertical: 8,
                                     borderRadius: 6,
-                                    backgroundColor: topUpMethod === 'card' ? '#2563eb' : 'transparent',
+                                    backgroundColor: topUpMethod === 'card' ? colors.primaryLight : 'transparent',
                                     alignItems: 'center'
                                 }}
                                 onPress={() => { setTopUpMethod('card'); setTopUpError(null); }}
                             >
-                                <Text style={{ color: topUpMethod === 'card' ? '#ffffff' : '#4b5563', fontWeight: 'bold' }}>💳 Bank Card</Text>
+                                <Text style={{ color: topUpMethod === 'card' ? colors.white : colors.textSecondary, fontWeight: 'bold' }}>💳 Bank Card</Text>
                             </TouchableOpacity>
                         </View>
 
                         {topUpMethod === 'voucher' ? (
                             <>
                                 <Text style={[styles.inputLabel, { marginBottom: 4 }]}>1Voucher PIN</Text>
-                                <Text style={{ fontSize: 12, color: '#6b7280', marginBottom: 10 }}>
+                                <Text style={{ fontSize: 12, color: colors.textSecondary, marginBottom: 10 }}>
                                     Enter the 14–16 digit PIN from your physical 1Voucher.
                                 </Text>
                                 <TextInput
@@ -963,7 +965,7 @@ const WalletScreen = ({
                                     style={[
                                         styles.channelOption,
                                         withdrawChannel === option.value && styles.channelOptionSelected,
-                                        option.value === 'send_money' && withdrawChannel === 'send_money' && { borderColor: '#7c3aed', backgroundColor: '#7c3aed' }
+                                        option.value === 'send_money' && withdrawChannel === 'send_money' && { borderColor: colors.primary, backgroundColor: colors.primary }
                                     ]}
                                     onPress={() => {
                                         setWithdrawChannel(option.value as any);
@@ -1137,16 +1139,16 @@ const WalletScreen = ({
                                                     paddingHorizontal: 12,
                                                     paddingVertical: 6,
                                                     borderRadius: 16,
-                                                    backgroundColor: withdrawProvider === prov ? '#2563eb' : '#f3f4f6',
+                                                    backgroundColor: withdrawProvider === prov ? colors.primaryLight : colors.surfaceLight,
                                                     borderWidth: 1,
-                                                    borderColor: withdrawProvider === prov ? '#2563eb' : '#d1d5db'
+                                                    borderColor: withdrawProvider === prov ? colors.primaryLight : colors.border
                                                 }}
                                                 onPress={() => setWithdrawProvider(prov)}
                                             >
                                                 <Text style={{
                                                     fontSize: 12,
                                                     fontWeight: withdrawProvider === prov ? '700' : '500',
-                                                    color: withdrawProvider === prov ? '#ffffff' : '#374151'
+                                                    color: withdrawProvider === prov ? colors.white : colors.textSecondary
                                                 }}>
                                                     {withdrawProvider === prov ? `✓ ${prov}` : prov}
                                                 </Text>
@@ -1179,16 +1181,16 @@ const WalletScreen = ({
                                                     paddingHorizontal: 12,
                                                     paddingVertical: 6,
                                                     borderRadius: 16,
-                                                    backgroundColor: withdrawPartner === partner ? '#059669' : '#f3f4f6',
+                                                    backgroundColor: withdrawPartner === partner ? colors.success : colors.surfaceLight,
                                                     borderWidth: 1,
-                                                    borderColor: withdrawPartner === partner ? '#059669' : '#d1d5db'
+                                                    borderColor: withdrawPartner === partner ? colors.success : colors.border
                                                 }}
                                                 onPress={() => setWithdrawPartner(partner)}
                                             >
                                                 <Text style={{
                                                     fontSize: 12,
                                                     fontWeight: withdrawPartner === partner ? '700' : '500',
-                                                    color: withdrawPartner === partner ? '#ffffff' : '#374151'
+                                                    color: withdrawPartner === partner ? colors.white : colors.textSecondary
                                                 }}>
                                                     {withdrawPartner === partner ? `✓ ${partner}` : partner}
                                                 </Text>
@@ -1227,7 +1229,7 @@ const WalletScreen = ({
 
                         {withdrawChannel === 'send_money' && selectedRecipient && (
                             <TouchableOpacity
-                                style={[styles.submitButton, { backgroundColor: '#7c3aed' }, isSending && styles.disabledButton]}
+                                style={[styles.submitButton, { backgroundColor: colors.primary }, isSending && styles.disabledButton]}
                                 onPress={handleSendMoney}
                                 disabled={isSending}
                             >
@@ -1363,8 +1365,8 @@ const WalletScreen = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
-    },
+    backgroundColor: colors.background,
+            },
     centered: {
         flex: 1,
         justifyContent: 'center',
@@ -1376,38 +1378,38 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     scrollContent: {
         padding: 16,
     },
     balanceCard: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 16,
         padding: 24,
         marginBottom: 24,
         alignItems: 'center',
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -1422,7 +1424,7 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     },
     balanceAmount: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 36,
         fontWeight: 'bold',
         marginBottom: 24,
@@ -1450,7 +1452,7 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     actionText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 11,
         fontWeight: '700',
         letterSpacing: 0.3,
@@ -1458,27 +1460,26 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 16,
     },
     transactionWrapper: {
         marginBottom: 12,
     },
     transactionItem: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         padding: 16,
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     transactionIconContainer: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#f3f4f6',
-        alignItems: 'center',
+                alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
@@ -1491,17 +1492,17 @@ const styles = StyleSheet.create({
     transactionType: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.textPrimary,
         textTransform: 'capitalize',
     },
     destinationText: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     transactionDate: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: colors.textMuted,
         marginTop: 4,
     },
     amountContainer: {
@@ -1513,28 +1514,28 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     positiveAmount: {
-        color: '#10b981',
+        color: colors.success,
     },
     negativeAmount: {
-        color: '#ef4444',
+        color: colors.danger,
     },
     expandedCard: {
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         padding: 12,
         marginTop: 8,
     },
     expandedTitle: {
         fontSize: 13,
         fontWeight: '700',
-        color: '#1e293b',
+        color: colors.textPrimary,
         marginBottom: 6,
     },
     expandedText: {
         fontSize: 12,
-        color: '#475569',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     statusBadge: {
@@ -1548,23 +1549,23 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
     },
     statusCOMPLETED: {
-        backgroundColor: '#d1fae5',
+        backgroundColor: colors.successLight,
     },
     statusTextCOMPLETED: {
-        color: '#065f46',
+        color: colors.success,
     },
     statusPENDING: {
-        backgroundColor: '#fef3c7',
+        backgroundColor: colors.warningLight,
     },
     statusFAILED: {
-        backgroundColor: '#fee2e2',
+        backgroundColor: colors.dangerLight,
     },
     emptyState: {
         padding: 40,
         alignItems: 'center',
     },
     emptyStateText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontSize: 16,
     },
     modalOverlay: {
@@ -1573,7 +1574,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
@@ -1588,35 +1589,35 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     closeButton: {
         fontSize: 20,
-        color: '#9ca3af',
+        color: colors.textMuted,
         padding: 4,
     },
     inputLabel: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#4b5563',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     textInput: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 16,
         fontSize: 18,
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 8,
     },
     inputError: {
-        borderColor: '#ef4444',
-        backgroundColor: '#fef2f2',
+        borderColor: colors.danger,
+        backgroundColor: colors.dangerLight,
     },
     errorText: {
-        color: '#ef4444',
+        color: colors.danger,
         fontSize: 13,
         marginBottom: 16,
         marginLeft: 4,
@@ -1633,18 +1634,18 @@ const styles = StyleSheet.create({
         marginHorizontal: 4,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#d1d5db',
-        backgroundColor: '#fafafa',
+        borderColor: colors.border,
+        backgroundColor: colors.background,
         alignItems: 'center',
         justifyContent: 'center',
     },
     channelOptionSelected: {
-        backgroundColor: '#2563eb',
-        borderColor: '#1d4ed8',
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primaryLight,
     },
     channelOptionText: {
         fontSize: 13,
-        color: '#374151',
+        color: colors.textSecondary,
         fontWeight: '600',
         textAlign: 'center',
     },
@@ -1653,7 +1654,7 @@ const styles = StyleSheet.create({
         marginBottom: 6,
     },
     channelOptionTextSelected: {
-        color: '#ffffff',
+        color: colors.white,
     },
     presets: {
         flexDirection: 'row',
@@ -1661,30 +1662,30 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     presetBtn: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         paddingVertical: 8,
         paddingHorizontal: 16,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     presetText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '600',
     },
     submitButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 4,
     },
     submitButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -1699,83 +1700,82 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderRadius: 8,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     memberAvatar: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     avatarImg: {
         width: '100%',
         height: '100%',
     },
     avatarInitial: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         fontSize: 16,
     },
     memberName: {
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
         fontWeight: '600',
     },
     selectedRecipient: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 12,
         marginBottom: 24,
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     recipientName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     changeRecipient: {
         fontSize: 13,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '600',
     },
     deceasedItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderRadius: 8,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     fundProgress: {
         fontSize: 13,
-        color: '#10b981',
+        color: colors.success,
         fontWeight: '600',
         marginTop: 2,
     },
     chevron: {
         fontSize: 20,
-        color: '#9ca3af',
+        color: colors.textMuted,
         marginLeft: 8,
     },
     activeEntityContainer: {
-        backgroundColor: '#eff6ff',
-        borderColor: '#dbeafe',
+                borderColor: colors.surfaceLight,
         borderWidth: 1,
         borderRadius: 12,
         paddingHorizontal: 8,
@@ -1787,7 +1787,7 @@ const styles = StyleSheet.create({
     activeEntityText: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
 });
 

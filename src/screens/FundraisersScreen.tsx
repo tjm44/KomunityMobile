@@ -4,13 +4,15 @@ import {
     ActivityIndicator, RefreshControl
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 const TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
-    bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement' },
-    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
-    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency' },
-    custom:      { icon: '✨', color: '#059669', label: 'Custom Fund' },
+    bereavement: { icon: '🕊️', color: colors.primary, label: 'Bereavement' },
+    excess:      { icon: '🚗', color: colors.primaryLight, label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: colors.danger, label: 'Emergency' },
+    custom:      { icon: '✨', color: colors.success, label: 'Custom Fund' },
 };
 
 interface FundraisersScreenProps {
@@ -167,35 +169,35 @@ const FundraisersScreen = ({ onSelectCampaign }: FundraisersScreenProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1, backgroundColor: colors.background },
     header: {
         paddingHorizontal: 20,
         paddingTop: 12,
         paddingBottom: 16,
-        backgroundColor: '#1e1b4b',
+        backgroundColor: colors.primaryDark,
         borderBottomWidth: 1,
-        borderBottomColor: '#312e81',
+        borderBottomColor: colors.primaryDark,
     },
     headerTitle: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#ffffff',
+        color: colors.white,
         fontFamily: 'Outfit-Bold',
     },
     headerSubtitle: {
         fontSize: 13,
-        color: '#c7d2fe',
+        color: colors.surfaceLight,
         marginTop: 4,
         fontFamily: 'Outfit-Regular',
     },
     list: { padding: 16 },
     card: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 18,
         padding: 16,
         marginBottom: 14,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.05,
@@ -210,7 +212,7 @@ const styles = StyleSheet.create({
     orgHeaderText: {
         fontSize: 16,
         fontWeight: '800',
-        color: '#0f172a',
+        color: colors.textPrimary,
         textAlign: 'center',
         fontFamily: 'Outfit-Bold',
     },
@@ -231,24 +233,24 @@ const styles = StyleSheet.create({
     typeBadgeIcon: { fontSize: 14 },
     typeBadgeLabel: { fontSize: 12, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     verifiedBadge: {
-        backgroundColor: '#e0e7ff',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 8,
         paddingVertical: 3,
         borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#818cf8',
+        borderColor: colors.accentLight,
     },
-    verifiedText: { fontSize: 11, color: '#3730a3', fontWeight: '700', fontFamily: 'Outfit-Bold' },
+    verifiedText: { fontSize: 11, color: colors.primary, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     cardTitle: {
         fontSize: 17,
         fontWeight: '800',
-        color: '#0f172a',
+        color: colors.textPrimary,
         marginBottom: 4,
         fontFamily: 'Outfit-Bold',
     },
     cardDesc: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         lineHeight: 18,
         marginBottom: 10,
         fontFamily: 'Outfit-Regular',
@@ -261,11 +263,11 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     raised: { fontSize: 15, fontWeight: '800', fontFamily: 'Outfit-Bold' },
-    target: { fontSize: 13, color: '#94a3b8', fontFamily: 'Outfit-Regular' },
-    contributors: { fontSize: 12, color: '#94a3b8', fontFamily: 'Outfit-Regular' },
+    target: { fontSize: 13, color: colors.textMuted, fontFamily: 'Outfit-Regular' },
+    contributors: { fontSize: 12, color: colors.textMuted, fontFamily: 'Outfit-Regular' },
     progressTrack: {
         height: 6,
-        backgroundColor: '#e2e8f0',
+        backgroundColor: colors.border,
         borderRadius: 3,
         overflow: 'hidden',
         marginBottom: 10,
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
     progressBar: { height: '100%', borderRadius: 3 },
     beneficiary: {
         fontSize: 13,
-        color: '#475569',
+        color: colors.textSecondary,
         marginBottom: 10,
         fontFamily: 'Outfit-Regular',
     },
@@ -282,7 +284,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 10,
     },
-    deadline: { fontSize: 12, color: '#f97316', fontFamily: 'Outfit-Regular' },
+    deadline: { fontSize: 12, color: colors.warning, fontFamily: 'Outfit-Regular' },
     contributeHint: {
         borderRadius: 10,
         padding: 10,
@@ -290,12 +292,12 @@ const styles = StyleSheet.create({
     },
     contributeHintText: { fontSize: 14, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
-    errorText: { fontSize: 15, color: '#64748b', textAlign: 'center', marginBottom: 16, fontFamily: 'Outfit-Regular' },
-    retryBtn: { backgroundColor: '#4338ca', borderRadius: 12, paddingHorizontal: 24, paddingVertical: 10 },
+    errorText: { fontSize: 15, color: colors.textSecondary, textAlign: 'center', marginBottom: 16, fontFamily: 'Outfit-Regular' },
+    retryBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 10 },
     retryText: { color: '#fff', fontWeight: '700', fontFamily: 'Outfit-Bold' },
     emptyIcon: { fontSize: 48, marginBottom: 12 },
-    emptyTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b', marginBottom: 8, fontFamily: 'Outfit-Bold' },
-    emptySubtitle: { fontSize: 14, color: '#94a3b8', textAlign: 'center', lineHeight: 20, fontFamily: 'Outfit-Regular' },
+    emptyTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 8, fontFamily: 'Outfit-Bold' },
+    emptySubtitle: { fontSize: 14, color: colors.textMuted, textAlign: 'center', lineHeight: 20, fontFamily: 'Outfit-Regular' },
 });
 
 export default FundraisersScreen;

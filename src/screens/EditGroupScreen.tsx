@@ -5,8 +5,10 @@ import {
     KeyboardAvoidingView, Image, Modal
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import client, { fetchFormData, appendFileToFormData } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface EditGroupScreenProps {
     group: any;
@@ -306,8 +308,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Switch
                             value={requiresApproval}
                             onValueChange={setRequiresApproval}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={requiresApproval ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={requiresApproval ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -322,8 +324,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Switch
                             value={verifiedMembersOnly}
                             onValueChange={setVerifiedMembersOnly}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={verifiedMembersOnly ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={verifiedMembersOnly ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -341,8 +343,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Switch
                             value={notifyOnMemberJoin}
                             onValueChange={setNotifyOnMemberJoin}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={notifyOnMemberJoin ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={notifyOnMemberJoin ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -357,8 +359,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Switch
                             value={notifyOnMemberPromote}
                             onValueChange={setNotifyOnMemberPromote}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={notifyOnMemberPromote ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={notifyOnMemberPromote ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -373,8 +375,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Switch
                             value={notifyOnWalletTransfer}
                             onValueChange={setNotifyOnWalletTransfer}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={notifyOnWalletTransfer ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={notifyOnWalletTransfer ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -389,8 +391,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         <Switch
                             value={notifyOnCampaignCreated}
                             onValueChange={setNotifyOnCampaignCreated}
-                            trackColor={{ false: '#d1d5db', true: '#93c5fd' }}
-                            thumbColor={notifyOnCampaignCreated ? '#2563eb' : '#f4f3f4'}
+                            trackColor={{ false: colors.border, true: colors.accentLight }}
+                            thumbColor={notifyOnCampaignCreated ? colors.primaryLight : '#f4f3f4'}
                         />
                     </View>
 
@@ -410,7 +412,7 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                                         paddingVertical: 10,
                                         borderRadius: 10,
                                         borderWidth: 2,
-                                        borderColor: minDisbursementApprovals === n ? '#2563eb' : '#e5e7eb',
+                                        borderColor: minDisbursementApprovals === n ? colors.primaryLight : colors.border,
                                         backgroundColor: minDisbursementApprovals === n ? 'rgba(37,99,235,0.1)' : 'transparent',
                                         alignItems: 'center',
                                     }}
@@ -418,18 +420,18 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                                     <Text style={{
                                         fontSize: 13,
                                         fontWeight: minDisbursementApprovals === n ? '700' : '500',
-                                        color: minDisbursementApprovals === n ? '#2563eb' : '#6b7280',
+                                        color: minDisbursementApprovals === n ? colors.primaryLight : colors.textSecondary,
                                     }}>
                                         {n === 1 ? '🔓 1' : n === 2 ? '🔒 2' : '🔐 3'}
                                     </Text>
-                                    <Text style={{ fontSize: 10, color: minDisbursementApprovals === n ? '#3b82f6' : '#9ca3af', marginTop: 2 }}>
+                                    <Text style={{ fontSize: 10, color: minDisbursementApprovals === n ? colors.primaryLight : colors.textMuted, marginTop: 2 }}>
                                         {n === 1 ? 'Instant' : n === 2 ? '2 Admins' : '3 Admins'}
                                     </Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
                         {minDisbursementApprovals > 1 && (
-                            <Text style={{ fontSize: 11, color: '#f59e0b', marginTop: 8, marginHorizontal: 4 }}>
+                            <Text style={{ fontSize: 11, color: colors.warning, marginTop: 8, marginHorizontal: 4 }}>
                                 ⚠️ Transfers require {minDisbursementApprovals} admin approvals before executing.
                             </Text>
                         )}
@@ -439,13 +441,13 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                     <View style={[
                         styles.infoBox,
                         group.is_verified
-                            ? { backgroundColor: '#f0fdf4', borderColor: '#6ee7b7', borderWidth: 1 }
-                            : { backgroundColor: '#fffbeb', borderColor: '#fde68a', borderWidth: 1 }
+                            ? { backgroundColor: colors.successLight, borderColor: colors.accent, borderWidth: 1 }
+                            : { backgroundColor: colors.warningLight, borderColor: colors.warningLight, borderWidth: 1 }
                     ]}>
-                        <Text style={[styles.infoText, { fontWeight: '700', marginBottom: 4, color: group.is_verified ? '#065f46' : '#92400e' }]}>
+                        <Text style={[styles.infoText, { fontWeight: '700', marginBottom: 4, color: group.is_verified ? colors.success : colors.warning }]}>
                             {group.is_verified ? '✅ This community is Verified' : '⚠️ This community is not yet verified'}
                         </Text>
-                        <Text style={[styles.infoText, { color: group.is_verified ? '#14532d' : '#78350f' }]}>
+                        <Text style={[styles.infoText, { color: group.is_verified ? colors.success : '#78350f' }]}>
                             {group.is_verified
                                 ? 'Your group has been officially verified by the Komunity team. A ✅ badge is shown on your community profile.'
                                 : 'Verified groups receive a trust badge and are eligible to run Emergency Fundraiser campaigns. Tap below to apply.'}
@@ -543,8 +545,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     scrollContent: {
         padding: 24,
     },
@@ -556,7 +558,7 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 2,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderStyle: 'dashed',
     },
     coverPreview: {
@@ -567,7 +569,7 @@ const styles = StyleSheet.create({
     coverPlaceholder: {
         width: '100%',
         height: 180,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -577,7 +579,7 @@ const styles = StyleSheet.create({
     },
     coverPlaceholderText: {
         fontSize: 14,
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontWeight: '500',
     },
     coverActions: {
@@ -589,22 +591,22 @@ const styles = StyleSheet.create({
     changeCoverBtn: {
         paddingVertical: 8,
         paddingHorizontal: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 8,
     },
     changeCoverText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '600',
         fontSize: 14,
     },
     removeCoverBtn: {
         paddingVertical: 8,
         paddingHorizontal: 20,
-        backgroundColor: '#fef2f2',
+        backgroundColor: colors.dangerLight,
         borderRadius: 8,
     },
     removeCoverText: {
-        color: '#ef4444',
+        color: colors.danger,
         fontWeight: '600',
         fontSize: 14,
     },
@@ -615,17 +617,17 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     input: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 16,
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
     },
     textArea: {
         height: 130,
@@ -635,7 +637,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         padding: 16,
         borderRadius: 12,
         marginBottom: 24,
@@ -647,50 +649,50 @@ const styles = StyleSheet.create({
     settingLabel: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     settingDescription: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     infoBox: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         padding: 16,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     infoText: {
         fontSize: 14,
-        color: '#1e40af',
+        color: colors.primary,
         lineHeight: 20,
     },
     // Footer
     footer: {
         padding: 24,
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
+        borderTopColor: colors.surfaceLight,
     },
     saveButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 12,
         padding: 18,
         alignItems: 'center',
         marginBottom: 12,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 4,
     },
     buttonDisabled: {
-        backgroundColor: '#93c5fd',
+        backgroundColor: colors.accentLight,
         shadowOpacity: 0,
         elevation: 0,
     },
     saveButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -699,15 +701,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     cancelButtonText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontSize: 16,
         fontWeight: '500',
     },
     // Review Modal Styles
     reviewContainer: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     reviewHeader: {
         padding: 24,
         alignItems: 'center',
@@ -715,11 +717,11 @@ const styles = StyleSheet.create({
     reviewTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     reviewSubtitle: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginTop: 4,
         textAlign: 'center',
     },
@@ -727,16 +729,16 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     reviewFrame: {
         width: '90%',
         aspectRatio: 16 / 9,
         borderRadius: 12,
         overflow: 'hidden',
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border,
         borderWidth: 2,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
@@ -752,13 +754,13 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     reviewConfirmBtn: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 18,
         borderRadius: 12,
         alignItems: 'center',
     },
     reviewConfirmText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -767,19 +769,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     reviewCancelText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontSize: 14,
     },
     verificationRequestBtn: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 10,
         paddingVertical: 12,
         alignItems: 'center',
         marginTop: 12,
     },
     verificationRequestBtnText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -788,34 +790,34 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
-        backgroundColor: '#f9fafb',
+        borderColor: colors.border,
+        backgroundColor: colors.background,
         marginBottom: 8,
         marginRight: 6,
     },
     entityPillActive: {
-        backgroundColor: '#eff6ff',
-        borderColor: '#2563eb',
+        backgroundColor: colors.surfaceLight,
+        borderColor: colors.primaryLight,
     },
     entityPillText: {
         fontSize: 13,
-        color: '#475569',
+        color: colors.textSecondary,
         fontWeight: '500',
         fontFamily: 'Outfit-Regular',
     },
     entityPillTextActive: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '700',
     },
     sectionHeader: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 12,
         marginTop: 4,
         paddingHorizontal: 4,
         borderLeftWidth: 3,
-        borderLeftColor: '#2563eb',
+        borderLeftColor: colors.primaryLight,
         paddingLeft: 10,
     },
 });

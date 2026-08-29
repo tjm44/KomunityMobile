@@ -4,7 +4,9 @@ import {
     ActivityIndicator, RefreshControl, ScrollView, LayoutAnimation, Platform, UIManager
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
     UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -77,10 +79,10 @@ interface ContributionsScreenProps {
 }
 
 const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; bg: string; label: string }> = {
-    bereavement: { icon: '🕊️', color: '#7c3aed', bg: '#f3e8ff', label: 'Bereavement' },
-    excess:      { icon: '🚗', color: '#0284c7', bg: '#e0f2fe', label: 'Insurance Excess' },
-    emergency:   { icon: '🆘', color: '#dc2626', bg: '#fee2e2', label: 'Emergency' },
-    custom:      { icon: '✨', color: '#059669', bg: '#d1fae5', label: 'Custom' },
+    bereavement: { icon: '🕊️', color: colors.primary, bg: colors.surfaceLight, label: 'Bereavement' },
+    excess:      { icon: '🚗', color: colors.primaryLight, bg: '#e0f2fe', label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: colors.danger, bg: colors.dangerLight, label: 'Emergency' },
+    custom:      { icon: '✨', color: colors.success, bg: colors.successLight, label: 'Custom' },
 };
 
 const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
@@ -416,7 +418,7 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
                 keyExtractor={(item) => item.key}
                 renderItem={renderGroupedItem}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryLight]} />
                 }
                 contentContainerStyle={styles.listContent}
                 ListHeaderComponent={
@@ -498,18 +500,18 @@ const ContributionsScreen = ({ onBack }: ContributionsScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8fafc',
-    },
+    backgroundColor: colors.background,
+            },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
     },
     loadingText: {
         marginTop: 12,
         fontSize: 14,
-        color: '#64748b',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     headerBar: {
@@ -518,60 +520,60 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingVertical: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
+        borderBottomColor: colors.border,
     },
     backButton: {
         padding: 6,
         borderRadius: 8,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
     },
     backButtonText: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#0f172a',
+        color: colors.textPrimary,
     },
     headerTitle: {
         fontSize: 17,
         fontWeight: '700',
-        color: '#0f172a',
+        color: colors.textPrimary,
     },
     refreshButton: {
         padding: 6,
         borderRadius: 8,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
     },
     refreshButtonText: {
         fontSize: 16,
     },
     tabBar: {
         flexDirection: 'row',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         paddingHorizontal: 16,
         paddingVertical: 8,
         gap: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#e2e8f0',
+        borderBottomColor: colors.border,
     },
     tabButton: {
         flex: 1,
         paddingVertical: 10,
         borderRadius: 10,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
         alignItems: 'center',
         justifyContent: 'center',
     },
     tabButtonActive: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
     },
     tabButtonText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#64748b',
+        color: colors.textSecondary,
     },
     tabButtonTextActive: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '700',
     },
     listContent: {
@@ -579,12 +581,12 @@ const styles = StyleSheet.create({
         paddingBottom: 40,
     },
     summaryCard: {
-        backgroundColor: '#1e293b',
+        backgroundColor: colors.textPrimary,
         borderRadius: 18,
         padding: 20,
         marginBottom: 16,
         elevation: 4,
-        shadowColor: '#0f172a',
+        shadowColor: colors.textPrimary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
@@ -592,7 +594,7 @@ const styles = StyleSheet.create({
     summaryLabel: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#94a3b8',
+        color: colors.textMuted,
         textTransform: 'uppercase',
         letterSpacing: 0.8,
         marginBottom: 4,
@@ -600,7 +602,7 @@ const styles = StyleSheet.create({
     summaryValue: {
         fontSize: 28,
         fontWeight: '800',
-        color: '#ffffff',
+        color: colors.white,
         marginBottom: 12,
     },
     summaryBadgeRow: {
@@ -616,7 +618,7 @@ const styles = StyleSheet.create({
     badgePillText: {
         fontSize: 11,
         fontWeight: '600',
-        color: '#cbd5e1',
+        color: colors.border,
     },
     filterSection: {
         marginBottom: 16,
@@ -624,7 +626,7 @@ const styles = StyleSheet.create({
     filterTitle: {
         fontSize: 11,
         fontWeight: '700',
-        color: '#94a3b8',
+        color: colors.textMuted,
         letterSpacing: 1,
         marginBottom: 8,
     },
@@ -632,35 +634,35 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     filterChip: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 20,
         paddingVertical: 6,
         paddingHorizontal: 14,
         borderWidth: 1,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
     },
     filterChipActive: {
-        backgroundColor: '#2563eb',
-        borderColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
+        borderColor: colors.primaryLight,
     },
     filterChipText: {
         fontSize: 13,
         fontWeight: '600',
-        color: '#475569',
+        color: colors.textSecondary,
     },
     filterChipTextActive: {
-        color: '#ffffff',
+        color: colors.white,
     },
     sectionTitle: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#64748b',
+        color: colors.textSecondary,
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 10,
     },
     groupCard: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 16,
         marginBottom: 14,
         borderWidth: 1,
@@ -700,12 +702,12 @@ const styles = StyleSheet.create({
     groupTitle: {
         fontSize: 15,
         fontWeight: '700',
-        color: '#0f172a',
+        color: colors.textPrimary,
         marginBottom: 2,
     },
     groupSubtitle: {
         fontSize: 12,
-        color: '#64748b',
+        color: colors.textSecondary,
     },
     groupHeaderRight: {
         alignItems: 'flex-end',
@@ -714,23 +716,22 @@ const styles = StyleSheet.create({
     groupTotalAmount: {
         fontSize: 15,
         fontWeight: '800',
-        color: '#059669',
+        color: colors.success,
         marginBottom: 2,
     },
     chevronIcon: {
         fontSize: 10,
-        color: '#94a3b8',
+        color: colors.textMuted,
     },
     entriesContainer: {
-        backgroundColor: '#ffffff',
-        borderTopWidth: 1,
-        borderTopColor: '#f1f5f9',
+                borderTopWidth: 1,
+        borderTopColor: colors.borderLight,
         paddingHorizontal: 12,
         paddingVertical: 6,
     },
     entryWrapper: {
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        borderBottomColor: colors.borderLight,
         paddingVertical: 10,
     },
     entryRow: {
@@ -749,14 +750,14 @@ const styles = StyleSheet.create({
     entryTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#1e293b',
+        color: colors.textPrimary,
         flex: 1,
         marginRight: 8,
     },
     entryAmount: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#059669',
+        color: colors.success,
     },
     entryMetaRow: {
         flexDirection: 'row',
@@ -764,7 +765,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     methodBadge: {
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
         paddingHorizontal: 8,
         paddingVertical: 2,
         borderRadius: 6,
@@ -772,46 +773,46 @@ const styles = StyleSheet.create({
     methodBadgeText: {
         fontSize: 11,
         fontWeight: '500',
-        color: '#475569',
+        color: colors.textSecondary,
     },
     entryDate: {
         fontSize: 11,
-        color: '#94a3b8',
+        color: colors.textMuted,
     },
     entryNoteSnippet: {
         fontSize: 12,
-        color: '#64748b',
+        color: colors.textSecondary,
         fontStyle: 'italic',
         marginTop: 4,
     },
     expandedDetailPanel: {
         marginTop: 8,
         padding: 10,
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderRadius: 8,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         gap: 4,
     },
     detailItemText: {
         fontSize: 12,
-        color: '#334155',
+        color: colors.textSecondary,
     },
     detailLabel: {
         fontWeight: '700',
-        color: '#0f172a',
+        color: colors.textPrimary,
     },
     fullNoteBox: {
         marginTop: 4,
         padding: 6,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 6,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
     },
     fullNoteText: {
         fontSize: 12,
-        color: '#475569',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     emptyState: {
@@ -826,12 +827,12 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 17,
         fontWeight: '700',
-        color: '#334155',
+        color: colors.textSecondary,
         marginBottom: 6,
     },
     emptySubtext: {
         fontSize: 13,
-        color: '#94a3b8',
+        color: colors.textMuted,
         textAlign: 'center',
         lineHeight: 18,
     },

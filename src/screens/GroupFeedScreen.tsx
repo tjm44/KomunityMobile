@@ -6,6 +6,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import client, { getMediaUrl } from '../api/client';
 import { FeedPlaceholder } from '../components/Loaders';
+import { colors } from '../constants/theme';
 
 interface Author {
     id: number;
@@ -216,7 +217,7 @@ const GroupFeedScreen = ({ group, onBack, onSelectPost, onCreatePost }: GroupFee
 
     if (loading) {
         return (
-            <View style={{ flex: 1, backgroundColor: '#ffffff' }}>
+            <View style={{ flex: 1, backgroundColor: colors.white }}>
                 <FeedPlaceholder />
             </View>
         );
@@ -244,13 +245,13 @@ const GroupFeedScreen = ({ group, onBack, onSelectPost, onCreatePost }: GroupFee
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={['#2563eb']}
+                        colors={[colors.primaryLight]}
                         tintColor="#2563eb"
                     />
                 }
                 renderItem={({ item }) => (
                     <LinearGradient
-                        colors={['#ffffff', '#eff6ff']}
+                        colors={[colors.white, colors.surfaceLight]}
                         style={styles.postCard}
                     >
                         {/* Make the author and content area clickable to view details */}
@@ -361,25 +362,25 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         backgroundColor: 'transparent',
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     listContent: {
         padding: 12,
@@ -403,12 +404,12 @@ const styles = StyleSheet.create({
         width: 42,
         height: 42,
         borderRadius: 21,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
         borderWidth: 2,
-        borderColor: '#2563eb',
+        borderColor: colors.primaryLight,
         overflow: 'hidden',
     },
     avatarImage: {
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     avatarInitial: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -426,15 +427,15 @@ const styles = StyleSheet.create({
     authorName: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     timestamp: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     content: {
         fontSize: 15,
-        color: '#4b5563',
+        color: colors.textSecondary,
         lineHeight: 22,
         marginBottom: 12,
     },
@@ -446,7 +447,7 @@ const styles = StyleSheet.create({
     postImage: {
         width: width - 24,
         height: 300,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
     },
     badge: {
         position: 'absolute',
@@ -458,14 +459,14 @@ const styles = StyleSheet.create({
         borderRadius: 12,
     },
     badgeText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 12,
         fontWeight: 'bold',
     },
     footer: {
         flexDirection: 'row',
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
+        borderTopColor: colors.surfaceLight,
         paddingTop: 12,
         marginTop: 4,
     },
@@ -476,11 +477,11 @@ const styles = StyleSheet.create({
     },
     footerActionText: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
     activeLike: {
-        color: '#ef4444',
+        color: colors.danger,
         fontWeight: 'bold',
     },
     emptyContainer: {
@@ -488,7 +489,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontSize: 16,
         textAlign: 'center',
     },
@@ -496,7 +497,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         right: 20,
         bottom: 20,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         width: 56,
         height: 56,
         borderRadius: 28,
@@ -509,7 +510,7 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
     },
     fabIcon: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 32,
         fontWeight: '300',
         marginTop: -2,

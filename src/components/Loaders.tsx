@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import Skeleton from './Skeleton';
+import { colors } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -53,12 +54,12 @@ export const GroupPlaceholder = () => (
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     header: {
         flexDirection: 'row',
@@ -69,12 +70,12 @@ const styles = StyleSheet.create({
         marginLeft: 12,
     },
     groupCard: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         marginBottom: 16,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     }
 });
 

@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -7,6 +8,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import client, { setAuthToken, saveToken } from '../api/client';
 import { validateEmail } from '../utils/validation';
+import { colors, gradients } from '../constants/theme';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,11 +20,11 @@ interface LoginProps {
 }
 
 const LoginScreen = ({ onLoginSuccess, onShowSignUp, onForgotPassword, onBack }: LoginProps) => {
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const [isPasswordVisible, setIsPasswordVisible] = React.useState(false);
-    const [loading, setLoading] = React.useState(false);
-    const [errors, setErrors] = React.useState<{ [key: string]: string | null }>({});
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState<{ [key: string]: string | null }>({});
 
     const handleLogin = async () => {
         const newErrors: { [key: string]: string | null } = {
@@ -114,7 +116,7 @@ const LoginScreen = ({ onLoginSuccess, onShowSignUp, onForgotPassword, onBack }:
 
     return (
         <LinearGradient
-            colors={['#bfdbfe', '#f1f5f9', '#ffffff']}
+            colors={[...gradients.screenBackground]}
             style={styles.container}
         >
             <SafeAreaView style={{ flex: 1 }}>
@@ -232,7 +234,7 @@ const LoginScreen = ({ onLoginSuccess, onShowSignUp, onForgotPassword, onBack }:
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
     },
     innerContainer: {
         flex: 1,
@@ -252,34 +254,34 @@ const styles = StyleSheet.create({
         fontSize: 36,
         fontFamily: 'Outfit-Bold',
         textAlign: 'center',
-        color: '#2563eb',
+        color: colors.primary,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 16,
         textAlign: 'center',
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginBottom: 24,
     },
     input: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         padding: 16,
         borderRadius: 12,
         marginBottom: 16,
         fontSize: 16,
     },
     inputError: {
-        borderColor: '#ef4444',
-        backgroundColor: '#fef2f2',
+        borderColor: colors.danger,
+        backgroundColor: colors.dangerLight,
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         marginBottom: 16,
     },
@@ -294,12 +296,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     eyeButtonText: {
-        color: '#2563eb',
+        color: colors.primary,
         fontWeight: 'bold',
         fontSize: 14,
     },
     errorText: {
-        color: '#ef4444',
+        color: colors.danger,
         fontSize: 12,
         marginTop: -12,
         marginBottom: 12,
@@ -311,27 +313,27 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     forgotPasswordText: {
-        color: '#2563eb',
+        color: colors.primary,
         fontWeight: 'bold',
         fontSize: 14,
     },
     button: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primary,
         padding: 18,
         borderRadius: 12,
         alignItems: 'center',
         marginTop: 10,
         elevation: 2,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
     },
     buttonDisabled: {
-        backgroundColor: '#93c5fd',
+        backgroundColor: colors.accentLight,
     },
     buttonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 18,
     },
@@ -340,11 +342,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     signUpLinkText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontSize: 14,
     },
     signUpLinkBold: {
-        color: '#2563eb',
+        color: colors.primary,
         fontWeight: 'bold',
     },
     backButton: {
@@ -357,7 +359,7 @@ const styles = StyleSheet.create({
     backButtonText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#2563eb',
+        color: colors.primary,
     },
     dividerContainer: {
         flexDirection: 'row',
@@ -367,10 +369,10 @@ const styles = StyleSheet.create({
     dividerLine: {
         flex: 1,
         height: 1,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border,
     },
     dividerText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         paddingHorizontal: 10,
         fontSize: 14,
     },
@@ -388,25 +390,25 @@ const styles = StyleSheet.create({
         padding: 14,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         gap: 8,
     },
     googleButton: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
     },
     facebookButton: {
-        backgroundColor: '#1877f2',
-        borderColor: '#1877f2',
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
     },
     socialButtonText: {
         fontWeight: '600',
         fontSize: 16,
     },
     googleButtonText: {
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     facebookButtonText: {
-        color: '#ffffff',
+        color: colors.white,
     },
 });
 

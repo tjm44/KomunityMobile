@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Alert, Share } from 'react-native';
 import * as Contacts from 'expo-contacts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
 import * as SMS from 'expo-sms';
+import { colors, gradients } from '../constants/theme';
 
 interface ContactsScreenProps {
     onBack?: () => void;
@@ -148,21 +150,21 @@ const styles = StyleSheet.create({
     },
     headerButtonText: {
         fontSize: 16,
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     permissionText: {
         fontSize: 16,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginBottom: 20,
     },
     backButton: {
         padding: 12,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 8,
     },
     backButtonText: {
@@ -180,14 +182,14 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#e0e7ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
     },
     avatarText: {
         fontSize: 18,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     contactInfo: {
@@ -196,16 +198,16 @@ const styles = StyleSheet.create({
     contactName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     contactDetail: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     inviteButton: {
         paddingVertical: 6,
         paddingHorizontal: 12,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 16,
     },
     inviteButtonText: {

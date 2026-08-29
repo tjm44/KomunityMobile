@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface SearchResult {
     groups: Group[];
@@ -61,13 +63,13 @@ const SearchScreen = ({ onClose, onSelectGroup }: SearchScreenProps) => {
             {item.cover_image ? (
                 <Image source={{ uri: item.cover_image }} style={styles.resultImage} />
             ) : (
-                <View style={[styles.resultImage, { backgroundColor: '#e5e7eb' }]} />
+                <View style={[styles.resultImage, { backgroundColor: colors.border }]} />
             )}
             <View style={styles.resultInfo}>
                 <Text style={styles.resultName}>{item.name}</Text>
                 <Text style={styles.resultSubtext}>{item.total_members} members</Text>
             </View>
-            <Text style={{ fontSize: 16, color: '#6b7280' }}>👥</Text>
+            <Text style={{ fontSize: 16, color: colors.textSecondary }}>👥</Text>
         </TouchableOpacity>
     );
 
@@ -76,7 +78,7 @@ const SearchScreen = ({ onClose, onSelectGroup }: SearchScreenProps) => {
             {item.profile_picture ? (
                 <Image source={{ uri: item.profile_picture }} style={styles.resultImageRound} />
             ) : (
-                <View style={[styles.resultImageRound, { backgroundColor: '#d1d5db' }]} />
+                <View style={[styles.resultImageRound, { backgroundColor: colors.border }]} />
             )}
             <View style={styles.resultInfo}>
                 <Text style={styles.resultName}>{item.full_name}</Text>
@@ -89,7 +91,7 @@ const SearchScreen = ({ onClose, onSelectGroup }: SearchScreenProps) => {
         <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.searchBar}>
-                    <Text style={{ fontSize: 18, color: '#6b7280' }}>🔍</Text>
+                    <Text style={{ fontSize: 18, color: colors.textSecondary }}>🔍</Text>
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search groups and members..."
@@ -99,7 +101,7 @@ const SearchScreen = ({ onClose, onSelectGroup }: SearchScreenProps) => {
                     />
                     {query.length > 0 && (
                         <TouchableOpacity onPress={() => setQuery('')}>
-                            <Text style={{ fontSize: 16, color: '#9ca3af' }}>✕</Text>
+                            <Text style={{ fontSize: 16, color: colors.textMuted }}>✕</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -141,14 +143,14 @@ const SearchScreen = ({ onClose, onSelectGroup }: SearchScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
         gap: 12,
         paddingTop: 50, // Safe area fix essentially
     },
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 8,
@@ -165,27 +167,29 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 8,
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
     },
     cancelText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontSize: 16,
         fontWeight: '500',
     },
     loadingContainer: {
         flex: 1,
+    backgroundColor: colors.background,
         justifyContent: 'center',
         alignItems: 'center',
     },
     resultsContainer: {
         flex: 1,
+    backgroundColor: colors.background,
     },
     resultItem: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     resultImage: {
         width: 40,
@@ -205,18 +209,18 @@ const styles = StyleSheet.create({
     resultName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     resultSubtext: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     emptyContainer: {
         padding: 40,
         alignItems: 'center',
     },
     emptyText: {
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontSize: 16,
     },
 });

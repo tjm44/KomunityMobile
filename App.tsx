@@ -53,6 +53,7 @@ import OrganisationPreviewScreen from "./src/screens/OrganisationPreviewScreen";
 import VerifyIdentityPromptScreen from "./src/screens/VerifyIdentityPromptScreen";
 import NotificationScreen from "./src/screens/NotificationScreen";
 import client, { setAuthToken, loadToken, clearToken } from "./src/api/client";
+import { colors, gradients } from "./src/constants/theme";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -653,7 +654,7 @@ export default function App() {
       <SafeAreaProvider>
         <StatusBar style="dark" />
         <LinearGradient
-          colors={['#bfdbfe', '#f1f5f9', '#ffffff']}
+          colors={[...gradients.screenBackground]}
           style={{ flex: 1 }}
         >
           {shouldShowTopNavBar() && (

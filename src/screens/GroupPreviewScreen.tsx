@@ -5,8 +5,10 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -270,8 +272,8 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                                 </Text>
                             </View>
                             {group.verified_members_only && (
-                                <View style={[styles.metaBadge, { backgroundColor: '#fee2e2' }]}>
-                                    <Text style={[styles.metaBadgeText, { color: '#dc2626', fontWeight: 'bold' }]}>
+                                <View style={[styles.metaBadge, { backgroundColor: colors.dangerLight }]}>
+                                    <Text style={[styles.metaBadgeText, { color: colors.danger, fontWeight: 'bold' }]}>
                                         🛡️ Verified Only
                                     </Text>
                                 </View>
@@ -282,23 +284,23 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
 
                 <View style={styles.contentArea}>
                     {group.is_verified && (
-                        <View style={[styles.card, { borderColor: '#6ee7b7', backgroundColor: '#f0fdf4', borderWidth: 1 }]}>
+                        <View style={[styles.card, { borderColor: colors.accent, backgroundColor: colors.successLight, borderWidth: 1 }]}>
                             <View style={styles.cardHeader}>
                                 <Text style={styles.cardIcon}>✅</Text>
-                                <Text style={[styles.cardTitle, { color: '#065f46' }]}>Verified Community</Text>
+                                <Text style={[styles.cardTitle, { color: colors.success }]}>Verified Community</Text>
                             </View>
-                            <Text style={[styles.descriptionText, { color: '#14532d', marginTop: 4 }]}>
+                            <Text style={[styles.descriptionText, { color: colors.success, marginTop: 4 }]}>
                                 This community has been officially verified by the Komunity team as a legitimate and trusted organisation.
                             </Text>
                         </View>
                     )}
                     {group.verified_members_only && (
-                        <View style={[styles.card, { borderColor: '#fecaca', backgroundColor: '#fef2f2', borderWidth: 1 }]}>
+                        <View style={[styles.card, { borderColor: colors.dangerLight, backgroundColor: colors.dangerLight, borderWidth: 1 }]}>
                             <View style={styles.cardHeader}>
                                 <Text style={styles.cardIcon}>🛡️</Text>
-                                <Text style={[styles.cardTitle, { color: '#991b1b' }]}>Verified Members Only</Text>
+                                <Text style={[styles.cardTitle, { color: colors.danger }]}>Verified Members Only</Text>
                             </View>
-                            <Text style={[styles.descriptionText, { color: '#7f1d1d', marginTop: 4 }]}>
+                            <Text style={[styles.descriptionText, { color: colors.danger, marginTop: 4 }]}>
                                 This community requires a verified user profile to join. Go to your Profile settings to complete KYC verification if you haven't already.
                             </Text>
                         </View>
@@ -353,14 +355,14 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                             </View>
                         </View>
                         <View style={styles.guidelineItem}>
-                            <View style={[styles.guidelineDot, { backgroundColor: '#8b5cf6' }]} />
+                            <View style={[styles.guidelineDot, { backgroundColor: colors.primaryLight }]} />
                             <View style={styles.guidelineContent}>
                                 <Text style={styles.guidelineTitle}>Cultural Sensitivity</Text>
                                 <Text style={styles.guidelineDesc}>Honor the heritage and traditions of our shared community background.</Text>
                             </View>
                         </View>
                         <View style={styles.guidelineItem}>
-                            <View style={[styles.guidelineDot, { backgroundColor: '#f59e0b' }]} />
+                            <View style={[styles.guidelineDot, { backgroundColor: colors.warning }]} />
                             <View style={styles.guidelineContent}>
                                 <Text style={styles.guidelineTitle}>Financial Integrity</Text>
                                 <Text style={styles.guidelineDesc}>All contributions are tracked transparently for the benefit of members.</Text>
@@ -449,19 +451,19 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                                 onPress={() => setShowBRelPicker(!showBRelPicker)}
                             >
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ fontSize: 14, color: '#0f172a' }}>{bRel}</Text>
-                                    <Text style={{ color: '#94a3b8', fontSize: 12 }}>{showBRelPicker ? '▲' : '▼'}</Text>
+                                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>{bRel}</Text>
+                                    <Text style={{ color: colors.textMuted, fontSize: 12 }}>{showBRelPicker ? '▲' : '▼'}</Text>
                                 </View>
                             </TouchableOpacity>
                             {showBRelPicker && (
-                                <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                                <View style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
                                     {BENEFICIARY_RELATIONSHIPS.map((rel) => (
                                         <TouchableOpacity
                                             key={rel}
-                                            style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: '#f1f5f9', backgroundColor: bRel === rel ? '#ede9fe' : 'transparent' }}
+                                            style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: colors.borderLight, backgroundColor: bRel === rel ? '#ede9fe' : 'transparent' }}
                                             onPress={() => { setBRel(rel); setShowBRelPicker(false); }}
                                         >
-                                            <Text style={{ fontSize: 14, color: bRel === rel ? '#7c3aed' : '#0f172a', fontWeight: bRel === rel ? '700' : '400' }}>{rel}</Text>
+                                            <Text style={{ fontSize: 14, color: bRel === rel ? colors.primary : colors.textPrimary, fontWeight: bRel === rel ? '700' : '400' }}>{rel}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
@@ -502,9 +504,9 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                             {dependents.map((dep, idx) => (
                                 <View key={idx} style={styles.depCard}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                                        <Text style={{ fontWeight: '700', fontSize: 12, color: '#475569' }}>Dependent #{idx + 1}</Text>
+                                        <Text style={{ fontWeight: '700', fontSize: 12, color: colors.textSecondary }}>Dependent #{idx + 1}</Text>
                                         <TouchableOpacity onPress={() => setDependents(dependents.filter((_, i) => i !== idx))}>
-                                            <Text style={{ color: '#ef4444', fontSize: 12 }}>Remove</Text>
+                                            <Text style={{ color: colors.danger, fontSize: 12 }}>Remove</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <TextInput
@@ -523,16 +525,16 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                                         onPress={() => setOpenDepRelIdx(openDepRelIdx === idx ? null : idx)}
                                     >
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Text style={{ fontSize: 14, color: dep.relationship ? '#0f172a' : '#94a3b8' }}>{dep.relationship || 'Relationship'}</Text>
-                                            <Text style={{ color: '#94a3b8', fontSize: 12 }}>{openDepRelIdx === idx ? '▲' : '▼'}</Text>
+                                            <Text style={{ fontSize: 14, color: dep.relationship ? colors.textPrimary : colors.textMuted }}>{dep.relationship || 'Relationship'}</Text>
+                                            <Text style={{ color: colors.textMuted, fontSize: 12 }}>{openDepRelIdx === idx ? '▲' : '▼'}</Text>
                                         </View>
                                     </TouchableOpacity>
                                     {openDepRelIdx === idx && (
-                                        <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                                        <View style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
                                             {DEPENDENT_RELATIONSHIPS.map((rel) => (
                                                 <TouchableOpacity
                                                     key={rel}
-                                                    style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: '#f1f5f9', backgroundColor: dep.relationship === rel ? '#ede9fe' : 'transparent' }}
+                                                    style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: colors.borderLight, backgroundColor: dep.relationship === rel ? '#ede9fe' : 'transparent' }}
                                                     onPress={() => {
                                                         const updated = [...dependents];
                                                         updated[idx].relationship = rel;
@@ -540,7 +542,7 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                                                         setOpenDepRelIdx(null);
                                                     }}
                                                 >
-                                                    <Text style={{ fontSize: 14, color: dep.relationship === rel ? '#7c3aed' : '#0f172a', fontWeight: dep.relationship === rel ? '700' : '400' }}>{rel}</Text>
+                                                    <Text style={{ fontSize: 14, color: dep.relationship === rel ? colors.primary : colors.textPrimary, fontWeight: dep.relationship === rel ? '700' : '400' }}>{rel}</Text>
                                                 </TouchableOpacity>
                                             ))}
                                         </View>
@@ -659,7 +661,7 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
                             <TouchableOpacity style={styles.cancelModalBtn} onPress={() => setShowExcessModal(false)}>
                                 <Text style={styles.cancelModalBtnText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.submitModalBtn, { backgroundColor: '#0284c7' }]} onPress={handleExcessSubmit} disabled={joining}>
+                            <TouchableOpacity style={[styles.submitModalBtn, { backgroundColor: colors.primaryLight }]} onPress={handleExcessSubmit} disabled={joining}>
                                 {joining ? (
                                     <ActivityIndicator size="small" color="#fff" />
                                 ) : (
@@ -677,8 +679,8 @@ const GroupPreviewScreen = ({ group, onBack, onGroupJoined, onGoToVerification }
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f3f4f6',
-    },
+    backgroundColor: colors.background,
+            },
     heroSection: {
         width: '100%',
         height: 280,
@@ -689,7 +691,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     coverPlaceholder: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -718,7 +720,7 @@ const styles = StyleSheet.create({
     },
     backButtonText: {
         fontSize: 22,
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
     },
     heroContent: {
@@ -730,7 +732,7 @@ const styles = StyleSheet.create({
     heroGroupName: {
         fontSize: 26,
         fontWeight: 'bold',
-        color: '#ffffff',
+        color: colors.white,
         marginBottom: 10,
         textShadowColor: 'rgba(0, 0, 0, 0.5)',
         textShadowOffset: { width: 0, height: 1 },
@@ -755,19 +757,19 @@ const styles = StyleSheet.create({
     },
     metaBadgeText: {
         fontSize: 12,
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '600',
     },
     contentArea: {
         padding: 16,
     },
     card: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 16,
         padding: 18,
         marginBottom: 14,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
@@ -786,11 +788,11 @@ const styles = StyleSheet.create({
     cardTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     descriptionText: {
         fontSize: 15,
-        color: '#4b5563',
+        color: colors.textSecondary,
         lineHeight: 24,
     },
     statsGrid: {
@@ -806,18 +808,18 @@ const styles = StyleSheet.create({
     statNumber: {
         fontSize: 22,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     statLabel: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textSecondary,
         textAlign: 'center',
     },
     statDivider: {
         width: 1,
         height: 40,
-        backgroundColor: '#e5e7eb',
+        backgroundColor: colors.border,
     },
     guidelineItem: {
         flexDirection: 'row',
@@ -828,7 +830,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         marginTop: 6,
         marginRight: 12,
     },
@@ -838,12 +840,12 @@ const styles = StyleSheet.create({
     guidelineTitle: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.textPrimary,
         marginBottom: 2,
     },
     guidelineDesc: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 18,
     },
     expectItem: {
@@ -857,7 +859,7 @@ const styles = StyleSheet.create({
     },
     expectText: {
         fontSize: 14,
-        color: '#4b5563',
+        color: colors.textSecondary,
         flex: 1,
     },
     bottomBar: {
@@ -869,9 +871,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 16,
         paddingTop: 12,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.08,
@@ -882,7 +884,7 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 14,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
@@ -892,51 +894,51 @@ const styles = StyleSheet.create({
     },
     // Join button
     joinButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 14,
         borderRadius: 14,
         alignItems: 'center',
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 4,
     },
     joinButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
     // Already joined
     joinedButton: {
-        backgroundColor: '#f0fdf4',
+        backgroundColor: colors.successLight,
         paddingVertical: 14,
         borderRadius: 14,
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: '#22c55e',
+        borderColor: colors.success,
     },
     joinedButtonText: {
-        color: '#16a34a',
+        color: colors.success,
         fontWeight: 'bold',
         fontSize: 16,
     },
     // Pending
     pendingButton: {
-        backgroundColor: '#fffbeb',
+        backgroundColor: colors.warningLight,
         paddingVertical: 14,
         borderRadius: 14,
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: '#f59e0b',
+        borderColor: colors.warning,
     },
     pendingButtonText: {
-        color: '#d97706',
+        color: colors.warning,
         fontWeight: 'bold',
         fontSize: 16,
     },
     buttonLoading: {
-        backgroundColor: '#93c5fd',
+        backgroundColor: colors.accentLight,
     },
     heroVerifiedBadge: {
         backgroundColor: 'rgba(209, 250, 229, 0.9)',
@@ -944,10 +946,10 @@ const styles = StyleSheet.create({
         paddingHorizontal: 9,
         paddingVertical: 3,
         borderWidth: 1,
-        borderColor: '#6ee7b7',
+        borderColor: colors.accent,
     },
     heroVerifiedBadgeText: {
-        color: '#065f46',
+        color: colors.success,
         fontSize: 12,
         fontWeight: '700',
     },
@@ -958,7 +960,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '85%',
@@ -972,16 +974,16 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        borderBottomColor: colors.borderLight,
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#1e293b',
+        color: colors.textPrimary,
     },
     modalCloseText: {
         fontSize: 20,
-        color: '#94a3b8',
+        color: colors.textMuted,
         padding: 4,
     },
     modalBody: {
@@ -991,36 +993,36 @@ const styles = StyleSheet.create({
     modalSubtitle: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#7c3aed',
+        color: colors.primary,
     },
     modalDesc: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         marginBottom: 16,
         marginTop: 2,
     },
     fieldSectionTitle: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#334155',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     inputLabel: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#475569',
+        color: colors.textSecondary,
         marginBottom: 4,
         marginTop: 6,
     },
     textInput: {
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 10,
         fontSize: 14,
-        color: '#0f172a',
+        color: colors.textPrimary,
     },
     dependentsHeaderRow: {
         flexDirection: 'row',
@@ -1030,20 +1032,20 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     addDepBtn: {
-        backgroundColor: '#f3e8ff',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 12,
     },
     addDepBtnText: {
-        color: '#7c3aed',
+        color: colors.primary,
         fontWeight: '700',
         fontSize: 12,
     },
     depCard: {
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 10,
         marginBottom: 8,
@@ -1054,29 +1056,29 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#f1f5f9',
+        borderTopColor: colors.borderLight,
     },
     cancelModalBtn: {
         flex: 1,
         paddingVertical: 12,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
         alignItems: 'center',
     },
     cancelModalBtnText: {
-        color: '#64748b',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     submitModalBtn: {
         flex: 2,
-        backgroundColor: '#7c3aed',
+        backgroundColor: colors.primary,
         paddingVertical: 12,
         borderRadius: 12,
         alignItems: 'center',
     },
     submitModalBtnText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '700',
         fontSize: 15,
     },

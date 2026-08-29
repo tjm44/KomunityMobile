@@ -4,7 +4,9 @@ import {
     TouchableOpacity, Dimensions, ActivityIndicator, Alert, RefreshControl
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -113,7 +115,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                     <RefreshControl
                         refreshing={refreshing}
                         onRefresh={onRefresh}
-                        colors={['#2563eb']}
+                        colors={[colors.primaryLight]}
                         tintColor="#2563eb"
                     />
                 }
@@ -122,7 +124,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                     {group.cover_image ? (
                         <Image source={{ uri: group.cover_image }} style={styles.coverImage} />
                     ) : (
-                        <View style={[styles.coverImage, { backgroundColor: '#2563eb' }]} />
+                        <View style={[styles.coverImage, { backgroundColor: colors.primaryLight }]} />
                     )}
                     <View style={styles.groupInfoOverlay}>
                         <View style={styles.mainInfo}>
@@ -204,7 +206,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                             </View>
                             <View style={styles.statItem}>
                                 <Text style={styles.statLabel}>Status</Text>
-                                <Text style={[styles.statValue, { color: '#059669' }]}>Active</Text>
+                                <Text style={[styles.statValue, { color: colors.success }]}>Active</Text>
                             </View>
                         </View>
                     </View>
@@ -286,8 +288,8 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -295,25 +297,25 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     heroSection: {
         width: '100%',
@@ -340,14 +342,14 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
     },
     purposePillText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 12,
         fontWeight: '700',
     },
     groupName: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#ffffff',
+        color: colors.white,
         marginBottom: 4,
         textShadowColor: 'rgba(0, 0, 0, 0.75)',
         textShadowOffset: { width: -1, height: 1 },
@@ -363,25 +365,25 @@ const styles = StyleSheet.create({
     },
     contentSection: {
         padding: 16,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     card: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 12,
     },
     descriptionText: {
         fontSize: 15,
-        color: '#4b5563',
+        color: colors.textSecondary,
         lineHeight: 22,
     },
     statRow: {
@@ -393,14 +395,14 @@ const styles = StyleSheet.create({
     },
     statLabel: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: colors.textMuted,
         textTransform: 'uppercase',
         marginBottom: 4,
     },
     statValue: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -410,7 +412,7 @@ const styles = StyleSheet.create({
     },
     viewAllText: {
         fontSize: 13,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '600',
     },
     membersList: {
@@ -425,20 +427,20 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     avatarImg: {
         width: '100%',
         height: '100%',
     },
     avatarInitial: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
         fontSize: 16,
     },
@@ -448,34 +450,34 @@ const styles = StyleSheet.create({
     memberName: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     memberRole: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     emptyMembersText: {
         fontSize: 14,
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontStyle: 'italic',
         textAlign: 'center',
         marginVertical: 10,
     },
     primaryActionButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 12,
         paddingVertical: 16,
         alignItems: 'center',
         marginTop: 8,
         marginBottom: 24,
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 4,
     },
     primaryActionButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -485,21 +487,21 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     leaveGroupButtonText: {
-        color: '#ef4444',
+        color: colors.danger,
         fontSize: 14,
         fontWeight: '600',
     },
     manageButton: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#2563eb',
+        borderColor: colors.primaryLight,
         marginBottom: 12,
     },
     manageButtonText: {
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -512,7 +514,7 @@ const styles = StyleSheet.create({
     },
     bannerPrimaryButton: {
         flex: 2,
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 12,
         borderRadius: 10,
         alignItems: 'center',
@@ -524,13 +526,13 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     bannerPrimaryButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
     bannerSecondaryButton: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         paddingVertical: 10,
         borderRadius: 10,
         marginHorizontal: 4,
@@ -552,7 +554,7 @@ const styles = StyleSheet.create({
     },
     bannerDangerButton: {
         flex: 1,
-        backgroundColor: '#ef4444',
+        backgroundColor: colors.danger,
         paddingVertical: 12,
         borderRadius: 10,
         alignItems: 'center',
@@ -563,7 +565,7 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     bannerDangerButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -581,16 +583,17 @@ const styles = StyleSheet.create({
     },
     ruleTextContainer: {
         flex: 1,
+    backgroundColor: colors.background,
     },
     ruleTitle: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
         marginBottom: 2,
     },
     ruleDescription: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 18,
     },
 });

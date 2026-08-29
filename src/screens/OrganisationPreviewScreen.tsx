@@ -5,6 +5,7 @@ import {
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from '../constants/theme';
 
 interface OrganisationPreviewScreenProps {
     organisation: any;
@@ -36,7 +37,7 @@ const OrganisationPreviewScreen = ({
                         <Image source={{ uri: organisation.cover_image }} style={styles.coverImage} />
                     ) : (
                         <LinearGradient
-                            colors={['#1e1b4b', '#312e81', '#4338ca']}
+                            colors={[colors.primaryDark, colors.primary, colors.primaryLight]}
                             style={styles.coverImage}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
@@ -85,7 +86,7 @@ const OrganisationPreviewScreen = ({
                         </View>
                         <View style={styles.registryRow}>
                             <Text style={styles.registryLabel}>Official Status</Text>
-                            <Text style={[styles.registryValue, { color: organisation.is_verified ? '#4338ca' : '#b45309' }]}>
+                            <Text style={[styles.registryValue, { color: organisation.is_verified ? colors.primary : '#b45309' }]}>
                                 {organisation.is_verified ? '🛡️ Trusted Corporate Entity' : '⚠️ Registry Pending Verification'}
                             </Text>
                         </View>
@@ -94,7 +95,7 @@ const OrganisationPreviewScreen = ({
                     {/* Action controls */}
                     <TouchableOpacity style={styles.exploreBtn} onPress={onExplore}>
                         <LinearGradient
-                            colors={['#3730a3', '#4338ca', '#4f46e5']}
+                            colors={[colors.primary, colors.primaryLight, colors.accent]}
                             style={styles.btnGradient}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 0 }}
@@ -109,7 +110,7 @@ const OrganisationPreviewScreen = ({
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1, backgroundColor: colors.background },
     heroSection: { height: 260, position: 'relative' },
     coverImage: { width: '100%', height: '100%' },
     heroOverlay: {
@@ -119,19 +120,19 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.9)', justifyContent: 'center', alignItems: 'center' },
-    backBtnText: { fontSize: 20, fontWeight: 'bold', color: '#1e1b4b' },
+    backBtnText: { fontSize: 20, fontWeight: 'bold', color: colors.primaryDark },
     orgMetaInfo: { marginTop: 'auto' },
-    orgName: { fontSize: 24, fontWeight: 'bold', color: '#ffffff', fontFamily: 'Outfit-Bold' },
-    verifiedBadge: { backgroundColor: '#e0e7ff', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#818cf8' },
-    verifiedBadgeText: { color: '#3730a3', fontSize: 11, fontWeight: '700' },
-    entityLabel: { fontSize: 14, color: '#c7d2fe', marginTop: 4, fontWeight: '600', fontFamily: 'Outfit-Regular' },
+    orgName: { fontSize: 24, fontWeight: 'bold', color: colors.white, fontFamily: 'Outfit-Bold' },
+    verifiedBadge: { backgroundColor: colors.surfaceLight, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: colors.accentLight },
+    verifiedBadgeText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
+    entityLabel: { fontSize: 14, color: colors.surfaceLight, marginTop: 4, fontWeight: '600', fontFamily: 'Outfit-Regular' },
     contentBody: { padding: 20, gap: 16 },
-    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#e0e7ff' },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e1b4b', marginBottom: 12, fontFamily: 'Outfit-Bold' },
-    descText: { fontSize: 14, color: '#475569', lineHeight: 22, fontFamily: 'Outfit-Regular' },
-    registryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-    registryLabel: { fontSize: 14, color: '#64748b', fontWeight: '500', fontFamily: 'Outfit-Regular' },
-    registryValue: { fontSize: 14, color: '#4338ca', fontWeight: '700', fontFamily: 'Outfit-Bold' },
+    card: { backgroundColor: colors.white, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.surfaceLight },
+    cardTitle: { fontSize: 16, fontWeight: 'bold', color: colors.primaryDark, marginBottom: 12, fontFamily: 'Outfit-Bold' },
+    descText: { fontSize: 14, color: colors.textSecondary, lineHeight: 22, fontFamily: 'Outfit-Regular' },
+    registryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+    registryLabel: { fontSize: 14, color: colors.textSecondary, fontWeight: '500', fontFamily: 'Outfit-Regular' },
+    registryValue: { fontSize: 14, color: colors.primary, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     exploreBtn: {
         borderRadius: 12,
         overflow: 'hidden',
@@ -142,7 +143,7 @@ const styles = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
     },
-    exploreBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, fontFamily: 'Outfit-Bold' },
+    exploreBtnText: { color: colors.white, fontWeight: 'bold', fontSize: 16, fontFamily: 'Outfit-Bold' },
 });
 
 export default OrganisationPreviewScreen;

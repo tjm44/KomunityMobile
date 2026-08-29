@@ -5,14 +5,16 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
+import { colors, gradients } from '../constants/theme';
 
 const TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
-    bereavement: { icon: '🕊️', color: '#7c3aed', label: 'Bereavement Fund' },
-    excess:      { icon: '🚗', color: '#0284c7', label: 'Insurance Excess' },
-    emergency:   { icon: '🆘', color: '#dc2626', label: 'Emergency / Disaster Fundraiser' },
-    custom:      { icon: '✨', color: '#059669', label: 'Custom Fund' },
+    bereavement: { icon: '🕊️', color: colors.primary, label: 'Bereavement Fund' },
+    excess:      { icon: '🚗', color: colors.primaryLight, label: 'Insurance Excess' },
+    emergency:   { icon: '🆘', color: colors.danger, label: 'Emergency / Disaster Fundraiser' },
+    custom:      { icon: '✨', color: colors.success, label: 'Custom Fund' },
 };
 
 interface CampaignDetailScreenProps {
@@ -221,8 +223,8 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                 )}
 
                 <View style={styles.statusRow}>
-                    <View style={[styles.statusPill, { backgroundColor: campaign.contributions_open ? '#d1fae5' : '#fee2e2' }]}>
-                        <Text style={[styles.statusText, { color: campaign.contributions_open ? '#065f46' : '#991b1b' }]}>
+                    <View style={[styles.statusPill, { backgroundColor: campaign.contributions_open ? colors.successLight : colors.dangerLight }]}>
+                        <Text style={[styles.statusText, { color: campaign.contributions_open ? colors.success : colors.danger }]}>
                             {campaign.contributions_open ? '● Open for Contributions' : '● Closed'}
                         </Text>
                     </View>
@@ -246,7 +248,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
 
                 {/* Ledger button */}
                 <TouchableOpacity
-                    style={[styles.adminBtn, { backgroundColor: '#3b82f6', marginBottom: 12 }]}
+                    style={[styles.adminBtn, { backgroundColor: colors.primaryLight, marginBottom: 12 }]}
                     onPress={fetchLedger}
                 >
                     <Text style={styles.adminBtnText}>📜 View Campaign Ledger</Text>
@@ -271,7 +273,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
 
                         {campaign.contributions_open && (
                             <TouchableOpacity
-                                style={[styles.adminBtn, { backgroundColor: '#64748b' }]}
+                                style={[styles.adminBtn, { backgroundColor: colors.textSecondary }]}
                                 onPress={handleClose}
                                 disabled={closing}
                             >
@@ -312,7 +314,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                             <Text style={styles.modalTitle}>📜 Campaign Ledger</Text>
                             <TouchableOpacity onPress={() => setShowLedgerModal(false)}>
-                                <Text style={{ fontSize: 18, color: '#64748b', fontWeight: 'bold' }}>✕</Text>
+                                <Text style={{ fontSize: 18, color: colors.textSecondary, fontWeight: 'bold' }}>✕</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -320,18 +322,18 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                             <ActivityIndicator color={meta.color} size="large" style={{ padding: 20 }} />
                         ) : ledgerData ? (
                             <ScrollView showsVerticalScrollIndicator={false}>
-                                <View style={{ flexDirection: 'row', backgroundColor: '#f1f5f9', borderRadius: 12, padding: 12, marginBottom: 16 }}>
+                                <View style={{ flexDirection: 'row', backgroundColor: colors.borderLight, borderRadius: 12, padding: 12, marginBottom: 16 }}>
                                     <View style={{ flex: 1, alignItems: 'center' }}>
-                                        <Text style={{ fontSize: 10, color: '#64748b', fontWeight: 'bold' }}>RAISED</Text>
-                                        <Text style={{ fontSize: 14, color: '#059669', fontWeight: 'bold' }}>R{parseFloat(ledgerData.total_raised || 0).toFixed(2)}</Text>
+                                        <Text style={{ fontSize: 10, color: colors.textSecondary, fontWeight: 'bold' }}>RAISED</Text>
+                                        <Text style={{ fontSize: 14, color: colors.success, fontWeight: 'bold' }}>R{parseFloat(ledgerData.total_raised || 0).toFixed(2)}</Text>
                                     </View>
                                     <View style={{ flex: 1, alignItems: 'center' }}>
-                                        <Text style={{ fontSize: 10, color: '#64748b', fontWeight: 'bold' }}>WITHDRAWN</Text>
-                                        <Text style={{ fontSize: 14, color: '#dc2626', fontWeight: 'bold' }}>R{parseFloat(ledgerData.total_disbursed || 0).toFixed(2)}</Text>
+                                        <Text style={{ fontSize: 10, color: colors.textSecondary, fontWeight: 'bold' }}>WITHDRAWN</Text>
+                                        <Text style={{ fontSize: 14, color: colors.danger, fontWeight: 'bold' }}>R{parseFloat(ledgerData.total_disbursed || 0).toFixed(2)}</Text>
                                     </View>
                                     <View style={{ flex: 1, alignItems: 'center' }}>
-                                        <Text style={{ fontSize: 10, color: '#64748b', fontWeight: 'bold' }}>BALANCE</Text>
-                                        <Text style={{ fontSize: 14, color: '#0284c7', fontWeight: 'bold' }}>R{parseFloat(ledgerData.available_balance || 0).toFixed(2)}</Text>
+                                        <Text style={{ fontSize: 10, color: colors.textSecondary, fontWeight: 'bold' }}>BALANCE</Text>
+                                        <Text style={{ fontSize: 14, color: colors.primaryLight, fontWeight: 'bold' }}>R{parseFloat(ledgerData.available_balance || 0).toFixed(2)}</Text>
                                     </View>
                                 </View>
 
@@ -339,22 +341,22 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                                     ledgerData.timeline.map((item: any, idx: number) => {
                                         const isContrib = item.type === 'contribution';
                                         return (
-                                            <View key={idx} style={{ padding: 12, backgroundColor: '#f8fafc', borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                            <View key={idx} style={{ padding: 12, backgroundColor: colors.background, borderRadius: 10, marginBottom: 8, borderWidth: 1, borderColor: colors.border }}>
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#0f172a' }}>
+                                                    <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
                                                         {isContrib ? `💙 ${item.contributor_name}` : `💸 Payout to ${item.recipient_name}`}
                                                     </Text>
-                                                    <Text style={{ fontSize: 14, fontWeight: '800', color: isContrib ? '#059669' : '#dc2626' }}>
+                                                    <Text style={{ fontSize: 14, fontWeight: '800', color: isContrib ? colors.success : colors.danger }}>
                                                         {isContrib ? '+' : '-'} R{parseFloat(item.amount || 0).toFixed(2)}
                                                     </Text>
                                                 </View>
-                                                {item.note ? <Text style={{ fontSize: 12, color: '#475569', marginTop: 4 }}>{item.note}</Text> : null}
-                                                <Text style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{item.date || item.timestamp}</Text>
+                                                {item.note ? <Text style={{ fontSize: 12, color: colors.textSecondary, marginTop: 4 }}>{item.note}</Text> : null}
+                                                <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 4 }}>{item.date || item.timestamp}</Text>
                                             </View>
                                         );
                                     })
                                 ) : (
-                                    <Text style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>No transaction history found.</Text>
+                                    <Text style={{ textAlign: 'center', color: colors.textMuted, padding: 20 }}>No transaction history found.</Text>
                                 )}
                             </ScrollView>
                         ) : null}
@@ -369,7 +371,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                         <Text style={styles.modalTitle}>💸 Withdraw Campaign Funds</Text>
                         <Text style={styles.modalSubtitle}>Withdraw funds from {campaign.title} while keeping campaign active.</Text>
                         
-                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 4 }}>WITHDRAWAL AMOUNT (ZAR)</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 4 }}>WITHDRAWAL AMOUNT (ZAR)</Text>
                         <TextInput
                             style={styles.modalInput}
                             keyboardType="numeric"
@@ -378,7 +380,7 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
                             placeholder="0.00"
                         />
 
-                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 4 }}>REASON / NOTE (OPTIONAL)</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 4 }}>REASON / NOTE (OPTIONAL)</Text>
                         <TextInput
                             style={styles.modalInput}
                             value={withdrawNote}
@@ -405,53 +407,53 @@ const CampaignDetailScreen = ({ campaign: initialCampaign, isAdmin, onBack, onUp
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
-    banner: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+    container: { flex: 1, backgroundColor: colors.background },
+    banner: { flexDirection: 'row', alignItems: 'center', padding: 16, gap: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
     bannerIcon: { fontSize: 36 },
     bannerType: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, fontFamily: 'Outfit-Bold' },
-    bannerTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a', marginTop: 2, fontFamily: 'Outfit-Bold' },
+    bannerTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, marginTop: 2, fontFamily: 'Outfit-Bold' },
     scroll: { padding: 20 },
-    desc: { fontSize: 15, color: '#475569', lineHeight: 22, marginBottom: 16, fontFamily: 'Outfit-Regular' },
+    desc: { fontSize: 15, color: colors.textSecondary, lineHeight: 22, marginBottom: 16, fontFamily: 'Outfit-Regular' },
     card: {
         backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 12,
-        borderWidth: 1, borderColor: '#e2e8f0',
+        borderWidth: 1, borderColor: colors.border,
     },
-    cardTitle: { fontSize: 12, fontWeight: '700', color: '#64748b', marginBottom: 4, fontFamily: 'Outfit-Bold' },
-    cardValue: { fontSize: 16, fontWeight: '700', color: '#1e293b', fontFamily: 'Outfit-Bold' },
-    statsRow: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+    cardTitle: { fontSize: 12, fontWeight: '700', color: colors.textSecondary, marginBottom: 4, fontFamily: 'Outfit-Bold' },
+    cardValue: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, fontFamily: 'Outfit-Bold' },
+    statsRow: { flexDirection: 'row', backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: colors.border },
     stat: { flex: 1, alignItems: 'center' },
-    statValue: { fontSize: 20, fontWeight: '800', color: '#1e293b', fontFamily: 'Outfit-Bold' },
-    statLabel: { fontSize: 11, color: '#94a3b8', marginTop: 2, fontFamily: 'Outfit-Regular' },
-    statDivider: { width: 1, backgroundColor: '#e2e8f0' },
+    statValue: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, fontFamily: 'Outfit-Bold' },
+    statLabel: { fontSize: 11, color: colors.textMuted, marginTop: 2, fontFamily: 'Outfit-Regular' },
+    statDivider: { width: 1, backgroundColor: colors.border },
     progressContainer: { marginBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 10 },
-    progressTrack: { flex: 1, height: 8, backgroundColor: '#e2e8f0', borderRadius: 4, overflow: 'hidden' },
+    progressTrack: { flex: 1, height: 8, backgroundColor: colors.border, borderRadius: 4, overflow: 'hidden' },
     progressBar: { height: '100%', borderRadius: 4 },
     progressText: { fontSize: 13, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     statusRow: { flexDirection: 'row', gap: 8, marginBottom: 12, flexWrap: 'wrap' },
     statusPill: { borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6 },
     statusText: { fontSize: 13, fontWeight: '700', fontFamily: 'Outfit-Bold' },
-    deadline: { fontSize: 13, color: '#64748b', marginBottom: 16, fontFamily: 'Outfit-Regular' },
+    deadline: { fontSize: 13, color: colors.textSecondary, marginBottom: 16, fontFamily: 'Outfit-Regular' },
     adminSection: { marginTop: 8, gap: 10 },
-    adminTitle: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 4, fontFamily: 'Outfit-Bold' },
+    adminTitle: { fontSize: 14, fontWeight: '700', color: colors.textSecondary, marginBottom: 4, fontFamily: 'Outfit-Bold' },
     adminBtn: { borderRadius: 12, padding: 14, alignItems: 'center' },
     adminBtnText: { color: '#fff', fontWeight: '700', fontSize: 15, fontFamily: 'Outfit-Bold' },
-    footer: { padding: 16, paddingTop: 10, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+    footer: { padding: 16, paddingTop: 10, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.borderLight },
     contributeBtn: { borderRadius: 14, padding: 16, alignItems: 'center' },
     contributeBtnText: { color: '#fff', fontSize: 17, fontWeight: '800', fontFamily: 'Outfit-Bold' },
-    alreadyContributed: { backgroundColor: '#d1fae5', borderRadius: 14, padding: 14, alignItems: 'center' },
-    alreadyContributedText: { color: '#065f46', fontSize: 14, fontWeight: '700', fontFamily: 'Outfit-Bold' },
+    alreadyContributed: { backgroundColor: colors.successLight, borderRadius: 14, padding: 14, alignItems: 'center' },
+    alreadyContributedText: { color: colors.success, fontSize: 14, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
     modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
-    modalTitle: { fontSize: 18, fontWeight: '800', color: '#0f172a', marginBottom: 4, fontFamily: 'Outfit-Bold' },
-    modalSubtitle: { fontSize: 13, color: '#64748b', marginBottom: 16, fontFamily: 'Outfit-Regular' },
+    modalTitle: { fontSize: 18, fontWeight: '800', color: colors.textPrimary, marginBottom: 4, fontFamily: 'Outfit-Bold' },
+    modalSubtitle: { fontSize: 13, color: colors.textSecondary, marginBottom: 16, fontFamily: 'Outfit-Regular' },
     modalInput: {
-        backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0',
+        backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,
         borderRadius: 12, padding: 14, fontSize: 15, marginBottom: 10, fontFamily: 'Outfit-Regular',
     },
     modalConfirm: { borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 10 },
     modalConfirmText: { color: '#fff', fontSize: 16, fontWeight: '800', fontFamily: 'Outfit-Bold' },
     modalCancel: { alignItems: 'center', padding: 10 },
-    modalCancelText: { color: '#64748b', fontSize: 15, fontFamily: 'Outfit-Regular' },
+    modalCancelText: { color: colors.textSecondary, fontSize: 15, fontFamily: 'Outfit-Regular' },
 });
 
 export default CampaignDetailScreen;

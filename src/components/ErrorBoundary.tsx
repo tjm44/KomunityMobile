@@ -1,6 +1,7 @@
 import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors } from '../constants/theme';
 
 interface Props {
     children: ReactNode;
@@ -81,7 +82,7 @@ class ErrorBoundary extends Component<Props, State> {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
     },
     content: {
         padding: 24,
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: '#fff1f2',
+        backgroundColor: colors.dangerLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 24,
@@ -104,39 +105,39 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: '800',
-        color: '#1e293b',
+        color: colors.textPrimary,
         marginBottom: 12,
         textAlign: 'center',
     },
     message: {
         fontSize: 16,
-        color: '#64748b',
+        color: colors.textSecondary,
         textAlign: 'center',
         marginBottom: 32,
         lineHeight: 24,
     },
     errorDetails: {
         width: '100%',
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderRadius: 12,
         padding: 16,
         marginBottom: 32,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
     },
     errorText: {
         fontFamily: 'System',
         fontSize: 12,
-        color: '#ef4444',
+        color: colors.danger,
     },
     button: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 16,
         paddingHorizontal: 32,
         borderRadius: 16,
         width: '100%',
         alignItems: 'center',
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     buttonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     secondaryButtonText: {
-        color: '#64748b',
+        color: colors.textSecondary,
         fontSize: 14,
         fontWeight: '600',
     },

@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import client, { getMediaUrl } from '../api/client';
+import { colors } from '../constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -172,7 +173,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
     // Renders
     const renderPost = () => (
         <LinearGradient
-            colors={['#ffffff', '#eff6ff']}
+            colors={[colors.white, colors.surfaceLight]}
             style={styles.postCard}
         >
             <View style={styles.postHeader}>
@@ -218,7 +219,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
             <View style={styles.postStats}>
                 <TouchableOpacity style={styles.statButton} onPress={handleLike}>
                     <Text style={{ fontSize: 18 }}>{hasLiked ? '❤️' : '🤍'}</Text>
-                    <Text style={[styles.statText, hasLiked && { color: '#ef4444' }]}>
+                    <Text style={[styles.statText, hasLiked && { color: colors.danger }]}>
                         {postLikes} {postLikes === 1 ? 'Like' : 'Likes'}
                     </Text>
                 </TouchableOpacity>
@@ -239,7 +240,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
             <Image source={{ uri: getMediaUrl(item.author_detail?.profile_picture) }} style={[styles.avatar, { width: 34, height: 34 }]} />
             <View style={{ flex: 1, marginLeft: 10 }}>
                 <LinearGradient
-                    colors={['#ffffff', '#dcfce7']}
+                    colors={[colors.white, colors.successLight]}
                     style={styles.bubble}
                 >
                     <Text style={styles.commentAuthor}>{item.author_detail?.full_name || 'Member'}</Text>
@@ -251,7 +252,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                     {currentUserProfile?.id === item.author_detail?.id && (
                         <>
                             <TouchableOpacity onPress={() => openEditCommentInput(item)}><Text style={styles.actionText}>Edit</Text></TouchableOpacity>
-                            <TouchableOpacity onPress={() => handleDeleteComment(item.id)}><Text style={[styles.actionText, { color: '#ef4444' }]}>Delete</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDeleteComment(item.id)}><Text style={[styles.actionText, { color: colors.danger }]}>Delete</Text></TouchableOpacity>
                         </>
                     )}
                 </View>
@@ -261,7 +262,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                         <Image source={{ uri: getMediaUrl(r.author_detail?.profile_picture) }} style={[styles.avatar, { width: 28, height: 28 }]} />
                         <View style={{ flex: 1, marginLeft: 10 }}>
                             <LinearGradient
-                                colors={['#ffffff', '#dcfce7']}
+                                colors={[colors.white, colors.successLight]}
                                 style={styles.bubble}
                             >
                                 <Text style={styles.commentAuthor}>{r.author_detail?.full_name || 'Member'}</Text>
@@ -271,7 +272,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                                 <View style={styles.actions}>
                                     <Text style={styles.date}>{formatDate(r.created_at)}</Text>
                                     <TouchableOpacity onPress={() => openEditReplyInput(r)}><Text style={styles.actionText}>Edit</Text></TouchableOpacity>
-                                    <TouchableOpacity onPress={() => handleDeleteReply(r.id)}><Text style={[styles.actionText, { color: '#ef4444' }]}>Delete</Text></TouchableOpacity>
+                                    <TouchableOpacity onPress={() => handleDeleteReply(r.id)}><Text style={[styles.actionText, { color: colors.danger }]}>Delete</Text></TouchableOpacity>
                                 </View>
                             )}
                         </View>
@@ -286,9 +287,9 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
             {/* Header */}
             <View style={[styles.navbar, { paddingTop: insets.top }]}>
                 <TouchableOpacity onPress={onBack} style={{ padding: 12 }}>
-                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#2563eb' }}>←</Text>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.primaryLight }}>←</Text>
                 </TouchableOpacity>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#111827' }}>Post Details</Text>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.textPrimary }}>Post Details</Text>
                 <View style={{ width: 48 }} />
             </View>
 
@@ -351,7 +352,7 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
                                     {editingComment ? 'Edit Comment' : editingReply ? 'Edit Reply' : replyingTo ? 'Reply' : 'New Comment'}
                                 </Text>
                                 <TouchableOpacity onPress={handleSend} disabled={!newComment.trim()}>
-                                    <Text style={[styles.modalPostText, !newComment.trim() && { color: '#9ca3af' }]}>
+                                    <Text style={[styles.modalPostText, !newComment.trim() && { color: colors.textMuted }]}>
                                         {editingComment || editingReply ? 'Update' : 'Post'}
                                     </Text>
                                 </TouchableOpacity>
@@ -384,46 +385,46 @@ const PostDetailScreen = ({ post, onBack, onEditPost }: PostDetailProps) => {
 };
 
 const styles = StyleSheet.create({
-    navbar: { backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: '#e5e7eb' },
+    navbar: { backgroundColor: 'transparent', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderColor: colors.border },
     postCard: { padding: 15, marginBottom: 8 },
     postHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-    avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#eff6ff', borderWidth: 2, borderColor: '#2563eb' },
-    author: { fontWeight: 'bold', fontSize: 16, marginLeft: 12, color: '#111827' },
-    date: { color: '#6b7280', fontSize: 12, marginLeft: 12 },
-    postContent: { fontSize: 16, color: '#374151', marginBottom: 15, lineHeight: 24 },
+    avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.surfaceLight, borderWidth: 2, borderColor: colors.primaryLight },
+    author: { fontWeight: 'bold', fontSize: 16, marginLeft: 12, color: colors.textPrimary },
+    date: { color: colors.textSecondary, fontSize: 12, marginLeft: 12 },
+    postContent: { fontSize: 16, color: colors.textSecondary, marginBottom: 15, lineHeight: 24 },
     postImage: { height: 300, borderRadius: 12, marginRight: 10 },
     imageBadge: { position: 'absolute', bottom: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
     imageBadgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-    postStats: { flexDirection: 'row', borderTopWidth: 1, borderColor: '#f3f4f6', paddingTop: 15, justifyContent: 'space-around' },
+    postStats: { flexDirection: 'row', borderTopWidth: 1, borderColor: colors.surfaceLight, paddingTop: 15, justifyContent: 'space-around' },
     statButton: { flexDirection: 'row', alignItems: 'center' },
-    statText: { marginLeft: 6, fontSize: 14, color: '#6b7280', fontWeight: '500' },
+    statText: { marginLeft: 6, fontSize: 14, color: colors.textSecondary, fontWeight: '500' },
 
     commentSectionHeader: { padding: 15, backgroundColor: 'transparent' },
-    commentSectionTitle: { fontWeight: 'bold', fontSize: 13, color: '#6b7280', letterSpacing: 1 },
+    commentSectionTitle: { fontWeight: 'bold', fontSize: 13, color: colors.textSecondary, letterSpacing: 1 },
 
-    commentRow: { flexDirection: 'row', padding: 15, backgroundColor: 'transparent', borderBottomWidth: 1, borderColor: '#f3f4f6' },
+    commentRow: { flexDirection: 'row', padding: 15, backgroundColor: 'transparent', borderBottomWidth: 1, borderColor: colors.surfaceLight },
     bubble: { padding: 12, borderRadius: 18, borderTopLeftRadius: 2 },
-    commentAuthor: { fontWeight: 'bold', marginBottom: 2, fontSize: 14, color: '#111827' },
-    commentText: { fontSize: 15, color: '#374151', lineHeight: 20 },
+    commentAuthor: { fontWeight: 'bold', marginBottom: 2, fontSize: 14, color: colors.textPrimary },
+    commentText: { fontSize: 15, color: colors.textSecondary, lineHeight: 20 },
     actions: { flexDirection: 'row', gap: 15, marginTop: 8, alignItems: 'center' },
-    actionText: { fontSize: 12, color: '#2563eb', fontWeight: 'bold' },
+    actionText: { fontSize: 12, color: colors.primaryLight, fontWeight: 'bold' },
 
-    bottomTrigger: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingTop: 12, paddingHorizontal: 16, borderTopWidth: 1, borderColor: '#e5e7eb' },
-    triggerButton: { backgroundColor: '#f3f4f6', borderRadius: 24, paddingVertical: 10, paddingLeft: 20, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    triggerText: { color: '#6b7280', fontSize: 15 },
-    triggerIcon: { backgroundColor: '#2563eb', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 18 },
+    bottomTrigger: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255, 255, 255, 0.9)', paddingTop: 12, paddingHorizontal: 16, borderTopWidth: 1, borderColor: colors.border },
+    triggerButton: { backgroundColor: colors.surfaceLight, borderRadius: 24, paddingVertical: 10, paddingLeft: 20, paddingRight: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    triggerText: { color: colors.textSecondary, fontSize: 15 },
+    triggerIcon: { backgroundColor: colors.primaryLight, paddingHorizontal: 16, paddingVertical: 6, borderRadius: 18 },
 
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
     modalDismissArea: { flex: 1 },
     modalContainer: { backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' },
     modalContent: { padding: 16, minHeight: 250 },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 15, borderBottomWidth: 1, borderColor: '#f3f4f6' },
-    modalCancelText: { color: '#6b7280', fontSize: 16 },
-    modalTitle: { fontSize: 17, fontWeight: 'bold', color: '#111827' },
-    modalPostText: { color: '#2563eb', fontSize: 16, fontWeight: 'bold' },
-    modalReplyContext: { backgroundColor: '#eff6ff', padding: 10, borderRadius: 8, marginBottom: 15 },
-    modalReplyContextText: { fontSize: 13, color: '#1e40af' },
-    modalInput: { fontSize: 17, color: '#111827', minHeight: 120, textAlignVertical: 'top' },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, paddingBottom: 15, borderBottomWidth: 1, borderColor: colors.surfaceLight },
+    modalCancelText: { color: colors.textSecondary, fontSize: 16 },
+    modalTitle: { fontSize: 17, fontWeight: 'bold', color: colors.textPrimary },
+    modalPostText: { color: colors.primaryLight, fontSize: 16, fontWeight: 'bold' },
+    modalReplyContext: { backgroundColor: colors.surfaceLight, padding: 10, borderRadius: 8, marginBottom: 15 },
+    modalReplyContextText: { fontSize: 13, color: colors.primary },
+    modalInput: { fontSize: 17, color: colors.textPrimary, minHeight: 120, textAlignVertical: 'top' },
 });
 
 export default PostDetailScreen;

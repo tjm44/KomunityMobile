@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
 
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from '../constants/theme';
 
 interface Transaction {
     id: number;
@@ -122,20 +123,20 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
             <View style={[
                 styles.header,
                 { paddingTop: insets.top },
-                isOrg && { backgroundColor: '#1e1b4b', borderBottomColor: '#312e81' }
+                isOrg && { backgroundColor: colors.primaryDark, borderBottomColor: colors.primaryDark }
             ]}>
                 <TouchableOpacity
                     onPress={onBack}
-                    style={[styles.backButton, isOrg && { backgroundColor: '#312e81' }]}
+                    style={[styles.backButton, isOrg && { backgroundColor: colors.primaryDark }]}
                 >
-                    <Text style={[styles.backButtonText, isOrg && { color: '#a5b4fc' }]}>←</Text>
+                    <Text style={[styles.backButtonText, isOrg && { color: colors.accentLight }]}>←</Text>
                 </TouchableOpacity>
                 <View style={{ alignItems: 'center' }}>
-                    <Text style={[styles.headerTitle, isOrg && { color: '#ffffff' }]}>
+                    <Text style={[styles.headerTitle, isOrg && { color: colors.white }]}>
                         {isOrg ? "Organisation Wallet" : "Group Wallet"}
                     </Text>
                     {isOrg && (
-                        <Text style={{ fontSize: 10, color: '#a5b4fc', fontWeight: '700', letterSpacing: 0.5 }}>
+                        <Text style={{ fontSize: 10, color: colors.accentLight, fontWeight: '700', letterSpacing: 0.5 }}>
                             🏢 VERIFIED TREASURY
                         </Text>
                     )}
@@ -146,20 +147,20 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
             <ScrollView
                 style={styles.content}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isOrg ? "#4f46e5" : "#2563eb"} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isOrg ? "#00458b" : "#3fd2c7"} />
                 }
             >
                 {/* Balance Card */}
                 {isOrg ? (
                     <LinearGradient
-                        colors={['#1e1b4b', '#3730a3', '#4f46e5']}
+                        colors={[colors.primaryDark, colors.primary, colors.primaryLight]}
                         style={styles.balanceCard}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                     >
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                             <Text style={{ fontSize: 12 }}>🏢</Text>
-                            <Text style={[styles.balanceLabel, { color: '#c7d2fe' }]}>
+                            <Text style={[styles.balanceLabel, { color: colors.accentLight }]}>
                                 {group.name} Treasury
                             </Text>
                         </View>
@@ -198,7 +199,7 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
                 ) : (
                     transactions.map((item) => (
                         <View key={item.id} style={styles.transactionItem}>
-                            <View style={[styles.itemIconContainer, isOrg && { backgroundColor: '#eef2ff' }]}>
+                            <View style={[styles.itemIconContainer, isOrg && { backgroundColor: colors.surfaceLight }]}>
                                 <Text style={styles.itemIcon}>{getTransactionIcon(item.transaction_type)}</Text>
                             </View>
                             <View style={styles.itemContent}>
@@ -231,7 +232,7 @@ const GroupWalletScreen = ({ group, onBack }: GroupWalletScreenProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
     },
     centered: {
         justifyContent: 'center',
@@ -243,39 +244,39 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 16,
         paddingBottom: 16,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     content: {
         paddingHorizontal: 16,
     },
     balanceCard: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         borderRadius: 20,
         padding: 24,
         marginTop: 20,
         marginBottom: 24,
         alignItems: 'center',
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 15,
@@ -289,7 +290,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     balanceAmount: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 32,
         fontWeight: 'bold',
         marginBottom: 16,
@@ -309,7 +310,7 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 16,
     },
     emptyState: {
@@ -317,25 +318,25 @@ const styles = StyleSheet.create({
         paddingVertical: 40,
     },
     emptyStateText: {
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontSize: 16,
         textAlign: 'center',
     },
     transactionItem: {
         flexDirection: 'row',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#f3f4f6',
+        borderColor: colors.surfaceLight,
     },
     itemIconContainer: {
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 16,
@@ -355,17 +356,17 @@ const styles = StyleSheet.create({
     itemType: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     itemAmount: {
         fontSize: 16,
         fontWeight: 'bold',
     },
     positiveAmount: {
-        color: '#10b981',
+        color: colors.success,
     },
     negativeAmount: {
-        color: '#ef4444',
+        color: colors.danger,
     },
     itemFooter: {
         flexDirection: 'row',
@@ -374,11 +375,11 @@ const styles = StyleSheet.create({
     },
     itemUser: {
         fontSize: 12,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     itemDate: {
         fontSize: 12,
-        color: '#9ca3af',
+        color: colors.textMuted,
     },
 });
 

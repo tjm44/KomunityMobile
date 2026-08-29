@@ -6,7 +6,9 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import client, { fetchFormData, appendFileToFormData } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface Group {
     id: number;
@@ -219,8 +221,8 @@ const CreatePostScreen = ({ group, post, onBack, onPostCreated }: CreatePostProp
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#ffffff',
-    },
+    backgroundColor: colors.background,
+            },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -228,22 +230,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     closeButton: {
         padding: 4,
     },
     closeButtonText: {
         fontSize: 24,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     postButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingHorizontal: 20,
         paddingVertical: 8,
         borderRadius: 20,
@@ -251,7 +253,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     postButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -263,7 +265,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 16,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 16,
@@ -271,16 +273,16 @@ const styles = StyleSheet.create({
     },
     postingToLabel: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     groupNameText: {
         fontSize: 13,
         fontWeight: 'bold',
-        color: '#2563eb',
+        color: colors.primaryLight,
     },
     textInput: {
         fontSize: 18,
-        color: '#111827',
+        color: colors.textPrimary,
         minHeight: 120,
         textAlignVertical: 'top',
         lineHeight: 26,
@@ -301,7 +303,7 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         borderRadius: 8,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
     },
     removeImageButton: {
         position: 'absolute',
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     removeImageText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 12,
         fontWeight: 'bold',
     },
@@ -326,8 +328,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 12,
         borderTopWidth: 1,
-        borderTopColor: '#f3f4f6',
-        backgroundColor: '#ffffff',
+        borderTopColor: colors.surfaceLight,
+        backgroundColor: colors.white,
     },
     toolbarLeft: {
         flexDirection: 'row',
@@ -345,7 +347,7 @@ const styles = StyleSheet.create({
     },
     toolbarLabel: {
         fontSize: 14,
-        color: '#4b5563',
+        color: colors.textSecondary,
         fontWeight: '500',
     },
 });

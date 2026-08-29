@@ -5,8 +5,10 @@ import {
     Modal, SafeAreaView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import client, { fetchFormData, appendFileToFormData } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface EditOrganisationScreenProps {
     organisation: any;
@@ -316,13 +318,13 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
                     <View style={[
                         styles.verificationCard,
                         organisation.is_verified
-                            ? { backgroundColor: '#eef2ff', borderColor: '#818cf8' }
-                            : { backgroundColor: '#fffbeb', borderColor: '#fde68a' }
+                            ? { backgroundColor: colors.surfaceLight, borderColor: colors.accentLight }
+                            : { backgroundColor: colors.warningLight, borderColor: colors.warningLight }
                     ]}>
-                        <Text style={[styles.verificationTitle, { color: organisation.is_verified ? '#3730a3' : '#92400e' }]}>
+                        <Text style={[styles.verificationTitle, { color: organisation.is_verified ? colors.primary : colors.warning }]}>
                             {organisation.is_verified ? '🛡️ Official Trusted Organisation' : '⚠️ Unverified Organisation Profile'}
                         </Text>
-                        <Text style={[styles.verificationDesc, { color: organisation.is_verified ? '#1e1b4b' : '#78350f' }]}>
+                        <Text style={[styles.verificationDesc, { color: organisation.is_verified ? colors.primaryDark : '#78350f' }]}>
                             {organisation.is_verified
                                 ? 'Your registry documents are verified. You can launch public emergency campaigns globally.'
                                 : 'You are currently unverified. Verified accounts receive trust seals and access to global fundraisers.'}
@@ -441,48 +443,48 @@ const EditOrganisationScreen = ({ organisation, onBack, onOrganisationUpdated }:
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#ffffff' },
+    container: { flex: 1, backgroundColor: colors.white },
     scrollContent: { padding: 24 },
     coverSection: { marginBottom: 24 },
-    label: { fontSize: 16, fontWeight: 'bold', color: '#374151', marginBottom: 8, fontFamily: 'Outfit-Bold' },
-    coverPicker: { height: 160, borderRadius: 12, borderStyle: 'dashed', borderWidth: 2, borderColor: '#cbd5e1', overflow: 'hidden' },
+    label: { fontSize: 16, fontWeight: 'bold', color: colors.textSecondary, marginBottom: 8, fontFamily: 'Outfit-Bold' },
+    coverPicker: { height: 160, borderRadius: 12, borderStyle: 'dashed', borderWidth: 2, borderColor: colors.border, overflow: 'hidden' },
     coverPreview: { width: '100%', height: '100%' },
-    coverPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
+    coverPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
     coverPlaceholderIcon: { fontSize: 32, marginBottom: 8 },
-    coverPlaceholderText: { fontSize: 13, color: '#64748b', fontWeight: '500' },
+    coverPlaceholderText: { fontSize: 13, color: colors.textSecondary, fontWeight: '500' },
     coverActions: { flexDirection: 'row', gap: 10, marginTop: 10 },
-    changeCoverBtn: { flex: 1, backgroundColor: '#f1f5f9', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-    changeCoverText: { color: '#334155', fontWeight: '700', fontSize: 13 },
-    removeCoverBtn: { flex: 1, backgroundColor: '#fee2e2', paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
-    removeCoverText: { color: '#dc2626', fontWeight: '700', fontSize: 13 },
+    changeCoverBtn: { flex: 1, backgroundColor: colors.borderLight, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+    changeCoverText: { color: colors.textSecondary, fontWeight: '700', fontSize: 13 },
+    removeCoverBtn: { flex: 1, backgroundColor: colors.dangerLight, paddingVertical: 10, borderRadius: 8, alignItems: 'center' },
+    removeCoverText: { color: colors.danger, fontWeight: '700', fontSize: 13 },
     formSection: { marginBottom: 24 },
     input: {
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 16,
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
         fontFamily: 'Outfit-Regular',
     },
     textArea: { height: 120, textAlignVertical: 'top' },
     pillsContainer: { flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginTop: 4 },
-    entityPill: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: '#f9fafb' },
-    entityPillActive: { backgroundColor: '#e0e7ff', borderColor: '#4338ca' },
-    entityPillText: { fontSize: 13, color: '#475569', fontWeight: '600' },
-    entityPillTextActive: { color: '#4338ca' },
+    entityPill: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5, borderColor: colors.border, backgroundColor: colors.background },
+    entityPillActive: { backgroundColor: colors.surfaceLight, borderColor: colors.primary },
+    entityPillText: { fontSize: 13, color: colors.textSecondary, fontWeight: '600' },
+    entityPillTextActive: { color: colors.primary },
     verificationCard: { padding: 16, borderRadius: 12, borderWidth: 1, marginBottom: 24 },
     verificationTitle: { fontSize: 15, fontWeight: 'bold', fontFamily: 'Outfit-Bold' },
     verificationDesc: { fontSize: 13, marginTop: 6, lineHeight: 20, fontFamily: 'Outfit-Regular' },
-    verifyRequestBtn: { backgroundColor: '#4338ca', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 12 },
-    verifyRequestBtnText: { color: '#ffffff', fontWeight: 'bold', fontSize: 13 },
-    footer: { padding: 24, borderTopWidth: 1, borderTopColor: '#e0e7ff' },
-    saveButton: { backgroundColor: '#4338ca', borderRadius: 12, padding: 18, alignItems: 'center', marginBottom: 12 },
+    verifyRequestBtn: { backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginTop: 12 },
+    verifyRequestBtnText: { color: colors.white, fontWeight: 'bold', fontSize: 13 },
+    footer: { padding: 24, borderTopWidth: 1, borderTopColor: colors.surfaceLight },
+    saveButton: { backgroundColor: colors.primary, borderRadius: 12, padding: 18, alignItems: 'center', marginBottom: 12 },
     saveButtonDisabled: { opacity: 0.5 },
-    saveButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 16, fontFamily: 'Outfit-Bold' },
+    saveButtonText: { color: colors.white, fontWeight: 'bold', fontSize: 16, fontFamily: 'Outfit-Bold' },
     cancelButton: { padding: 12, alignItems: 'center' },
-    cancelButtonText: { color: '#6b7280', fontSize: 15, fontWeight: '500' },
+    cancelButtonText: { color: colors.textSecondary, fontSize: 15, fontWeight: '500' },
     pickerRow: {
         flexDirection: 'row',
         gap: 10,
@@ -490,27 +492,27 @@ const styles = StyleSheet.create({
     },
     pickerButton: {
         flex: 1,
-        backgroundColor: '#f9fafb',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 16,
     },
     pickerButtonText: {
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
         fontFamily: 'Outfit-Regular',
     },
     clearBtn: {
-        backgroundColor: '#fee2e2',
+        backgroundColor: colors.dangerLight,
         paddingVertical: 14,
         paddingHorizontal: 16,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#fca5a5',
+        borderColor: colors.dangerLight,
     },
     clearBtnText: {
-        color: '#dc2626',
+        color: colors.danger,
         fontWeight: 'bold',
         fontSize: 14,
     },
@@ -520,7 +522,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
@@ -529,16 +531,16 @@ const styles = StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
         fontFamily: 'Outfit-Bold',
         marginBottom: 16,
     },
     searchBar: {
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 12,
         padding: 12,
         fontSize: 16,
-        color: '#111827',
+        color: colors.textPrimary,
         marginBottom: 16,
     },
     profilesList: {
@@ -547,25 +549,25 @@ const styles = StyleSheet.create({
     profileItem: {
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f3f4f6',
+        borderBottomColor: colors.surfaceLight,
     },
     profileItemName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1f2937',
+        color: colors.textPrimary,
     },
     profileItemEmail: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
     },
     closeModalBtn: {
-        backgroundColor: '#374151',
+        backgroundColor: colors.textSecondary,
         borderRadius: 12,
         padding: 16,
         alignItems: 'center',
     },
     closeModalBtnText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },

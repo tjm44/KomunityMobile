@@ -4,6 +4,7 @@ import {
     ActivityIndicator, Alert, ScrollView
 } from 'react-native';
 import client from '../api/client';
+import { colors } from '../constants/theme';
 
 interface SMSCreditPackage {
     id: number;
@@ -161,7 +162,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     container: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         padding: 24,
@@ -169,26 +170,26 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: '700',
-        color: '#0f172a',
+        color: colors.textPrimary,
         marginBottom: 6,
     },
     subtitle: {
         fontSize: 14,
-        color: '#64748b',
+        color: colors.textSecondary,
         marginBottom: 16,
     },
     balanceBadge: {
-        backgroundColor: '#f0f9ff',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 14,
         paddingVertical: 10,
         borderRadius: 12,
         marginBottom: 16,
         borderWidth: 1,
-        borderColor: '#bae6fd',
+        borderColor: colors.accentLight,
     },
     balanceText: {
         fontSize: 14,
-        color: '#0369a1',
+        color: colors.primary,
     },
     bold: {
         fontWeight: '700',
@@ -197,34 +198,34 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         padding: 16,
         borderRadius: 14,
         marginBottom: 10,
         borderWidth: 2,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
     },
     packageCardSelected: {
-        backgroundColor: '#f0f9ff',
-        borderColor: '#0284c7',
+        backgroundColor: colors.surfaceLight,
+        borderColor: colors.primaryLight,
     },
     packageName: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#1e293b',
+        color: colors.textPrimary,
     },
     packageCredits: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         marginTop: 2,
     },
     packagePrice: {
         fontSize: 18,
         fontWeight: '700',
-        color: '#0284c7',
+        color: colors.primaryLight,
     },
     textSelected: {
-        color: '#0369a1',
+        color: colors.primary,
     },
     actionRow: {
         flexDirection: 'row',
@@ -235,25 +236,25 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 14,
         borderRadius: 12,
-        backgroundColor: '#f1f5f9',
+        backgroundColor: colors.borderLight,
         alignItems: 'center',
     },
     cancelBtnText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#64748b',
+        color: colors.textSecondary,
     },
     buyBtn: {
         flex: 2,
         paddingVertical: 14,
         borderRadius: 12,
-        backgroundColor: '#0284c7',
+        backgroundColor: colors.primaryLight,
         alignItems: 'center',
     },
     buyBtnText: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#ffffff',
+        color: colors.white,
     },
     btnDisabled: {
         opacity: 0.5,

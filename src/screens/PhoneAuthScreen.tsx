@@ -16,6 +16,7 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import client, { setAuthToken, saveToken } from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface PhoneAuthProps {
   onLoginSuccess: (isNewUser?: boolean) => void;
@@ -266,7 +267,7 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
   };
 
   return (
-    <LinearGradient colors={['#1e293b', '#0f172a', '#020617']} style={styles.container}>
+    <LinearGradient colors={[...gradients.screenBackground]} style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -277,7 +278,7 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
             <View style={styles.headerRow}>
               {onBack && (
                 <TouchableOpacity style={styles.backButton} onPress={onBack}>
-                  <Ionicons name="arrow-back" size={24} color="#ffffff" />
+                  <Ionicons name="arrow-back" size={24} color={colors.primary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -294,7 +295,7 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
                       : 'shield'
                   }
                   size={32}
-                  color="#3b82f6"
+                  color={colors.primary}
                 />
               </View>
               <Text style={styles.mainTitle}>
@@ -668,64 +669,66 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   titleContainer: {
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: 20,
   },
   iconBadge: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    backgroundColor: colors.surfaceTeal,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.3)',
+    marginBottom: 14,
+    borderWidth: 1.5,
+    borderColor: colors.accent,
   },
   mainTitle: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: colors.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#94a3b8',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 12,
   },
   formCard: {
-    backgroundColor: 'rgba(30, 41, 59, 0.7)',
+    backgroundColor: colors.white,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    borderColor: colors.border,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
     shadowRadius: 15,
-    elevation: 8,
+    elevation: 4,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#cbd5e1',
+    color: colors.textPrimary,
     marginBottom: 10,
   },
   phoneInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.surfaceLight,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.border,
     overflow: 'hidden',
     marginBottom: 16,
   },
@@ -735,13 +738,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 16,
     borderRightWidth: 1,
-    borderRightColor: '#334155',
-    backgroundColor: '#1e293b',
+    borderRightColor: colors.border,
+    backgroundColor: colors.surfaceTeal,
   },
   countryCodeText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: colors.primary,
     marginRight: 6,
   },
   phoneInput: {
@@ -750,13 +753,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     fontSize: 18,
     fontWeight: '600',
-    color: '#ffffff',
+    color: colors.textPrimary,
   },
   countryDropdown: {
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: colors.border,
     marginBottom: 16,
     overflow: 'hidden',
   },
@@ -764,11 +767,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1e293b',
+    borderBottomColor: colors.borderLight,
   },
   countryOptionText: {
     fontSize: 15,
-    color: '#e2e8f0',
+    color: colors.textPrimary,
   },
   otpBoxesContainer: {
     flexDirection: 'row',
@@ -779,24 +782,24 @@ const styles = StyleSheet.create({
     width: 46,
     height: 56,
     borderRadius: 12,
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.surfaceLight,
     borderWidth: 1.5,
-    borderColor: '#334155',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   otpBoxFilled: {
-    borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderColor: colors.accent,
+    backgroundColor: colors.surfaceTeal,
   },
   otpBoxFocused: {
-    borderColor: '#60a5fa',
-    backgroundColor: 'rgba(96, 165, 250, 0.15)',
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceLight,
   },
   otpDigitText: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#ffffff',
+    color: colors.primary,
   },
   pinBoxesContainer: {
     flexDirection: 'row',
@@ -808,23 +811,23 @@ const styles = StyleSheet.create({
     width: 60,
     height: 64,
     borderRadius: 16,
-    backgroundColor: '#0f172a',
+    backgroundColor: colors.surfaceLight,
     borderWidth: 1.5,
-    borderColor: '#334155',
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
   pinBoxFilled: {
-    borderColor: '#3b82f6',
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderColor: colors.accent,
+    backgroundColor: colors.surfaceTeal,
   },
   pinBoxFocused: {
-    borderColor: '#60a5fa',
-    backgroundColor: 'rgba(96, 165, 250, 0.15)',
+    borderColor: colors.primary,
+    backgroundColor: colors.surfaceLight,
   },
   pinDigitDot: {
     fontSize: 28,
-    color: '#3b82f6',
+    color: colors.primary,
   },
   hiddenInput: {
     position: 'absolute',
@@ -835,27 +838,27 @@ const styles = StyleSheet.create({
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: colors.dangerLight,
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.3)',
+    borderColor: colors.danger,
   },
   errorText: {
-    color: '#fca5a5',
+    color: colors.danger,
     fontSize: 13,
     marginLeft: 8,
     flex: 1,
   },
   primaryButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: colors.primary,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
-    shadowColor: '#2563eb',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 10,
     elevation: 4,
     marginTop: 8,
@@ -864,7 +867,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   primaryButtonText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -877,12 +880,12 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   footerLinkText: {
-    color: '#3b82f6',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
   },
   footerLinkDisabled: {
-    color: '#64748b',
+    color: colors.textMuted,
   },
 });
 

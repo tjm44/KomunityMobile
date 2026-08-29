@@ -7,6 +7,7 @@ import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+import { colors } from '../constants/theme';
 
 interface OrganisationDetailScreenProps {
     organisation: any;
@@ -86,7 +87,7 @@ const OrganisationDetailScreen = ({
                         <Image source={{ uri: orgDetails.cover_image }} style={styles.coverImage} />
                     ) : (
                         <LinearGradient
-                            colors={['#1e1b4b', '#312e81', '#4338ca']}
+                            colors={[colors.primaryDark, colors.primary, colors.primaryLight]}
                             style={styles.coverImage}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
@@ -156,7 +157,7 @@ const OrganisationDetailScreen = ({
                         </View>
                         <View style={styles.registryRow}>
                             <Text style={styles.registryLabel}>Verification Trust Seal</Text>
-                            <Text style={[styles.registryValue, { color: orgDetails.is_verified ? '#4338ca' : '#b45309' }]}>
+                            <Text style={[styles.registryValue, { color: orgDetails.is_verified ? colors.primary : '#b45309' }]}>
                                 {orgDetails.is_verified ? '🛡️ OFFICIAL TRUSTED' : '⚠️ UNVERIFIED PROFILE'}
                             </Text>
                         </View>
@@ -235,7 +236,7 @@ const OrganisationDetailScreen = ({
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1, backgroundColor: colors.background },
     heroSection: { height: 260, position: 'relative' },
     coverImage: { width: '100%', height: '100%' },
     heroOverlay: {
@@ -246,14 +247,14 @@ const styles = StyleSheet.create({
     },
     headerActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.9)', justifyContent: 'center', alignItems: 'center' },
-    backBtnText: { fontSize: 20, fontWeight: 'bold', color: '#1e1b4b' },
+    backBtnText: { fontSize: 20, fontWeight: 'bold', color: colors.primaryDark },
     shareBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255, 255, 255, 0.9)', justifyContent: 'center', alignItems: 'center' },
     shareIcon: { fontSize: 16 },
     orgInfoWrap: { marginTop: 'auto' },
-    orgName: { fontSize: 24, fontWeight: 'bold', color: '#ffffff', fontFamily: 'Outfit-Bold' },
-    verifiedBadge: { backgroundColor: '#e0e7ff', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: '#818cf8' },
-    verifiedBadgeText: { color: '#3730a3', fontSize: 11, fontWeight: '700' },
-    entityLabel: { fontSize: 14, color: '#c7d2fe', marginTop: 4, fontWeight: '600', fontFamily: 'Outfit-Regular' },
+    orgName: { fontSize: 24, fontWeight: 'bold', color: colors.white, fontFamily: 'Outfit-Bold' },
+    verifiedBadge: { backgroundColor: colors.surfaceLight, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: colors.accentLight },
+    verifiedBadgeText: { color: colors.primary, fontSize: 11, fontWeight: '700' },
+    entityLabel: { fontSize: 14, color: colors.surfaceLight, marginTop: 4, fontWeight: '600', fontFamily: 'Outfit-Regular' },
     dashboardActions: {
         flexDirection: 'row',
         paddingHorizontal: 20,
@@ -262,45 +263,45 @@ const styles = StyleSheet.create({
     },
     mainActionBtn: {
         flex: 2,
-        backgroundColor: '#4338ca',
+        backgroundColor: colors.primary,
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#4338ca',
+        shadowColor: colors.primary,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 6,
         elevation: 3,
     },
-    mainActionText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15, fontFamily: 'Outfit-Bold' },
+    mainActionText: { color: colors.white, fontWeight: 'bold', fontSize: 15, fontFamily: 'Outfit-Bold' },
     iconActionBtn: {
         flex: 1,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1.5,
-        borderColor: '#818cf8',
+        borderColor: colors.accentLight,
         borderRadius: 12,
         paddingVertical: 14,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    iconActionText: { color: '#3730a3', fontWeight: '700', fontSize: 13 },
+    iconActionText: { color: colors.primary, fontWeight: '700', fontSize: 13 },
     contentBody: { paddingHorizontal: 20, gap: 16 },
-    card: { backgroundColor: '#ffffff', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#e0e7ff' },
-    cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1e1b4b', marginBottom: 12, fontFamily: 'Outfit-Bold' },
-    descText: { fontSize: 14, color: '#475569', lineHeight: 22, fontFamily: 'Outfit-Regular' },
-    registryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-    registryLabel: { fontSize: 14, color: '#64748b', fontWeight: '500', fontFamily: 'Outfit-Regular' },
-    registryValue: { fontSize: 14, color: '#4338ca', fontWeight: '700', fontFamily: 'Outfit-Bold' },
+    card: { backgroundColor: colors.white, borderRadius: 16, padding: 20, borderWidth: 1, borderColor: colors.surfaceLight },
+    cardTitle: { fontSize: 16, fontWeight: 'bold', color: colors.primaryDark, marginBottom: 12, fontFamily: 'Outfit-Bold' },
+    descText: { fontSize: 14, color: colors.textSecondary, lineHeight: 22, fontFamily: 'Outfit-Regular' },
+    registryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+    registryLabel: { fontSize: 14, color: colors.textSecondary, fontWeight: '500', fontFamily: 'Outfit-Regular' },
+    registryValue: { fontSize: 14, color: colors.primary, fontWeight: '700', fontFamily: 'Outfit-Bold' },
     campaignHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    createCampBtn: { backgroundColor: '#e0e7ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#818cf8' },
-    createCampBtnText: { color: '#4338ca', fontWeight: '700', fontSize: 12 },
-    emptyCampText: { color: '#94a3b8', fontSize: 14, textAlign: 'center', paddingVertical: 20, fontFamily: 'Outfit-Regular' },
-    campRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-    campTitle: { fontSize: 14, fontWeight: '700', color: '#334155' },
-    campRaised: { fontSize: 12, color: '#64748b', marginTop: 2 },
-    campChevron: { fontSize: 18, color: '#94a3b8', fontWeight: '700' },
-    adminNameText: { fontSize: 14, color: '#1e293b', fontWeight: '500', fontFamily: 'Outfit-Regular' },
+    createCampBtn: { backgroundColor: colors.surfaceLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.accentLight },
+    createCampBtnText: { color: colors.primary, fontWeight: '700', fontSize: 12 },
+    emptyCampText: { color: colors.textMuted, fontSize: 14, textAlign: 'center', paddingVertical: 20, fontFamily: 'Outfit-Regular' },
+    campRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+    campTitle: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
+    campRaised: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
+    campChevron: { fontSize: 18, color: colors.textMuted, fontWeight: '700' },
+    adminNameText: { fontSize: 14, color: colors.textPrimary, fontWeight: '500', fontFamily: 'Outfit-Regular' },
 });
 
 export default OrganisationDetailScreen;

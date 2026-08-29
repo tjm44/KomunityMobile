@@ -15,6 +15,7 @@ import client from "../api/client";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import SearchScreen from "./SearchScreen";
 import { GroupPlaceholder } from "../components/Loaders";
+import { colors } from '../constants/theme';
 
 interface Group {
   id: number;
@@ -175,8 +176,8 @@ const HomeScreen = ({
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#2563eb"]}
-            tintColor="#2563eb"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
       >
@@ -209,7 +210,7 @@ const HomeScreen = ({
                   activeOpacity={0.85}
                 >
                   <LinearGradient
-                    colors={isActive ? ["#ffffff", "#f1f5f9"] : ["#ffffff", "#f8fafc"]}
+                    colors={isActive ? [colors.white, colors.borderLight] : [colors.white, colors.background]}
                     style={[styles.groupCard, !isActive && styles.minimizedCard]}
                   >
                     {isActive ? (
@@ -496,15 +497,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   verifiedBadge: {
-    backgroundColor: '#d1fae5',
+    backgroundColor: colors.successLight,
     borderRadius: 20,
     paddingHorizontal: 7,
     paddingVertical: 1,
     borderWidth: 1,
-    borderColor: '#6ee7b7',
+    borderColor: colors.accent,
   },
   verifiedBadgeText: {
-    color: '#065f46',
+    color: colors.success,
     fontSize: 10,
     fontWeight: '700',
   },
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#475569',
+    color: colors.textSecondary,
     marginBottom: 10,
     marginTop: 10,
     fontFamily: 'Outfit-Bold',
@@ -527,32 +528,32 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   sectionAddBtn: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: colors.surfaceLight,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: colors.accentLight,
   },
   sectionAddBtnText: {
-    color: '#2563eb',
+    color: colors.primary,
     fontWeight: '700',
     fontSize: 12,
   },
   emptySection: {
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#f1f5f9',
+    borderColor: colors.borderLight,
   },
   emptySectionText: {
-    color: '#94a3b8',
+    color: colors.textMuted,
     fontSize: 14,
   },
   emptySectionLink: {
-    color: '#2563eb',
+    color: colors.primary,
     fontWeight: '600',
     fontSize: 13,
     marginTop: 8,
@@ -604,7 +605,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: '#ef4444',
+    backgroundColor: colors.danger,
     borderRadius: 10,
     minWidth: 18,
     height: 18,
@@ -612,10 +613,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: '#ffffff',
+    borderColor: colors.white,
   },
   headerBadgeText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 10,
     fontWeight: 'bold',
   },

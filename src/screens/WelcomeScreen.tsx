@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors, gradients } from '../constants/theme';
 
 interface WelcomeProps {
     onShowLogin: () => void;
@@ -34,7 +35,7 @@ const WelcomeScreen = ({ onShowLogin, onShowSignUp }: WelcomeProps) => {
 
     return (
         <LinearGradient
-            colors={['#bfdbfe', '#f1f5f9', '#ffffff']}
+            colors={[...gradients.screenBackground]}
             style={styles.container}
         >
             <SafeAreaView style={{ flex: 1 }}>
@@ -61,7 +62,7 @@ const WelcomeScreen = ({ onShowLogin, onShowSignUp }: WelcomeProps) => {
                         {/* Feature 1 */}
                         <View style={styles.featureRow}>
                             <View style={styles.featureIconContainer}>
-                                <Feather name="users" size={22} color="#2563eb" />
+                                <Feather name="users" size={22} color="#00458b" />
                             </View>
                             <View style={styles.featureTextContainer}>
                                 <Text style={styles.featureTitle}>Democratic Group Wallets</Text>
@@ -74,7 +75,7 @@ const WelcomeScreen = ({ onShowLogin, onShowSignUp }: WelcomeProps) => {
                         {/* Feature 2 */}
                         <View style={styles.featureRow}>
                             <View style={styles.featureIconContainer}>
-                                <Feather name="zap" size={22} color="#10b981" />
+                                <Feather name="zap" size={22} color="#3fd2c7" />
                             </View>
                             <View style={styles.featureTextContainer}>
                                 <Text style={styles.featureTitle}>Automated Bereavement</Text>
@@ -87,7 +88,7 @@ const WelcomeScreen = ({ onShowLogin, onShowSignUp }: WelcomeProps) => {
                         {/* Feature 3 */}
                         <View style={styles.featureRow}>
                             <View style={styles.featureIconContainer}>
-                                <Feather name="shield" size={22} color="#2563eb" />
+                                <Feather name="shield" size={22} color="#00458b" />
                             </View>
                             <View style={styles.featureTextContainer}>
                                 <Text style={styles.featureTitle}>Biometric Payout Security</Text>
@@ -102,11 +103,18 @@ const WelcomeScreen = ({ onShowLogin, onShowSignUp }: WelcomeProps) => {
                     <View style={styles.actionsContainer}>
                         <TouchableOpacity
                             id="welcome-signup-button"
-                            style={styles.primaryButton}
                             onPress={handlePressSignUp}
                             activeOpacity={0.85}
+                            style={styles.primaryButtonTouch}
                         >
-                            <Text style={styles.primaryButtonText}>Get Started</Text>
+                            <LinearGradient
+                                colors={[colors.primary, colors.primaryLight, colors.accent]}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 0 }}
+                                style={styles.primaryButtonGradient}
+                            >
+                                <Text style={styles.primaryButtonText}>Get Started →</Text>
+                            </LinearGradient>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -158,12 +166,12 @@ const styles = StyleSheet.create({
         width: 46,
         height: 46,
         borderRadius: 14,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 14,
         borderWidth: 1,
-        borderColor: '#dbeafe',
+        borderColor: colors.surfaceLight,
     },
     featureTextContainer: {
         flex: 1,
@@ -171,45 +179,51 @@ const styles = StyleSheet.create({
     featureTitle: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
         marginBottom: 2,
     },
     featureDescription: {
         fontSize: 13,
-        color: '#6b7280',
+        color: colors.textSecondary,
         lineHeight: 18,
     },
     actionsContainer: {
         marginTop: 12,
     },
-    primaryButton: {
-        backgroundColor: '#2563eb',
-        padding: 16,
+    primaryButtonTouch: {
         borderRadius: 14,
-        alignItems: 'center',
-        elevation: 3,
-        shadowColor: '#2563eb',
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: colors.primary,
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.25,
+        shadowOpacity: 0.3,
         shadowRadius: 10,
         marginBottom: 12,
     },
+    primaryButtonGradient: {
+        paddingVertical: 16,
+        paddingHorizontal: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 14,
+    },
     primaryButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 17,
+        letterSpacing: 0.3,
     },
     secondaryButton: {
         padding: 12,
         alignItems: 'center',
     },
     secondaryButtonText: {
-        color: '#4b5563',
+        color: colors.textSecondary,
         fontSize: 15,
         fontWeight: '500',
     },
     loginLinkBold: {
-        color: '#2563eb',
+        color: colors.primary,
         fontWeight: 'bold',
     },
 });

@@ -4,8 +4,10 @@ import {
     ScrollView, Alert, ActivityIndicator, Platform, KeyboardAvoidingView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import client from '../api/client';
+import { colors, gradients } from '../constants/theme';
 
 interface Member {
     id: number;
@@ -24,14 +26,14 @@ interface CreateCampaignScreenProps {
 }
 
 const CAMPAIGN_TYPES = [
-    { key: 'bereavement', label: 'Bereavement', icon: '🕊️', color: '#7c3aed' },
-    { key: 'excess',      label: 'Insurance Excess', icon: '🚗', color: '#0284c7' },
-    { key: 'emergency',   label: 'Emergency', icon: '🆘', color: '#dc2626' },
-    { key: 'custom',      label: 'Custom Fund', icon: '✨', color: '#6366f1' },
-    { key: 'church',      label: 'Church / Tithe / Pledge', icon: '⛪', color: '#0284c7' },
-    { key: 'stokvel',     label: 'Stokvel Cycle Fund', icon: '💰', color: '#059669' },
-    { key: 'student',     label: 'Student Event & Relief', icon: '🎓', color: '#d97706' },
-    { key: 'sports',      label: 'Sports Kit & Dues', icon: '⚽', color: '#10b981' },
+    { key: 'bereavement', label: 'Bereavement', icon: '🕊️', color: colors.primary },
+    { key: 'excess',      label: 'Insurance Excess', icon: '🚗', color: colors.primaryLight },
+    { key: 'emergency',   label: 'Emergency', icon: '🆘', color: colors.danger },
+    { key: 'custom',      label: 'Custom Fund', icon: '✨', color: colors.primaryLight },
+    { key: 'church',      label: 'Church / Tithe / Pledge', icon: '⛪', color: colors.primaryLight },
+    { key: 'stokvel',     label: 'Stokvel Cycle Fund', icon: '💰', color: colors.success },
+    { key: 'student',     label: 'Student Event & Relief', icon: '🎓', color: colors.warning },
+    { key: 'sports',      label: 'Sports Kit & Dues', icon: '⚽', color: colors.success },
 ];
 
 const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreenProps) => {
@@ -197,7 +199,7 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                                 style={styles.pickerBtn}
                                 onPress={() => setShowMemberPicker(!showMemberPicker)}
                             >
-                                <Text style={[styles.pickerBtnText, !selectedBeneficiary && { color: '#94a3b8' }]}>
+                                <Text style={[styles.pickerBtnText, !selectedBeneficiary && { color: colors.textMuted }]}>
                                     {selectedBeneficiary
                                         ? `👤 ${selectedBeneficiary.member_detail.full_name}`
                                         : 'Select a member...'}
@@ -250,16 +252,16 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                             style={[styles.input, { flex: 1, justifyContent: 'center' }]} 
                             onPress={() => setShowDatePicker(true)}
                         >
-                            <Text style={deadlineDate ? { color: '#1e293b', fontFamily: 'Outfit-Regular', fontSize: 15 } : { color: '#94a3b8', fontFamily: 'Outfit-Regular', fontSize: 15 }}>
+                            <Text style={deadlineDate ? { color: colors.textPrimary, fontFamily: 'Outfit-Regular', fontSize: 15 } : { color: colors.textMuted, fontFamily: 'Outfit-Regular', fontSize: 15 }}>
                                 {deadlineDate ? formatDate(deadlineDate) : "Select a deadline date"}
                             </Text>
                         </TouchableOpacity>
                         {deadlineDate && (
                             <TouchableOpacity 
-                                style={{ marginLeft: 10, padding: 12, backgroundColor: '#fee2e2', borderRadius: 12, borderWidth: 1, borderColor: '#fecaca' }}
+                                style={{ marginLeft: 10, padding: 12, backgroundColor: colors.dangerLight, borderRadius: 12, borderWidth: 1, borderColor: colors.dangerLight }}
                                 onPress={() => setDeadlineDate(null)}
                             >
-                                <Text style={{ color: '#ef4444', fontFamily: 'Outfit-Bold', fontSize: 14 }}>Clear</Text>
+                                <Text style={{ color: colors.danger, fontFamily: 'Outfit-Bold', fontSize: 14 }}>Clear</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -306,12 +308,12 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f8fafc' },
+    container: { flex: 1, backgroundColor: colors.background },
     scroll: { padding: 20, paddingBottom: 24 },
     sectionLabel: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#374151',
+        color: colors.textSecondary,
         marginBottom: 8,
         marginTop: 16,
         fontFamily: 'Outfit-Bold',
@@ -321,72 +323,72 @@ const styles = StyleSheet.create({
         width: '47%',
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         backgroundColor: '#fff',
         padding: 12,
         alignItems: 'center',
         gap: 6,
     },
     typeIcon: { fontSize: 26 },
-    typeLabel: { fontSize: 13, fontWeight: '700', color: '#374151', fontFamily: 'Outfit-Bold', textAlign: 'center' },
+    typeLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, fontFamily: 'Outfit-Bold', textAlign: 'center' },
     input: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 14,
         fontSize: 15,
-        color: '#1e293b',
+        color: colors.textPrimary,
         fontFamily: 'Outfit-Regular',
     },
     textArea: { height: 110, textAlignVertical: 'top' },
     pickerBtn: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 14,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
     },
-    pickerBtnText: { fontSize: 15, color: '#1e293b', fontFamily: 'Outfit-Regular' },
-    pickerArrow: { fontSize: 12, color: '#94a3b8' },
+    pickerBtnText: { fontSize: 15, color: colors.textPrimary, fontFamily: 'Outfit-Regular' },
+    pickerArrow: { fontSize: 12, color: colors.textMuted },
     memberList: {
         backgroundColor: '#fff',
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         marginTop: 4,
         overflow: 'hidden',
     },
-    memberRow: { padding: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    memberRowSelected: { backgroundColor: '#eef2ff', borderWidth: 1, borderColor: '#818cf8' },
-    memberName: { fontSize: 15, color: '#1e293b', fontFamily: 'Outfit-Regular' },
-    memberCheck: { fontSize: 16, color: '#4338ca' },
+    memberRow: { padding: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    memberRowSelected: { backgroundColor: colors.surfaceLight, borderWidth: 1, borderColor: colors.accentLight },
+    memberName: { fontSize: 15, color: colors.textPrimary, fontFamily: 'Outfit-Regular' },
+    memberCheck: { fontSize: 16, color: colors.primary },
     warningBox: {
-        backgroundColor: '#fef3c7',
+        backgroundColor: colors.warningLight,
         borderRadius: 12,
         padding: 14,
         borderWidth: 1,
-        borderColor: '#fcd34d',
+        borderColor: colors.warningLight,
         marginTop: 8,
     },
-    warningText: { fontSize: 13, color: '#92400e', lineHeight: 18, fontFamily: 'Outfit-Regular' },
+    warningText: { fontSize: 13, color: colors.warning, lineHeight: 18, fontFamily: 'Outfit-Regular' },
     infoBox: {
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 12,
         padding: 14,
         borderWidth: 1,
-        borderColor: '#bfdbfe',
+        borderColor: colors.accentLight,
         marginTop: 12,
     },
-    infoText: { fontSize: 13, color: '#3730a3', lineHeight: 18, fontFamily: 'Outfit-Regular' },
-    footer: { padding: 20, paddingTop: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e0e7ff' },
+    infoText: { fontSize: 13, color: colors.primary, lineHeight: 18, fontFamily: 'Outfit-Regular' },
+    footer: { padding: 20, paddingTop: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.surfaceLight },
     createBtn: { borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 10 },
     createBtnText: { color: '#fff', fontSize: 17, fontWeight: '800', fontFamily: 'Outfit-Bold' },
     cancelBtn: { alignItems: 'center', padding: 10 },
-    cancelBtnText: { fontSize: 15, color: '#64748b', fontFamily: 'Outfit-Regular' },
+    cancelBtnText: { fontSize: 15, color: colors.textSecondary, fontFamily: 'Outfit-Regular' },
 });
 
 export default CreateCampaignScreen;

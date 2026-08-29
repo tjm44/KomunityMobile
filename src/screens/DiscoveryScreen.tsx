@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import client from '../api/client';
 import SearchScreen from './SearchScreen';
 import { GroupPlaceholder } from '../components/Loaders';
+import { colors, gradients } from '../constants/theme';
 
 interface Group {
     id: number;
@@ -325,17 +326,17 @@ const DiscoveryScreen = ({
                     keyExtractor={(item) => `group-${item.id}`}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2563eb']} tintColor="#2563eb" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryLight]} tintColor="#2563eb" />
                     }
                     renderItem={({ item }) => {
                         const btn = getButtonConfig(item);
                         return (
                             <TouchableOpacity onPress={() => onViewGroupDetails?.(item)} activeOpacity={0.85}>
-                                <LinearGradient colors={['#ffffff', '#f1f5f9']} style={styles.groupCard}>
+                                <LinearGradient colors={[colors.white, colors.borderLight]} style={styles.groupCard}>
                                     {item.cover_image ? (
                                         <Image source={{ uri: item.cover_image }} style={styles.coverImage} transition={200} />
                                     ) : (
-                                        <View style={[styles.coverImage, { backgroundColor: '#e5e7eb' }]} />
+                                        <View style={[styles.coverImage, { backgroundColor: colors.border }]} />
                                     )}
                                     <View style={styles.cardContent}>
                                         <Text style={styles.groupName}>{item.name}</Text>
@@ -346,12 +347,12 @@ const DiscoveryScreen = ({
                                                     styles.cardPurposePill,
                                                     {
                                                         backgroundColor:
-                                                            item.purpose === 'excess' ? '#eff6ff' :
-                                                            item.purpose === 'emergency' ? '#fef2f2' :
-                                                            item.purpose === 'custom' ? '#f0fdf4' : '#f5f3ff',
+                                                            item.purpose === 'excess' ? colors.surfaceLight :
+                                                            item.purpose === 'emergency' ? colors.dangerLight :
+                                                            item.purpose === 'custom' ? colors.successLight : colors.surfaceLight,
                                                         borderColor:
-                                                            item.purpose === 'excess' ? '#bfdbfe' :
-                                                            item.purpose === 'emergency' ? '#fecaca' :
+                                                            item.purpose === 'excess' ? colors.accentLight :
+                                                            item.purpose === 'emergency' ? colors.dangerLight :
                                                             item.purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
                                                         marginVertical: 0,
                                                     }
@@ -360,9 +361,9 @@ const DiscoveryScreen = ({
                                                         styles.cardPurposeText,
                                                         {
                                                             color:
-                                                                item.purpose === 'excess' ? '#0284c7' :
-                                                                item.purpose === 'emergency' ? '#dc2626' :
-                                                                item.purpose === 'custom' ? '#059669' : '#7c3aed'
+                                                                item.purpose === 'excess' ? colors.primaryLight :
+                                                                item.purpose === 'emergency' ? colors.danger :
+                                                                item.purpose === 'custom' ? colors.success : colors.primary
                                                         }
                                                     ]}>
                                                         {({
@@ -379,8 +380,8 @@ const DiscoveryScreen = ({
                                                 </View>
                                             )}
                                             {item.verified_members_only && (
-                                                <View style={[styles.cardPurposePill, { backgroundColor: '#fee2e2', borderColor: '#fecaca', marginVertical: 0 }]}>
-                                                    <Text style={[styles.cardPurposeText, { color: '#dc2626', fontWeight: 'bold' }]}>🛡️ Verified Only</Text>
+                                                <View style={[styles.cardPurposePill, { backgroundColor: colors.dangerLight, borderColor: colors.dangerLight, marginVertical: 0 }]}>
+                                                    <Text style={[styles.cardPurposeText, { color: colors.danger, fontWeight: 'bold' }]}>🛡️ Verified Only</Text>
                                                 </View>
                                             )}
                                         </View>
@@ -423,15 +424,15 @@ const DiscoveryScreen = ({
                     keyExtractor={(item) => `org-${item.id}`}
                     contentContainerStyle={styles.listContent}
                     refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#4f46e5']} tintColor="#4f46e5" />
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} tintColor={colors.primary} />
                     }
                     renderItem={({ item: org }) => (
                         <TouchableOpacity onPress={() => onViewOrganisationPreview?.(org)} activeOpacity={0.85}>
-                            <LinearGradient colors={['#eef2ff', '#e0e7ff']} style={[styles.groupCard, { borderColor: '#818cf8', borderWidth: 1.5 }]}>
+                            <LinearGradient colors={[...gradients.screenBackground]} style={[styles.groupCard, { borderColor: colors.accentLight, borderWidth: 1.5 }]}>
                                 {org.cover_image ? (
                                     <Image source={{ uri: org.cover_image }} style={styles.coverImage} transition={200} />
                                 ) : (
-                                    <LinearGradient colors={['#1e1b4b', '#312e81', '#4338ca']} style={styles.coverImage} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
+                                    <LinearGradient colors={[colors.primaryDark, colors.primaryDark, colors.primary]} style={styles.coverImage} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
                                 )}
                                 <View style={styles.cardContent}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
@@ -450,7 +451,7 @@ const DiscoveryScreen = ({
                                         {org.description || 'A formal organisation on the Komunity platform.'}
                                     </Text>
                                     <TouchableOpacity
-                                        style={[styles.joinButton, { backgroundColor: '#4338ca', shadowColor: '#4338ca' }]}
+                                        style={[styles.joinButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
                                         onPress={() => onViewOrganisationPreview?.(org)}
                                     >
                                         <Text style={styles.joinButtonText}>Explore Organisation →</Text>
@@ -510,19 +511,19 @@ const DiscoveryScreen = ({
                                 onPress={() => setShowBRelPicker(!showBRelPicker)}
                             >
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={{ fontSize: 14, color: '#0f172a' }}>{bRel}</Text>
-                                    <Text style={{ color: '#94a3b8', fontSize: 12 }}>{showBRelPicker ? '▲' : '▼'}</Text>
+                                    <Text style={{ fontSize: 14, color: colors.textPrimary }}>{bRel}</Text>
+                                    <Text style={{ color: colors.textMuted, fontSize: 12 }}>{showBRelPicker ? '▲' : '▼'}</Text>
                                 </View>
                             </TouchableOpacity>
                             {showBRelPicker && (
-                                <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                                <View style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
                                     {BENEFICIARY_RELATIONSHIPS.map((rel) => (
                                         <TouchableOpacity
                                             key={rel}
-                                            style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: '#f1f5f9', backgroundColor: bRel === rel ? '#ede9fe' : 'transparent' }}
+                                            style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: colors.borderLight, backgroundColor: bRel === rel ? '#ede9fe' : 'transparent' }}
                                             onPress={() => { setBRel(rel); setShowBRelPicker(false); }}
                                         >
-                                            <Text style={{ fontSize: 14, color: bRel === rel ? '#7c3aed' : '#0f172a', fontWeight: bRel === rel ? '700' : '400' }}>{rel}</Text>
+                                            <Text style={{ fontSize: 14, color: bRel === rel ? colors.primary : colors.textPrimary, fontWeight: bRel === rel ? '700' : '400' }}>{rel}</Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
@@ -563,9 +564,9 @@ const DiscoveryScreen = ({
                             {dependents.map((dep, idx) => (
                                 <View key={idx} style={styles.depCard}>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                                        <Text style={{ fontWeight: '700', fontSize: 12, color: '#475569' }}>Dependent #{idx + 1}</Text>
+                                        <Text style={{ fontWeight: '700', fontSize: 12, color: colors.textSecondary }}>Dependent #{idx + 1}</Text>
                                         <TouchableOpacity onPress={() => setDependents(dependents.filter((_, i) => i !== idx))}>
-                                            <Text style={{ color: '#ef4444', fontSize: 12 }}>Remove</Text>
+                                            <Text style={{ color: colors.danger, fontSize: 12 }}>Remove</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <TextInput
@@ -584,16 +585,16 @@ const DiscoveryScreen = ({
                                         onPress={() => setOpenDepRelIdx(openDepRelIdx === idx ? null : idx)}
                                     >
                                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <Text style={{ fontSize: 14, color: dep.relationship ? '#0f172a' : '#94a3b8' }}>{dep.relationship || 'Relationship'}</Text>
-                                            <Text style={{ color: '#94a3b8', fontSize: 12 }}>{openDepRelIdx === idx ? '▲' : '▼'}</Text>
+                                            <Text style={{ fontSize: 14, color: dep.relationship ? colors.textPrimary : colors.textMuted }}>{dep.relationship || 'Relationship'}</Text>
+                                            <Text style={{ color: colors.textMuted, fontSize: 12 }}>{openDepRelIdx === idx ? '▲' : '▼'}</Text>
                                         </View>
                                     </TouchableOpacity>
                                     {openDepRelIdx === idx && (
-                                        <View style={{ backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
+                                        <View style={{ backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border, borderRadius: 10, marginTop: 4, overflow: 'hidden' }}>
                                             {DEPENDENT_RELATIONSHIPS.map((rel) => (
                                                 <TouchableOpacity
                                                     key={rel}
-                                                    style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: '#f1f5f9', backgroundColor: dep.relationship === rel ? '#ede9fe' : 'transparent' }}
+                                                    style={{ paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: rel !== 'Other' ? 1 : 0, borderBottomColor: colors.borderLight, backgroundColor: dep.relationship === rel ? '#ede9fe' : 'transparent' }}
                                                     onPress={() => {
                                                         const updated = [...dependents];
                                                         updated[idx].relationship = rel;
@@ -601,7 +602,7 @@ const DiscoveryScreen = ({
                                                         setOpenDepRelIdx(null);
                                                     }}
                                                 >
-                                                    <Text style={{ fontSize: 14, color: dep.relationship === rel ? '#7c3aed' : '#0f172a', fontWeight: dep.relationship === rel ? '700' : '400' }}>{rel}</Text>
+                                                    <Text style={{ fontSize: 14, color: dep.relationship === rel ? colors.primary : colors.textPrimary, fontWeight: dep.relationship === rel ? '700' : '400' }}>{rel}</Text>
                                                 </TouchableOpacity>
                                             ))}
                                         </View>
@@ -732,7 +733,7 @@ const DiscoveryScreen = ({
                             }}>
                                 <Text style={styles.cancelModalBtnText}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.submitModalBtn, { backgroundColor: '#0284c7' }]} onPress={handleExcessSubmit} disabled={joiningId !== null}>
+                            <TouchableOpacity style={[styles.submitModalBtn, { backgroundColor: colors.primaryLight }]} onPress={handleExcessSubmit} disabled={joiningId !== null}>
                                 {joiningId !== null ? (
                                     <ActivityIndicator size="small" color="#fff" />
                                 ) : (
@@ -760,25 +761,25 @@ const styles = StyleSheet.create({
         paddingBottom: 12,
         backgroundColor: 'transparent',
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
     },
     backButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: '#eff6ff',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     backButtonText: {
         fontSize: 24,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: 'bold',
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: 'bold',
-        color: '#111827',
+        color: colors.textPrimary,
     },
     searchButton: {
         width: 40,
@@ -810,12 +811,12 @@ const styles = StyleSheet.create({
     groupName: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#1f2937',
+        color: colors.textPrimary,
         marginBottom: 4,
     },
     memberCount: {
         fontSize: 14,
-        color: '#3b82f6',
+        color: colors.primaryLight,
         fontWeight: '600',
         marginBottom: 8,
     },
@@ -824,12 +825,12 @@ const styles = StyleSheet.create({
     },
     viewDetailsText: {
         fontSize: 14,
-        color: '#2563eb',
+        color: colors.primaryLight,
         fontWeight: '600',
     },
     description: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         marginBottom: 16,
         lineHeight: 20,
     },
@@ -841,7 +842,7 @@ const styles = StyleSheet.create({
         flex: 1,
         height: 44,
         borderRadius: 12,
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginLeft: 8,
@@ -851,51 +852,51 @@ const styles = StyleSheet.create({
     },
     // Join button (default — not yet a member)
     joinButton: {
-        backgroundColor: '#2563eb',
+        backgroundColor: colors.primaryLight,
         paddingVertical: 12,
         borderRadius: 12,
         alignItems: 'center',
-        shadowColor: '#2563eb',
+        shadowColor: colors.primaryLight,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 4,
     },
     joinButtonText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: 'bold',
         fontSize: 16,
     },
     // Already joined
     joinedButton: {
-        backgroundColor: '#f0fdf4',
+        backgroundColor: colors.successLight,
         paddingVertical: 12,
         borderRadius: 12,
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: '#22c55e',
+        borderColor: colors.success,
     },
     joinedButtonText: {
-        color: '#16a34a',
+        color: colors.success,
         fontWeight: 'bold',
         fontSize: 16,
     },
     // Pending approval
     pendingButton: {
-        backgroundColor: '#fffbeb',
+        backgroundColor: colors.warningLight,
         paddingVertical: 12,
         borderRadius: 12,
         alignItems: 'center',
         borderWidth: 1.5,
-        borderColor: '#f59e0b',
+        borderColor: colors.warning,
     },
     pendingButtonText: {
-        color: '#d97706',
+        color: colors.warning,
         fontWeight: 'bold',
         fontSize: 16,
     },
     buttonLoading: {
-        backgroundColor: '#93c5fd',
+        backgroundColor: colors.accentLight,
     },
     cardPurposePill: {
         alignSelf: 'flex-start',
@@ -914,20 +915,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        color: '#9ca3af',
+        color: colors.textMuted,
         fontSize: 16,
         textAlign: 'center',
     },
     verifiedBadge: {
-        backgroundColor: '#e0e7ff',
+        backgroundColor: colors.surfaceLight,
         borderRadius: 20,
         paddingHorizontal: 7,
         paddingVertical: 1,
         borderWidth: 1,
-        borderColor: '#818cf8',
+        borderColor: colors.accentLight,
     },
     verifiedBadgeText: {
-        color: '#3730a3',
+        color: colors.primary,
         fontSize: 10,
         fontWeight: '700',
     },
@@ -935,9 +936,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: 16,
         paddingVertical: 10,
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb',
+        borderBottomColor: colors.border,
         gap: 12,
     },
     tabButton: {
@@ -945,27 +946,27 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         borderRadius: 20,
         alignItems: 'center',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: colors.surfaceLight,
         borderWidth: 1,
-        borderColor: '#e5e7eb',
+        borderColor: colors.border,
     },
     tabButtonActive: {
-        backgroundColor: '#eff6ff',
-        borderColor: '#3b82f6',
+        backgroundColor: colors.surfaceLight,
+        borderColor: colors.primaryLight,
     },
     tabButtonText: {
         fontSize: 14,
-        color: '#6b7280',
+        color: colors.textSecondary,
         fontWeight: '600',
         fontFamily: 'Outfit-Regular',
     },
     tabButtonTextActive: {
-        color: '#3b82f6',
+        color: colors.primaryLight,
         fontWeight: '700',
     },
     orgMetaText: {
         fontSize: 12,
-        color: '#475569',
+        color: colors.textSecondary,
         fontWeight: '500',
         marginBottom: 4,
         fontFamily: 'Outfit-Regular',
@@ -977,7 +978,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     modalContent: {
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.white,
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
         maxHeight: '85%',
@@ -991,16 +992,16 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
+        borderBottomColor: colors.borderLight,
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#1e293b',
+        color: colors.textPrimary,
     },
     modalCloseText: {
         fontSize: 20,
-        color: '#94a3b8',
+        color: colors.textMuted,
         padding: 4,
     },
     modalBody: {
@@ -1010,36 +1011,36 @@ const styles = StyleSheet.create({
     modalSubtitle: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#7c3aed',
+        color: colors.primary,
     },
     modalDesc: {
         fontSize: 13,
-        color: '#64748b',
+        color: colors.textSecondary,
         marginBottom: 16,
         marginTop: 2,
     },
     fieldSectionTitle: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#334155',
+        color: colors.textSecondary,
         marginBottom: 8,
     },
     inputLabel: {
         fontSize: 12,
         fontWeight: '600',
-        color: '#475569',
+        color: colors.textSecondary,
         marginBottom: 4,
         marginTop: 6,
     },
     textInput: {
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#e2e8f0',
+        borderColor: colors.border,
         borderRadius: 10,
         paddingHorizontal: 12,
         paddingVertical: 10,
         fontSize: 14,
-        color: '#0f172a',
+        color: colors.textPrimary,
     },
     dependentsHeaderRow: {
         flexDirection: 'row',
@@ -1049,20 +1050,20 @@ const styles = StyleSheet.create({
         marginBottom: 8,
     },
     addDepBtn: {
-        backgroundColor: '#f3e8ff',
+        backgroundColor: colors.surfaceLight,
         paddingHorizontal: 12,
         paddingVertical: 4,
         borderRadius: 12,
     },
     addDepBtnText: {
-        color: '#7c3aed',
+        color: colors.primary,
         fontWeight: '700',
         fontSize: 12,
     },
     depCard: {
-        backgroundColor: '#f8fafc',
+        backgroundColor: colors.background,
         borderWidth: 1,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
         borderRadius: 12,
         padding: 10,
         marginBottom: 8,
@@ -1073,29 +1074,29 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 16,
         borderTopWidth: 1,
-        borderTopColor: '#f1f5f9',
+        borderTopColor: colors.borderLight,
     },
     cancelModalBtn: {
         flex: 1,
         paddingVertical: 12,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: '#cbd5e1',
+        borderColor: colors.border,
         alignItems: 'center',
     },
     cancelModalBtnText: {
-        color: '#64748b',
+        color: colors.textSecondary,
         fontWeight: '600',
     },
     submitModalBtn: {
         flex: 2,
-        backgroundColor: '#7c3aed',
+        backgroundColor: colors.primary,
         paddingVertical: 12,
         borderRadius: 12,
         alignItems: 'center',
     },
     submitModalBtnText: {
-        color: '#ffffff',
+        color: colors.white,
         fontWeight: '700',
         fontSize: 15,
     },

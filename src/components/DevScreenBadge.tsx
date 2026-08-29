@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../constants/theme';
 
 interface DevScreenBadgeProps {
   id: string;
@@ -31,7 +32,7 @@ const styles = StyleSheet.create({
     right: 12,
     backgroundColor: 'rgba(15, 23, 42, 0.85)',
     borderWidth: 1,
-    borderColor: 'rgba(96, 165, 250, 0.6)',
+    borderColor: colors.accentLight,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -43,7 +44,7 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   text: {
-    color: '#60a5fa',
+    color: colors.accentLight,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,

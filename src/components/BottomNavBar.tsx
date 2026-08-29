@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
 import { getMediaUrl } from '../api/client';
+import { colors } from '../constants/theme';
 
 type TabName = 'home' | 'discovery' | 'wallet' | 'fundraisers' | 'profile';
 
@@ -23,11 +24,11 @@ const TABS: Array<{
     emoji?: string;
     color: string;
 }> = [
-    { key: 'home',        label: 'My Hub',      icon: 'users',       color: '#2563eb' },
-    { key: 'discovery',   label: 'Explore',     icon: 'search',      color: '#2563eb' },
-    { key: 'fundraisers', label: 'Fundraise',   emoji: '🆘',         color: '#dc2626' },
-    { key: 'wallet',      label: 'Wallet',      icon: 'credit-card', color: '#2563eb' },
-    { key: 'profile',     label: 'Profile',                          color: '#2563eb' },
+    { key: 'home',        label: 'My Hub',      icon: 'users',       color: colors.primary },
+    { key: 'discovery',   label: 'Explore',     icon: 'search',      color: colors.primary },
+    { key: 'fundraisers', label: 'Fundraise',   emoji: '🆘',         color: colors.danger },
+    { key: 'wallet',      label: 'Wallet',      icon: 'credit-card', color: colors.primary },
+    { key: 'profile',     label: 'Profile',                          color: colors.primary },
 ];
 
 const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNotificationCount }: BottomNavBarProps) => {
@@ -54,7 +55,7 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNot
 
             {TABS.map((tab) => {
                 const isActive = activeTab === tab.key;
-                const tabColor = isActive ? tab.color : '#9ca3af';
+                const tabColor = isActive ? tab.color : colors.textMuted;
 
                 if (tab.key === 'profile') {
                     return (
@@ -86,7 +87,7 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNot
                             style={styles.navItem}
                             onPress={() => handlePress('fundraisers')}
                         >
-                            <View style={[styles.fundraiserIconWrap, isActive && { backgroundColor: '#fee2e2' }]}>
+                            <View style={[styles.fundraiserIconWrap, isActive && { backgroundColor: colors.dangerLight }]}>
                                 <Text style={styles.fundraiserEmoji}>{tab.emoji}</Text>
                             </View>
                             <Text style={[styles.navText, isActive && { color: tab.color }]}>{tab.label}</Text>
@@ -126,17 +127,17 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNot
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        backgroundColor: '#ffffff',
+        backgroundColor: colors.cardBackground,
         borderTopWidth: 1,
-        borderTopColor: '#e5e7eb',
+        borderTopColor: colors.border,
         paddingTop: 12,
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        shadowColor: '#000',
+        shadowColor: colors.primary,
         shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.05,
+        shadowOpacity: 0.06,
         shadowRadius: 8,
         elevation: 10,
     },
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: -4,
         right: -8,
-        backgroundColor: '#ef4444',
+        backgroundColor: colors.danger,
         borderRadius: 9,
         minWidth: 16,
         height: 16,
@@ -162,20 +163,20 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 3,
         borderWidth: 1.5,
-        borderColor: '#ffffff',
+        borderColor: colors.white,
     },
     badgeText: {
-        color: '#ffffff',
+        color: colors.white,
         fontSize: 9,
         fontWeight: 'bold',
     },
-    backIcon: { fontSize: 22, marginBottom: 4, color: '#2563eb', fontWeight: 'bold' },
-    navText: { fontSize: 10, fontWeight: '600', color: '#6b7280' },
+    backIcon: { fontSize: 22, marginBottom: 4, color: colors.primary, fontWeight: 'bold' },
+    navText: { fontSize: 10, fontWeight: '600', color: colors.textSecondary },
     fundraiserIconWrap: {
         width: 32,
         height: 32,
         borderRadius: 16,
-        backgroundColor: '#fee2e230',
+        backgroundColor: colors.dangerLight,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 2,
@@ -184,16 +185,16 @@ const styles = StyleSheet.create({
     profilePic: {
         width: 28, height: 28, borderRadius: 14,
         marginBottom: 4, opacity: 0.6,
-        borderWidth: 2, borderColor: '#e5e7eb',
+        borderWidth: 2, borderColor: colors.border,
     },
-    activeProfilePic: { opacity: 1, borderColor: '#2563eb' },
+    activeProfilePic: { opacity: 1, borderColor: colors.accent },
     profilePlaceholder: {
         width: 28, height: 28, borderRadius: 14,
-        backgroundColor: '#f3f4f6', borderWidth: 2,
-        borderColor: '#d1d5db', justifyContent: 'center',
+        backgroundColor: colors.surfaceLight, borderWidth: 2,
+        borderColor: colors.border, justifyContent: 'center',
         alignItems: 'center', marginBottom: 4,
     },
-    activeProfilePlaceholder: { backgroundColor: '#eff6ff', borderColor: '#2563eb' },
+    activeProfilePlaceholder: { backgroundColor: colors.surfaceTeal, borderColor: colors.accent },
 });
 
 export default BottomNavBar;
