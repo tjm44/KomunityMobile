@@ -3,10 +3,9 @@ import {
     View, Text, StyleSheet, Image, ScrollView,
     TouchableOpacity, Dimensions, ActivityIndicator, Alert, RefreshControl
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import client from '../api/client';
-import { colors, gradients } from '../constants/theme';
+import { colors } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +30,10 @@ interface Group {
     created_at: string;
     is_admin: boolean;
     is_verified?: boolean;
+    enable_recurring_contributions?: boolean;
+    recurring_amount?: number | string;
+    recurring_frequency?: string;
+    recurring_title?: string;
 }
 
 interface GroupDetailProps {
@@ -41,11 +44,23 @@ interface GroupDetailProps {
     onSelectMember: (membership: any) => void;
     onViewAllMembers: () => void;
     onViewWallet: () => void;
+    onViewDuesLedger?: () => void;
     onEditGroup?: () => void;
     onInvite?: () => void;
 }
 
-const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember, onViewAllMembers, onViewWallet, onEditGroup, onInvite }: GroupDetailProps) => {
+const GroupDetailScreen = ({
+    group,
+    onBack,
+    onViewFeed,
+    onManage,
+    onSelectMember,
+    onViewAllMembers,
+    onViewWallet,
+    onViewDuesLedger,
+    onEditGroup,
+    onInvite
+}: GroupDetailProps) => {
     const insets = useSafeAreaInsets();
     const [members, setMembers] = useState<Member[]>([]);
     const [loading, setLoading] = useState(true);
@@ -57,13 +72,11 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
 
     const fetchMembers = async () => {
         try {
-            // Assuming there's an endpoint or we can filter memberships by group
-            // For now, let's try to fetch memberships if the API supports it
             const response = await client.get(`groups/${group.id}/members/`);
-            setMembers(response.data);
+            const data = response.data;
+            setMembers(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error('Error fetching members:', error);
-            // Fallback: maybe the endpoint is different or not yet implemented
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -94,7 +107,7 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
         try {
             await client.post(`groups/${group.id}/leave/`);
             Alert.alert('Left Group', `You have left ${group.name}.`);
-            onBack(); // Go back home
+            onBack();
         } catch (error) {
             console.error('Error leaving group:', error);
             Alert.alert('Error', 'Failed to leave group. Please try again.');
@@ -151,6 +164,18 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                         </View>
 
                         <View style={styles.bannerActions}>
+                            {onViewDuesLedger && (
+                                <TouchableOpacity
+                                    style={styles.bannerSecondaryButton}
+                                    onPress={onViewDuesLedger}
+                                    accessibilityLabel="Dues & Ledger"
+                                >
+                                    <View style={styles.iconCircle}>
+                                        <Text style={styles.iconText}>🗓️</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            )}
+
                             <TouchableOpacity style={styles.bannerSecondaryButton} onPress={onViewWallet}>
                                 <View style={styles.iconCircle}>
                                     <Text style={styles.iconText}>💳</Text>
@@ -180,12 +205,35 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                                     </View>
                                 </TouchableOpacity>
                             )}
-
                         </View>
                     </View>
                 </View>
 
                 <View style={styles.contentSection}>
+                    {/* DUES & LEDGER FEATURE CARD */}
+                    {onViewDuesLedger && (
+                        <TouchableOpacity
+                            style={[styles.card, { backgroundColor: '#e6faf8', borderColor: '#3fd2c7', borderWidth: 1.5 }]}
+                            onPress={onViewDuesLedger}
+                            activeOpacity={0.85}
+                        >
+                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}>
+                                    <View style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: '#00458b', justifyContent: 'center', alignItems: 'center' }}>
+                                        <Text style={{ fontSize: 22 }}>🗓️</Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 16, fontWeight: '800', color: '#00458b' }}>Dues & Contribution Ledger</Text>
+                                        <Text style={{ fontSize: 12, color: '#475569', marginTop: 2 }}>
+                                            Track monthly cycles, payment due dates, and member ledgers
+                                        </Text>
+                                    </View>
+                                </View>
+                                <Text style={{ fontSize: 20, color: '#00458b', fontWeight: 'bold' }}>→</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+
                     <View style={styles.card}>
                         <Text style={styles.sectionTitle}>Description</Text>
                         <Text style={styles.descriptionText}>
@@ -279,17 +327,23 @@ const GroupDetailScreen = ({ group, onBack, onViewFeed, onManage, onSelectMember
                             <Text style={styles.emptyMembersText}>Member list is currently private or unavailable.</Text>
                         )}
                     </View>
+
+                    <TouchableOpacity style={styles.leaveButton} onPress={handleLeaveGroup}>
+                        <Text style={styles.leaveButtonText}>Leave Group</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </View>
     );
 };
 
+export default GroupDetailScreen;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    backgroundColor: colors.background,
-            },
+        backgroundColor: colors.background,
+    },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -363,6 +417,28 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: -1, height: 1 },
         textShadowRadius: 5,
     },
+    bannerActions: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 10,
+    },
+    bannerSecondaryButton: {
+        borderRadius: 20,
+        overflow: 'hidden',
+    },
+    iconCircle: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.25)',
+    },
+    iconText: {
+        fontSize: 16,
+    },
     contentSection: {
         padding: 16,
         backgroundColor: colors.background,
@@ -375,11 +451,22 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.border,
     },
+    sectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
     sectionTitle: {
         fontSize: 16,
         fontWeight: 'bold',
         color: colors.textPrimary,
         marginBottom: 12,
+    },
+    viewAllText: {
+        fontSize: 14,
+        color: colors.primaryLight,
+        fontWeight: '600',
     },
     descriptionText: {
         fontSize: 15,
@@ -396,194 +483,24 @@ const styles = StyleSheet.create({
     statLabel: {
         fontSize: 12,
         color: colors.textMuted,
-        textTransform: 'uppercase',
         marginBottom: 4,
     },
     statValue: {
-        fontSize: 15,
-        fontWeight: '600',
+        fontSize: 14,
+        fontWeight: 'bold',
         color: colors.textPrimary,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    viewAllText: {
-        fontSize: 13,
-        color: colors.primaryLight,
-        fontWeight: '600',
-    },
-    membersList: {
-        marginTop: 4,
-    },
-    memberItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    memberAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: colors.surfaceLight,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: colors.surfaceLight,
-    },
-    avatarImg: {
-        width: '100%',
-        height: '100%',
-    },
-    avatarInitial: {
-        color: colors.primaryLight,
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
-    memberMeta: {
-        flex: 1,
-    },
-    memberName: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: colors.textPrimary,
-    },
-    memberRole: {
-        fontSize: 13,
-        color: colors.textSecondary,
-    },
-    emptyMembersText: {
-        fontSize: 14,
-        color: colors.textMuted,
-        fontStyle: 'italic',
-        textAlign: 'center',
-        marginVertical: 10,
-    },
-    primaryActionButton: {
-        backgroundColor: colors.primaryLight,
-        borderRadius: 12,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginTop: 8,
-        marginBottom: 24,
-        shadowColor: colors.primaryLight,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    primaryActionButtonText: {
-        color: colors.white,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    leaveGroupButton: {
-        paddingVertical: 12,
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    leaveGroupButtonText: {
-        color: colors.danger,
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    manageButton: {
-        backgroundColor: colors.white,
-        borderRadius: 12,
-        paddingVertical: 14,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.primaryLight,
-        marginBottom: 12,
-    },
-    manageButtonText: {
-        color: colors.primaryLight,
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    bannerActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-evenly',
-        marginTop: 16,
-        width: '100%',
-    },
-    bannerPrimaryButton: {
-        flex: 2,
-        backgroundColor: colors.primaryLight,
-        paddingVertical: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginRight: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3,
-    },
-    bannerPrimaryButtonText: {
-        color: colors.white,
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    bannerSecondaryButton: {
-        flex: 1,
-        backgroundColor: colors.white,
-        paddingVertical: 10,
-        borderRadius: 10,
-        marginHorizontal: 4,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    iconCircle: {
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    iconText: {
-        fontSize: 16,
-    },
-    bannerDangerButton: {
-        flex: 1,
-        backgroundColor: colors.danger,
-        paddingVertical: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    bannerDangerButtonText: {
-        color: colors.white,
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    mainInfo: {
-        marginBottom: 4,
     },
     ruleItem: {
         flexDirection: 'row',
-        marginBottom: 16,
+        alignItems: 'center',
+        marginBottom: 12,
     },
     ruleEmoji: {
-        fontSize: 20,
+        fontSize: 24,
         marginRight: 12,
-        marginTop: 2,
     },
     ruleTextContainer: {
         flex: 1,
-    backgroundColor: colors.background,
     },
     ruleTitle: {
         fontSize: 14,
@@ -592,10 +509,66 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     ruleDescription: {
-        fontSize: 13,
+        fontSize: 12,
         color: colors.textSecondary,
-        lineHeight: 18,
+    },
+    membersList: {
+        gap: 12,
+    },
+    memberItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    memberAvatar: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.primaryLight,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    avatarImg: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+    },
+    avatarInitial: {
+        color: colors.white,
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    memberMeta: {
+        flex: 1,
+    },
+    memberName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: colors.textPrimary,
+    },
+    memberRole: {
+        fontSize: 12,
+        color: colors.textMuted,
+    },
+    emptyMembersText: {
+        fontSize: 13,
+        color: colors.textMuted,
+        textAlign: 'center',
+        paddingVertical: 12,
+    },
+    leaveButton: {
+        backgroundColor: '#ef4444',
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    leaveButtonText: {
+        color: colors.white,
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
+    mainInfo: {
+        flex: 1,
     },
 });
-
-export default GroupDetailScreen;

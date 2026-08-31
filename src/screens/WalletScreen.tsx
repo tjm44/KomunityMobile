@@ -77,13 +77,13 @@ interface Transaction {
     };
 }
 
-const WalletScreen = ({ 
-    onBack, 
+const WalletScreen = ({
+    onBack,
     onViewContributions,
     initialCampaign,
     onClearInitialCampaign
-}: { 
-    onBack: () => void; 
+}: {
+    onBack: () => void;
     onViewContributions?: () => void;
     initialCampaign?: any;
     onClearInitialCampaign?: () => void;
@@ -104,6 +104,7 @@ const WalletScreen = ({
     const [cardExpiry, setCardExpiry] = useState('');
     const [cardCvv, setCardCvv] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [topUpError, setTopUpError] = useState<string | null>(null);
 
     // Send Money States
     const [showSendMoney, setShowSendMoney] = useState(false);
@@ -112,18 +113,18 @@ const WalletScreen = ({
     const [members, setMembers] = useState<any[]>([]);
     const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
     const [isSending, setIsSending] = useState(false);
+    const [sendError, setSendError] = useState<string | null>(null);
 
-    // Contribute to Campaign States
+    // Contribute States
     const [showContribute, setShowContribute] = useState(false);
     const [activeCampaigns, setActiveCampaigns] = useState<any[]>([]);
     const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
     const [contributeAmount, setContributeAmount] = useState('');
     const [isContributing, setIsContributing] = useState(false);
-
-    // Error States
-    const [topUpError, setTopUpError] = useState<string | null>(null);
-    const [sendError, setSendError] = useState<string | null>(null);
     const [contributeError, setContributeError] = useState<string | null>(null);
+    const [joinedGroups, setJoinedGroups] = useState<any[]>([]);
+
+    // Withdraw States
     const [showWithdraw, setShowWithdraw] = useState(false);
     const [withdrawChannel, setWithdrawChannel] = useState<'bank_transfer' | 'mobile_money' | 'voucher' | 'send_money'>('bank_transfer');
     const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -136,10 +137,12 @@ const WalletScreen = ({
     const [withdrawError, setWithdrawError] = useState<string | null>(null);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
 
+    const [activeGroupOrOrg, setActiveGroupOrOrg] = useState<string | null>(null);
+    const [activeGroupId, setActiveGroupId] = useState<number | null>(null);
+
     useEffect(() => {
         fetchData();
         fetchMembers();
-        fetchActiveCampaigns();
     }, []);
 
     useEffect(() => {
@@ -150,22 +153,22 @@ const WalletScreen = ({
         }
     }, [initialCampaign]);
 
-    const [activeGroupOrOrg, setActiveGroupOrOrg] = useState<string | null>(null);
-
     const fetchData = async () => {
         try {
-            const [balanceRes, transRes, activeGroupRes] = await Promise.all([
+            const [balanceRes, transRes, groupsRes] = await Promise.all([
                 client.get('wallets/balance/'),
                 client.get('transactions/'),
-                client.get('groups/mine/?active=true')
+                client.get('groups/mine/').catch(() => ({ data: [] }))
             ]);
             setBalance(balanceRes.data.balance);
             setTransactions(transRes.data);
-            if (activeGroupRes.data && activeGroupRes.data.length > 0) {
-                setActiveGroupOrOrg(activeGroupRes.data[0].name);
-            } else {
-                setActiveGroupOrOrg(null);
-            }
+            const groups = Array.isArray(groupsRes.data) ? groupsRes.data : [];
+            setJoinedGroups(groups);
+            const activeGroup = groups.find((g: any) => g.is_selected) || groups[0] || null;
+            setActiveGroupOrOrg(activeGroup ? activeGroup.name : null);
+            const targetGroupId = activeGroup ? activeGroup.id : null;
+            setActiveGroupId(targetGroupId);
+            fetchActiveCampaigns(targetGroupId);
         } catch (error) {
             console.error('Error fetching wallet data:', error);
         } finally {
@@ -380,19 +383,43 @@ const WalletScreen = ({
         }
     };
 
-    const fetchActiveCampaigns = async () => {
+    const fetchActiveCampaigns = async (grpId?: number | null) => {
         try {
-            const response = await client.get('campaigns/');
-            const openCampaigns = response.data.filter((c: any) => c.contributions_open);
+            const targetId = grpId !== undefined ? grpId : activeGroupId;
+            const endpoint = targetId ? `campaigns/?group=${targetId}` : 'campaigns/';
+            const response = await client.get(endpoint);
+            const data = Array.isArray(response.data) ? response.data : response.data?.results || [];
+            const openCampaigns = data.filter((c: any) => c.contributions_open);
             setActiveCampaigns(openCampaigns);
         } catch (error) {
             console.error('Error fetching active campaigns:', error);
         }
     };
 
+    /**
+     * Build the combined list of items shown in the Contribute modal:
+     * 1. Active fundraiser campaigns for the active group
+     * 2. Active group's pending recurring cycle contribution
+     */
+    const getContributeItems = () => {
+        const campaignItems = activeCampaigns.map((c: any) => ({ type: 'campaign' as const, data: c }));
+
+        const pendingCycleItems = joinedGroups
+            .filter((g: any) =>
+                (!activeGroupId || g.id === activeGroupId) &&
+                g.is_active !== false &&
+                g.enable_recurring_contributions &&
+                g.active_cycle &&
+                g.my_cycle_status?.status !== 'paid'
+            )
+            .map((g: any) => ({ type: 'cycle' as const, data: g }));
+
+        return [...pendingCycleItems, ...campaignItems];
+    };
+
     const handleContributeToCampaign = async () => {
         if (!selectedCampaign) {
-            setContributeError('Please select a campaign to contribute to.');
+            setContributeError('Please select a campaign or contribution to pay.');
             return;
         }
 
@@ -404,17 +431,33 @@ const WalletScreen = ({
 
         setContributeError(null);
 
-        const authenticated = await authenticateAction(`Authenticate to contribute ${formatCurrency(contributeAmount)} to "${selectedCampaign.title}"`);
+        const isCycle = selectedCampaign._type === 'cycle' || !!selectedCampaign.active_cycle || !!selectedCampaign.enable_recurring_contributions || !!selectedCampaign.cycle_month;
+        const targetGroupId = selectedCampaign.group?.id || (typeof selectedCampaign.group === 'number' ? selectedCampaign.group : null) || selectedCampaign.id;
+        const cycleId = selectedCampaign.active_cycle?.id || (selectedCampaign.cycle_month ? selectedCampaign.id : undefined);
+
+        const label = isCycle
+            ? `${selectedCampaign.name || selectedCampaign.group_name || 'Community'} – ${selectedCampaign.active_cycle?.title || selectedCampaign.title || 'Monthly Dues'}`
+            : selectedCampaign.title;
+
+        const authenticated = await authenticateAction(`Authenticate to contribute ${formatCurrency(contributeAmount)} to "${label}"`);
         if (!authenticated) return;
 
         setIsContributing(true);
         try {
-            await client.post(`campaigns/${selectedCampaign.id}/contribute/`, {
-                amount: parseFloat(contributeAmount)
-            });
+            if (isCycle) {
+                await client.post(`groups/${targetGroupId}/pay_cycle/`, {
+                    amount: parseFloat(contributeAmount),
+                    ...(cycleId ? { cycle_id: cycleId } : {})
+                });
+            } else {
+                await client.post(`campaigns/${selectedCampaign.id}/contribute/`, {
+                    amount: parseFloat(contributeAmount)
+                });
+            }
+
             Alert.alert(
                 'Contribution Successful',
-                `You contributed ${formatCurrency(contributeAmount)} to "${selectedCampaign.title}".`
+                `You contributed ${formatCurrency(contributeAmount)} to "${label}".`
             );
             setShowContribute(false);
             setContributeAmount('');
@@ -423,7 +466,7 @@ const WalletScreen = ({
             fetchActiveCampaigns(); // Refresh campaigns list
         } catch (error: any) {
             console.error('Contribution error:', error);
-            const errorMsg = error.response?.data?.error 
+            const errorMsg = error.response?.data?.error
                 || error.response?.data?.non_field_errors?.[0]
                 || 'Failed to process contribution. Please try again.';
             Alert.alert('Error', errorMsg);
@@ -463,6 +506,8 @@ const WalletScreen = ({
             </View>
         );
     }
+
+    const contributeItems = getContributeItems();
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -636,6 +681,7 @@ const WalletScreen = ({
                 )}
             </ScrollView>
 
+            {/* ──────────────── TOP UP MODAL ──────────────── */}
             <Modal
                 visible={showTopUp}
                 animationType="slide"
@@ -789,6 +835,7 @@ const WalletScreen = ({
                 </KeyboardAvoidingView>
             </Modal>
 
+            {/* ──────────────── SEND MONEY MODAL ──────────────── */}
             <Modal
                 visible={showSendMoney}
                 animationType="slide"
@@ -917,6 +964,7 @@ const WalletScreen = ({
                 </KeyboardAvoidingView>
             </Modal>
 
+            {/* ──────────────── WITHDRAW MODAL ──────────────── */}
             <Modal
                 visible={showWithdraw}
                 animationType="slide"
@@ -1244,6 +1292,7 @@ const WalletScreen = ({
                 </KeyboardAvoidingView>
             </Modal>
 
+            {/* ──────────────── CONTRIBUTE MODAL ──────────────── */}
             <Modal
                 visible={showContribute}
                 animationType="slide"
@@ -1256,7 +1305,7 @@ const WalletScreen = ({
                 >
                     <View style={styles.modalContent}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Contribute to Fundraiser</Text>
+                            <Text style={styles.modalTitle}>Contribute</Text>
                             <TouchableOpacity onPress={() => {
                                 setShowContribute(false);
                                 setSelectedCampaign(null);
@@ -1268,15 +1317,49 @@ const WalletScreen = ({
 
                         {!selectedCampaign ? (
                             <>
-                                <Text style={styles.inputLabel}>Select Campaign / Fund</Text>
+                                <Text style={styles.inputLabel}>Select Campaign or Monthly Due</Text>
                                 <ScrollView style={styles.memberList}>
+                                    {/* ── Pending recurring cycle dues ── */}
+                                    {joinedGroups
+                                        .filter((g: any) =>
+                                            (!activeGroupId || g.id === activeGroupId) &&
+                                            g.is_active !== false &&
+                                            g.enable_recurring_contributions &&
+                                            g.active_cycle &&
+                                            g.my_cycle_status?.status !== 'paid'
+                                        )
+                                        .map((g: any) => (
+                                            <TouchableOpacity
+                                                key={`cycle-${g.id}`}
+                                                style={[styles.deceasedItem, { borderLeftWidth: 4, borderLeftColor: colors.primaryLight }]}
+                                                onPress={() => {
+                                                    setSelectedCampaign({ ...g, _type: 'cycle' });
+                                                    const targetAmt = g.active_cycle?.target_amount_per_member || g.recurring_amount;
+                                                    if (targetAmt) setContributeAmount(String(targetAmt));
+                                                }}
+                                            >
+                                                <View style={[styles.memberAvatar, { backgroundColor: `${colors.primaryLight}20`, justifyContent: 'center', alignItems: 'center' }]}>
+                                                    <Text style={{ fontSize: 20 }}>🔄</Text>
+                                                </View>
+                                                <View style={{ flex: 1, marginLeft: 10 }}>
+                                                    <Text style={styles.memberName} numberOfLines={1}>{g.name}</Text>
+                                                    <Text style={[styles.fundProgress, { color: colors.primaryLight }]}>
+                                                        Monthly Due · {g.active_cycle?.title || 'Recurring Contribution'}
+                                                    </Text>
+                                                </View>
+                                                <Text style={styles.chevron}>›</Text>
+                                            </TouchableOpacity>
+                                        ))
+                                    }
+
+                                    {/* ── Active fundraiser campaigns ── */}
                                     {activeCampaigns.map((campaign) => {
                                         const meta = CAMPAIGN_TYPE_META[campaign.campaign_type] || CAMPAIGN_TYPE_META.custom;
                                         return (
                                             <TouchableOpacity
-                                                key={campaign.id}
+                                                key={`campaign-${campaign.id}`}
                                                 style={styles.deceasedItem}
-                                                onPress={() => setSelectedCampaign(campaign)}
+                                                onPress={() => setSelectedCampaign({ ...campaign, _type: 'campaign' })}
                                             >
                                                 <View style={[styles.memberAvatar, { backgroundColor: `${meta.color}15`, justifyContent: 'center', alignItems: 'center' }]}>
                                                     <Text style={{ fontSize: 20 }}>{meta.icon}</Text>
@@ -1291,9 +1374,10 @@ const WalletScreen = ({
                                             </TouchableOpacity>
                                         );
                                     })}
-                                    {activeCampaigns.length === 0 && (
+
+                                    {contributeItems.length === 0 && (
                                         <View style={styles.emptyState}>
-                                            <Text style={styles.emptyStateText}>No active campaigns at this time.</Text>
+                                            <Text style={styles.emptyStateText}>No active campaigns or pending dues.</Text>
                                         </View>
                                     )}
                                 </ScrollView>
@@ -1301,15 +1385,28 @@ const WalletScreen = ({
                         ) : (
                             <>
                                 <View style={styles.selectedRecipient}>
-                                    <View style={[styles.memberAvatar, { backgroundColor: `${(CAMPAIGN_TYPE_META[selectedCampaign.campaign_type] || CAMPAIGN_TYPE_META.custom).color}15`, justifyContent: 'center', alignItems: 'center' }]}>
-                                        <Text style={{ fontSize: 24 }}>{(CAMPAIGN_TYPE_META[selectedCampaign.campaign_type] || CAMPAIGN_TYPE_META.custom).icon}</Text>
-                                    </View>
+                                    {selectedCampaign._type === 'cycle' ? (
+                                        <View style={[styles.memberAvatar, { backgroundColor: `${colors.primaryLight}20`, justifyContent: 'center', alignItems: 'center' }]}>
+                                            <Text style={{ fontSize: 24 }}>🔄</Text>
+                                        </View>
+                                    ) : (
+                                        <View style={[styles.memberAvatar, { backgroundColor: `${(CAMPAIGN_TYPE_META[selectedCampaign.campaign_type] || CAMPAIGN_TYPE_META.custom).color}15`, justifyContent: 'center', alignItems: 'center' }]}>
+                                            <Text style={{ fontSize: 24 }}>{(CAMPAIGN_TYPE_META[selectedCampaign.campaign_type] || CAMPAIGN_TYPE_META.custom).icon}</Text>
+                                        </View>
+                                    )}
                                     <View style={{ flex: 1, marginLeft: 10 }}>
-                                        <Text style={styles.recipientName}>{selectedCampaign.title}</Text>
-                                        <Text style={styles.fundProgress}>
-                                            Total raised: {formatCurrency(selectedCampaign.total_raised.toString())}
-                                            {selectedCampaign.target_amount ? ` of ${formatCurrency(selectedCampaign.target_amount.toString())}` : ''}
+                                        <Text style={styles.recipientName}>
+                                            {selectedCampaign._type === 'cycle'
+                                                ? `${selectedCampaign.name} – ${selectedCampaign.active_cycle?.title || 'Monthly Dues'}`
+                                                : selectedCampaign.title
+                                            }
                                         </Text>
+                                        {selectedCampaign._type === 'campaign' && (
+                                            <Text style={styles.fundProgress}>
+                                                Total raised: {formatCurrency(selectedCampaign.total_raised.toString())}
+                                                {selectedCampaign.target_amount ? ` of ${formatCurrency(selectedCampaign.target_amount.toString())}` : ''}
+                                            </Text>
+                                        )}
                                         <TouchableOpacity onPress={() => setSelectedCampaign(null)}>
                                             <Text style={styles.changeRecipient}>Change selection</Text>
                                         </TouchableOpacity>
@@ -1365,8 +1462,8 @@ const WalletScreen = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    backgroundColor: colors.background,
-            },
+        backgroundColor: colors.background,
+    },
     centered: {
         flex: 1,
         justifyContent: 'center',
@@ -1479,7 +1576,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-                alignItems: 'center',
+        alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
@@ -1775,7 +1872,7 @@ const styles = StyleSheet.create({
         marginLeft: 8,
     },
     activeEntityContainer: {
-                borderColor: colors.surfaceLight,
+        borderColor: colors.surfaceLight,
         borderWidth: 1,
         borderRadius: 12,
         paddingHorizontal: 8,

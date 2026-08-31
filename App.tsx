@@ -52,6 +52,7 @@ import EditOrganisationScreen from "./src/screens/EditOrganisationScreen";
 import OrganisationPreviewScreen from "./src/screens/OrganisationPreviewScreen";
 import VerifyIdentityPromptScreen from "./src/screens/VerifyIdentityPromptScreen";
 import NotificationScreen from "./src/screens/NotificationScreen";
+import GroupDuesLedgerScreen from "./src/screens/GroupDuesLedgerScreen";
 import client, { setAuthToken, loadToken, clearToken } from "./src/api/client";
 import { colors, gradients } from "./src/constants/theme";
 
@@ -109,6 +110,9 @@ export default function App() {
   const [viewingNotifications, setViewingNotifications] = React.useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = React.useState(0);
 
+  // Dues & Ledger State (MOB-36)
+  const [viewingGroupDues, setViewingGroupDues] = React.useState<any>(null);
+
   const fetchUnreadNotificationCount = React.useCallback(async () => {
     try {
       const notifRes = await client.get("notifications/unread_count/");
@@ -148,6 +152,7 @@ export default function App() {
     setEditingOrganisation(null);
     setPreviewingOrganisation(null);
     setViewingNotifications(false);
+    setViewingGroupDues(null);
   }, []);
 
   const handleDeepLink = React.useCallback(
@@ -538,6 +543,7 @@ export default function App() {
   }
 
   const getCurrentBackAction = () => {
+    if (viewingGroupDues) return () => setViewingGroupDues(null);
     if (viewingNotifications) return () => setViewingNotifications(false);
     if (isCreatingOrganisation) return () => setIsCreatingOrganisation(false);
     if (editingOrganisation) return () => setEditingOrganisation(null);
@@ -560,6 +566,7 @@ export default function App() {
   };
 
   const shouldShowTopNavBar = () => {
+    if (viewingGroupDues) return false;
     if (viewingNotifications) return false;
     if (isCreatingOrganisation) return true;
     if (editingOrganisation) return true;
@@ -585,6 +592,7 @@ export default function App() {
   };
 
   const getCurrentTitle = () => {
+    if (viewingGroupDues) return "Dues & Ledger";
     if (viewingNotifications) return "Notifications";
     if (isCreatingOrganisation) return "Register Organisation";
     if (editingOrganisation) return "Edit Organisation";
@@ -614,6 +622,7 @@ export default function App() {
   /** DEV ONLY – maps current navigation state to a screen ID for DevScreenBadge */
   const getScreenId = (): string => {
     // Sub-screens / overlays (highest priority)
+    if (viewingGroupDues)       return 'MOB-36';
     if (viewingNotifications)   return 'MOB-35';
     if (isCreatingOrganisation) return 'MOB-31';
     if (editingOrganisation)    return 'MOB-34';
@@ -811,6 +820,21 @@ export default function App() {
                   onBack={() => setViewingGroupWallet(null)}
                 />
               </AnimatedScreen>
+            ) : viewingGroupDues ? (
+              <AnimatedScreen animation="slideRight">
+                <GroupDuesLedgerScreen
+                  group={viewingGroupDues}
+                  onBack={() => setViewingGroupDues(null)}
+                  onEditGroupSettings={() => {
+                    setEditingGroup(viewingGroupDues);
+                    setViewingGroupDues(null);
+                  }}
+                  onViewWallet={() => {
+                    setViewingGroupDues(null);
+                    setActiveTab("wallet");
+                  }}
+                />
+              </AnimatedScreen>
             ) : isManagingGroup ? (
               <AnimatedScreen animation="slideRight">
                 <GroupManagementScreen
@@ -821,6 +845,9 @@ export default function App() {
                   }
                   onViewWallet={() => {
                     setViewingGroupWallet(isManagingGroup);
+                  }}
+                  onViewDuesLedger={() => {
+                    setViewingGroupDues(isManagingGroup);
                   }}
                   onCreateCampaign={() => {
                     setIsCreatingCampaign(isManagingGroup);
@@ -921,6 +948,9 @@ export default function App() {
                   }}
                   onViewWallet={() => {
                     setViewingGroupWallet(viewingGroupDetails);
+                  }}
+                  onViewDuesLedger={() => {
+                    setViewingGroupDues(viewingGroupDetails);
                   }}
                   onEditGroup={() => {
                     setEditingGroup(viewingGroupDetails);

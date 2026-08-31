@@ -47,6 +47,7 @@ interface GroupManagementProps {
     onBack: () => void;
     onSelectMember: (membership: any) => void;
     onViewWallet: () => void;
+    onViewDuesLedger?: () => void;
     onCreateCampaign?: () => void;
     onSelectCampaign?: (campaign: any) => void;
     refreshKey?: number;
@@ -63,7 +64,7 @@ const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: s
     sports:      { icon: '⚽', color: colors.success, label: 'Sports Club' },
 };
 
-const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, onCreateCampaign, onSelectCampaign, refreshKey }: GroupManagementProps) => {
+const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, onViewDuesLedger, onCreateCampaign, onSelectCampaign, refreshKey }: GroupManagementProps) => {
     const insets = useSafeAreaInsets();
     const [pendingMembers, setPendingMembers] = useState<Member[]>([]);
     const [activeMembers, setActiveMembers] = useState<Member[]>([]);
@@ -493,14 +494,24 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
             <View style={styles.subHeader}>
                 <Text style={styles.groupName}>{group.name}</Text>
 
-                {onCreateCampaign && (
-                    <TouchableOpacity
-                        style={styles.campaignCreateBtn}
-                        onPress={onCreateCampaign}
-                    >
-                        <Text style={styles.campaignCreateBtnText}>💰 Create Fund Campaign</Text>
-                    </TouchableOpacity>
-                )}
+                <View style={{ flexDirection: 'row', gap: 8, marginVertical: 4 }}>
+                    {onViewDuesLedger && (
+                        <TouchableOpacity
+                            style={[styles.campaignCreateBtn, { backgroundColor: '#00458b', flex: 1 }]}
+                            onPress={onViewDuesLedger}
+                        >
+                            <Text style={styles.campaignCreateBtnText}>🗓️ Dues & Ledger</Text>
+                        </TouchableOpacity>
+                    )}
+                    {onCreateCampaign && (
+                        <TouchableOpacity
+                            style={[styles.campaignCreateBtn, { flex: 1 }]}
+                            onPress={onCreateCampaign}
+                        >
+                            <Text style={styles.campaignCreateBtnText}>💰 Create Campaign</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
 
                 <ScrollView
                     horizontal

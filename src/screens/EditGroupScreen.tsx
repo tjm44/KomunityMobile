@@ -22,7 +22,7 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
     const [description, setDescription] = useState(group.description || '');
     const [requiresApproval, setRequiresApproval] = useState(group.requires_approval || false);
     const [verifiedMembersOnly, setVerifiedMembersOnly] = useState(group.verified_members_only || false);
-    
+
     // Notifications States
     const [notifyOnMemberJoin, setNotifyOnMemberJoin] = useState(group.notify_on_member_join !== false);
     const [notifyOnMemberPromote, setNotifyOnMemberPromote] = useState(group.notify_on_member_promote !== false);
@@ -30,12 +30,20 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
     const [notifyOnCampaignCreated, setNotifyOnCampaignCreated] = useState(group.notify_on_campaign_created !== false);
     const [minDisbursementApprovals, setMinDisbursementApprovals] = useState<number>(group.min_disbursement_approvals || 1);
 
+    // Recurring Contributions States
+    const [enableRecurring, setEnableRecurring] = useState(group.enable_recurring_contributions || false);
+    const [recurringAmount, setRecurringAmount] = useState(group.recurring_amount ? String(group.recurring_amount) : '100');
+    const [recurringFrequency, setRecurringFrequency] = useState(group.recurring_frequency || 'monthly');
+    const [recurringDueDay, setRecurringDueDay] = useState<number>(group.recurring_due_day || 25);
+    const [recurringTitle, setRecurringTitle] = useState(group.recurring_title || 'Monthly Contribution');
+    const [recurringReminderDays, setRecurringReminderDays] = useState<number>(group.recurring_reminder_days || 3);
+
     const [registrationNumber, setRegistrationNumber] = useState(group.registration_number || '');
     const [entityType, setEntityType] = useState(group.entity_type || 'ngo');
     const isOrganisation = !!group.registration_number || !!group.entity_type;
     const [loading, setLoading] = useState(false);
     const [coverImage, setCoverImage] = useState<string | null>(group.cover_image || null);
-    const [newCoverImage, setNewCoverImage] = useState<any>(null); // For the picked image
+    const [newCoverImage, setNewCoverImage] = useState<any>(null);
     const [removeCover, setRemoveCover] = useState(false);
     const [selectedReviewImage, setSelectedReviewImage] = useState<any>(null);
     const [isReviewingImage, setIsReviewingImage] = useState(false);
@@ -119,7 +127,7 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             formData.append('description', description.trim());
             formData.append('requires_approval', requiresApproval.toString());
             formData.append('verified_members_only', verifiedMembersOnly.toString());
-            
+
             // Notification preferences
             formData.append('notify_on_member_join', notifyOnMemberJoin.toString());
             formData.append('notify_on_member_promote', notifyOnMemberPromote.toString());
@@ -127,8 +135,16 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             formData.append('notify_on_campaign_created', notifyOnCampaignCreated.toString());
             formData.append('min_disbursement_approvals', String(minDisbursementApprovals));
 
-            const isOrganisation = !!group.registration_number || !!group.entity_type;
-            if (isOrganisation) {
+            // Recurring contributions settings
+            formData.append('enable_recurring_contributions', enableRecurring.toString());
+            formData.append('recurring_amount', enableRecurring ? String(parseFloat(recurringAmount) || 0) : '0');
+            formData.append('recurring_frequency', recurringFrequency);
+            formData.append('recurring_due_day', String(recurringDueDay));
+            formData.append('recurring_title', recurringTitle.trim() || 'Monthly Contribution');
+            formData.append('recurring_reminder_days', String(recurringReminderDays));
+
+            const isOrg = !!group.registration_number || !!group.entity_type;
+            if (isOrg) {
                 formData.append('registration_number', registrationNumber.trim());
                 formData.append('entity_type', entityType);
             }
@@ -165,6 +181,12 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
             notifyOnWalletTransfer !== (group.notify_on_wallet_transfer !== false) ||
             notifyOnCampaignCreated !== (group.notify_on_campaign_created !== false) ||
             minDisbursementApprovals !== (group.min_disbursement_approvals || 1) ||
+            enableRecurring !== (group.enable_recurring_contributions || false) ||
+            recurringAmount !== (group.recurring_amount ? String(group.recurring_amount) : '100') ||
+            recurringFrequency !== (group.recurring_frequency || 'monthly') ||
+            recurringDueDay !== (group.recurring_due_day || 25) ||
+            recurringTitle !== (group.recurring_title || 'Monthly Contribution') ||
+            recurringReminderDays !== (group.recurring_reminder_days || 3) ||
             registrationNumber.trim() !== (group.registration_number || '') ||
             entityType !== (group.entity_type || 'ngo') ||
             newCoverImage !== null ||
@@ -437,9 +459,152 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
                         )}
                     </View>
 
+                    {/* ═══ Scheduled Recurring Contributions & Ledger ═══ */}
+                    {group.is_active === false ? (
+                        <View style={[styles.recurringContainer, { borderColor: colors.border, opacity: 0.7 }]}>
+                            <Text style={[styles.settingLabel, { fontSize: 15 }]}>🗓️ Scheduled Recurring Contributions & Ledger</Text>
+                            <Text style={[styles.settingDescription, { marginTop: 6 }]}>
+                                Recurring contributions are only available for active communities. This group is currently inactive.
+                            </Text>
+                        </View>
+                    ) : (
+                    <View style={[styles.recurringContainer, enableRecurring && styles.recurringContainerActive]}>
+                        {/* Header Row */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View style={{ flex: 1, marginRight: 12 }}>
+                                <Text style={[styles.settingLabel, { fontSize: 15 }]}>🗓️ Scheduled Recurring Contributions & Ledger</Text>
+                                <Text style={styles.settingDescription}>
+                                    Enable recurring dues with due dates, payment tracking, and automated reminders.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={enableRecurring}
+                                onValueChange={setEnableRecurring}
+                                trackColor={{ false: colors.border, true: 'rgba(99,102,241,0.5)' }}
+                                thumbColor={enableRecurring ? '#6366f1' : '#f4f3f4'}
+                            />
+                        </View>
+
+                        {/* Status label */}
+                        <Text style={[styles.recurringStatusLabel, enableRecurring ? styles.recurringEnabled : styles.recurringDisabled]}>
+                            {enableRecurring ? '● ENABLED' : '● DISABLED'}
+                        </Text>
+
+                        {/* Sub-fields — only when enabled */}
+                        {enableRecurring && (
+                            <View style={styles.recurringFields}>
+                                {/* Amount */}
+                                <View style={styles.formSection}>
+                                    <Text style={styles.label}>Amount per Member (ZAR) *</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={recurringAmount}
+                                        onChangeText={setRecurringAmount}
+                                        keyboardType="decimal-pad"
+                                        placeholder="e.g. 100.00"
+                                        placeholderTextColor="#9ca3af"
+                                    />
+                                </View>
+
+                                {/* Contribution Title */}
+                                <View style={styles.formSection}>
+                                    <Text style={styles.label}>Contribution Title</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={recurringTitle}
+                                        onChangeText={setRecurringTitle}
+                                        placeholder="e.g. Monthly Contribution"
+                                        placeholderTextColor="#9ca3af"
+                                    />
+                                </View>
+
+                                {/* Frequency */}
+                                <View style={styles.formSection}>
+                                    <Text style={styles.label}>Frequency</Text>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                        {[
+                                            { key: 'weekly', label: 'Weekly' },
+                                            { key: 'biweekly', label: 'Bi-weekly' },
+                                            { key: 'monthly', label: 'Monthly' },
+                                            { key: 'annual', label: 'Annual' },
+                                        ].map((f) => (
+                                            <TouchableOpacity
+                                                key={f.key}
+                                                onPress={() => setRecurringFrequency(f.key)}
+                                                style={[styles.entityPill, recurringFrequency === f.key && styles.entityPillActive]}
+                                            >
+                                                <Text style={[styles.entityPillText, recurringFrequency === f.key && styles.entityPillTextActive]}>
+                                                    {f.label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </View>
+
+                                {/* Due Day of Month */}
+                                <View style={styles.formSection}>
+                                    <Text style={styles.label}>Due Day of the Month</Text>
+                                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                        {[
+                                            { val: 1, label: '1st' },
+                                            { val: 5, label: '5th' },
+                                            { val: 15, label: '15th' },
+                                            { val: 20, label: '20th' },
+                                            { val: 25, label: '25th' },
+                                            { val: 28, label: '28th' },
+                                            { val: 31, label: 'Last' },
+                                        ].map((d) => (
+                                            <TouchableOpacity
+                                                key={d.val}
+                                                onPress={() => setRecurringDueDay(d.val)}
+                                                style={[styles.entityPill, recurringDueDay === d.val && styles.entityPillActive]}
+                                            >
+                                                <Text style={[styles.entityPillText, recurringDueDay === d.val && styles.entityPillTextActive]}>
+                                                    {d.label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                </View>
+
+                                {/* Reminder Notice */}
+                                <View style={[styles.formSection, { marginBottom: 4 }]}>
+                                    <Text style={styles.label}>Reminder Notice</Text>
+                                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                                        {[
+                                            { val: 1, label: '1 day' },
+                                            { val: 3, label: '3 days' },
+                                            { val: 5, label: '5 days' },
+                                            { val: 7, label: '7 days' },
+                                        ].map((r) => (
+                                            <TouchableOpacity
+                                                key={r.val}
+                                                onPress={() => setRecurringReminderDays(r.val)}
+                                                style={[
+                                                    styles.entityPill,
+                                                    { flex: 1, alignItems: 'center' },
+                                                    recurringReminderDays === r.val && styles.entityPillActive,
+                                                ]}
+                                            >
+                                                <Text style={[styles.entityPillText, recurringReminderDays === r.val && styles.entityPillTextActive]}>
+                                                    {r.label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                    <Text style={{ fontSize: 11, color: colors.textMuted, marginTop: 6 }}>
+                                        Send due-date reminder this many days before.
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+                    </View>
+                    )}
+
                     {/* Group Verification Status */}
                     <View style={[
                         styles.infoBox,
+                        { marginTop: 20 },
                         group.is_verified
                             ? { backgroundColor: colors.successLight, borderColor: colors.accent, borderWidth: 1 }
                             : { backgroundColor: colors.warningLight, borderColor: colors.warningLight, borderWidth: 1 }
@@ -545,8 +710,8 @@ const EditGroupScreen = ({ group, onBack, onGroupUpdated }: EditGroupScreenProps
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-    backgroundColor: colors.background,
-            },
+        backgroundColor: colors.background,
+    },
     scrollContent: {
         padding: 24,
     },
@@ -612,10 +777,10 @@ const styles = StyleSheet.create({
     },
     // Form
     formSection: {
-        marginBottom: 24,
+        marginBottom: 16,
     },
     label: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: colors.textSecondary,
         marginBottom: 8,
@@ -625,8 +790,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.border,
         borderRadius: 12,
-        padding: 16,
-        fontSize: 16,
+        padding: 14,
+        fontSize: 15,
         color: colors.textPrimary,
     },
     textArea: {
@@ -640,19 +805,19 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
         padding: 16,
         borderRadius: 12,
-        marginBottom: 24,
+        marginBottom: 12,
     },
     settingText: {
         flex: 1,
         marginRight: 16,
     },
     settingLabel: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: 'bold',
         color: colors.textPrimary,
     },
     settingDescription: {
-        fontSize: 14,
+        fontSize: 13,
         color: colors.textSecondary,
         marginTop: 2,
     },
@@ -662,11 +827,44 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         borderColor: colors.surfaceLight,
+        marginBottom: 12,
     },
     infoText: {
         fontSize: 14,
         color: colors.primary,
         lineHeight: 20,
+    },
+    // Recurring Contributions
+    recurringContainer: {
+        backgroundColor: colors.background,
+        borderRadius: 14,
+        borderWidth: 1.5,
+        borderColor: colors.border,
+        padding: 16,
+        marginTop: 16,
+        marginBottom: 8,
+        gap: 10,
+    },
+    recurringContainerActive: {
+        borderColor: 'rgba(99,102,241,0.5)',
+        backgroundColor: 'rgba(99,102,241,0.05)',
+    },
+    recurringStatusLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        marginTop: 2,
+    },
+    recurringEnabled: {
+        color: '#6366f1',
+    },
+    recurringDisabled: {
+        color: colors.textMuted,
+    },
+    recurringFields: {
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        paddingTop: 16,
+        marginTop: 4,
     },
     // Footer
     footer: {
@@ -708,8 +906,8 @@ const styles = StyleSheet.create({
     // Review Modal Styles
     reviewContainer: {
         flex: 1,
-    backgroundColor: colors.background,
-            },
+        backgroundColor: colors.background,
+    },
     reviewHeader: {
         padding: 24,
         alignItems: 'center',
@@ -803,7 +1001,6 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: colors.textSecondary,
         fontWeight: '500',
-        fontFamily: 'Outfit-Regular',
     },
     entityPillTextActive: {
         color: colors.primaryLight,

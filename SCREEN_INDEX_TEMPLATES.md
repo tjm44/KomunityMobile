@@ -44,6 +44,7 @@ The temporary visual indexes (on-screen badges) have been **hidden** from the UI
 | **MOB-33** | `MOB_33_ORGANISATION_DETAIL` | `OrganisationDetailScreen` | ORGANISATIONS | Organization hub, sub-groups, campaigns, and settings |
 | **MOB-34** | `MOB_34_EDIT_ORGANISATION` | `EditOrganisationScreen` | ORGANISATIONS | Update organization details, cover image, and admins |
 | **MOB-35** | `MOB_35_NOTIFICATIONS` | `NotificationScreen` | NOTIFICATIONS | In-app notification center and system alerts |
+| **MOB-36** | `MOB_36_DUES_LEDGER` | `GroupDuesLedgerScreen` | GROUPS / WALLET | Contribution cycles, member payment ledger, live wallet dues & reminders |
 
 ---
 
