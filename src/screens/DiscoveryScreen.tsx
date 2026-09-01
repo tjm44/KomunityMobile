@@ -374,7 +374,6 @@ const DiscoveryScreen = ({
                                                             'church': '⛪ Church Group',
                                                             'stokvel': '💰 Stokvel & Savings',
                                                             'student': '🎓 Student Body',
-                                                            'sports': '⚽ Sports Club',
                                                         } as any)[item.purpose] ?? item.purpose}
                                                     </Text>
                                                 </View>

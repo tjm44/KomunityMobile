@@ -18,7 +18,6 @@ const PURPOSE_META: Record<GroupPurpose, { label: string; icon: string; color: s
     church:      { label: 'Church / Religious', icon: '⛪', color: colors.primaryLight },
     stokvel:     { label: 'Stokvel & Savings', icon: '💰', color: colors.success },
     student:     { label: 'Student Body', icon: '🎓', color: colors.warning },
-    sports:      { label: 'Sports Club', icon: '⚽', color: colors.success },
 };
 
 interface CreateGroupScreenProps {
@@ -101,14 +100,6 @@ const CreateGroupScreen = ({
     const [membershipFeePeriod, setMembershipFeePeriod] = useState('annual');
     const [studentIdRequired, setStudentIdRequired] = useState(true);
 
-    // ── Sports ─────────────────────────────────────────────────────────────────
-    const [sportCategory, setSportCategory] = useState('soccer');
-    const [clubLevel, setClubLevel] = useState('social_recreational');
-    const [sportsMembershipFee, setSportsMembershipFee] = useState('');
-    const [duesFrequency, setDuesFrequency] = useState('monthly');
-    const [matchFeePerGame, setMatchFeePerGame] = useState('');
-    const [kitEquipmentFundEnabled, setKitEquipmentFundEnabled] = useState(true);
-
     const meta = purpose ? PURPOSE_META[purpose] : { label: 'Select Fund Type', icon: '❓', color: colors.textSecondary };
     const canCreate = !!purpose;
 
@@ -165,15 +156,6 @@ const CreateGroupScreen = ({
                     student_id_required: studentIdRequired,
                     membership_fee: parseFloat(studentMembershipFee) || 0.00,
                     membership_fee_period: membershipFeePeriod,
-                };
-            } else if (purpose === 'sports') {
-                payload.sports_profile = {
-                    sport_category: sportCategory,
-                    club_level: clubLevel,
-                    membership_fee: parseFloat(sportsMembershipFee) || 0.00,
-                    dues_frequency: duesFrequency,
-                    match_fee_per_game: parseFloat(matchFeePerGame) || 0.00,
-                    kit_equipment_fund_enabled: kitEquipmentFundEnabled,
                 };
             }
 
@@ -365,62 +347,6 @@ const CreateGroupScreen = ({
                             <View style={[styles.settingRow, { marginBottom: 0, marginTop: 12, backgroundColor: 'transparent', padding: 0 }]}>
                                 <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Require Student Reg Number</Text>
                                 <Switch value={studentIdRequired} onValueChange={setStudentIdRequired} trackColor={{ false: colors.border, true: '#d9770666' }} thumbColor={studentIdRequired ? colors.warning : '#f4f3f4'} />
-                            </View>
-                        </View>
-                    )}
-
-                    {/* ── SPORTS ── */}
-                    {purpose === 'sports' && (
-                        <View style={[styles.profileSection, { borderLeftColor: colors.success, backgroundColor: colors.successLight }]}>
-                            <Text style={[styles.profileSectionTitle, { color: colors.success }]}>⚽ Sports Club Settings</Text>
-                            <PillPicker
-                                label="Sport Category"
-                                value={sportCategory}
-                                onChange={setSportCategory}
-                                color="#10b981"
-                                options={[
-                                    { value: 'soccer', label: 'Soccer / Football' },
-                                    { value: 'rugby', label: 'Rugby' },
-                                    { value: 'netball', label: 'Netball' },
-                                    { value: 'running_athletics', label: 'Athletics' },
-                                    { value: 'cricket', label: 'Cricket' },
-                                    { value: 'basketball', label: 'Basketball' },
-                                    { value: 'swimming', label: 'Swimming' },
-                                    { value: 'golf', label: 'Golf' },
-                                    { value: 'other', label: 'Other' },
-                                ]}
-                            />
-                            <PillPicker
-                                label="Competition Level"
-                                value={clubLevel}
-                                onChange={setClubLevel}
-                                color="#10b981"
-                                options={[
-                                    { value: 'social_recreational', label: 'Social / Rec' },
-                                    { value: 'amateur_league', label: 'Amateur League' },
-                                    { value: 'university_league', label: 'University' },
-                                    { value: 'youth_academy', label: 'Youth Academy' },
-                                    { value: 'semi_professional', label: 'Semi-Pro' },
-                                ]}
-                            />
-                            <PillPicker
-                                label="Dues Frequency"
-                                value={duesFrequency}
-                                onChange={setDuesFrequency}
-                                color="#10b981"
-                                options={[
-                                    { value: 'monthly', label: 'Monthly' },
-                                    { value: 'per_season', label: 'Per Season' },
-                                    { value: 'annual', label: 'Annual' },
-                                ]}
-                            />
-                            <View style={{ flexDirection: 'row', gap: 8 }}>
-                                <TextInput style={[styles.input, { flex: 1 }]} placeholder="Monthly Dues (R)" value={sportsMembershipFee} onChangeText={setSportsMembershipFee} keyboardType="numeric" />
-                                <TextInput style={[styles.input, { flex: 1 }]} placeholder="Per Match Fee (R)" value={matchFeePerGame} onChangeText={setMatchFeePerGame} keyboardType="numeric" />
-                            </View>
-                            <View style={[styles.settingRow, { marginBottom: 0, marginTop: 12, backgroundColor: 'transparent', padding: 0 }]}>
-                                <Text style={{ fontSize: 14, color: colors.textSecondary, flex: 1, fontFamily: 'Outfit-Regular' }}>Enable Kit & Equipment Fund</Text>
-                                <Switch value={kitEquipmentFundEnabled} onValueChange={setKitEquipmentFundEnabled} trackColor={{ false: colors.border, true: '#10b98166' }} thumbColor={kitEquipmentFundEnabled ? colors.success : '#f4f3f4'} />
                             </View>
                         </View>
                     )}

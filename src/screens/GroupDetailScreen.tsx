@@ -155,7 +155,6 @@ const GroupDetailScreen = ({
                                             'church': '⛪ Church Group',
                                             'stokvel': '💰 Stokvel & Savings',
                                             'student': '🎓 Student Body',
-                                            'sports': '⚽ Sports Club',
                                         } as any)[(group as any).purpose] ?? ''}
                                     </Text>
                                 </View>

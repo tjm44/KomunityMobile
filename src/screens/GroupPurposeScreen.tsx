@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, gradients } from '../constants/theme';
 
-export type GroupPurpose = 'bereavement' | 'excess' | 'custom' | 'emergency' | 'church' | 'stokvel' | 'student' | 'sports';
+export type GroupPurpose = 'bereavement' | 'excess' | 'custom' | 'emergency' | 'church' | 'stokvel' | 'student';
 
 export interface PurposeSelection {
     purpose: GroupPurpose;
@@ -68,14 +68,6 @@ const PURPOSE_OPTIONS: PurposeOption[] = [
         description: 'Faculty societies, residence committees, event ticketing, and emergency aid.',
         color: colors.warning,
         bgColor: colors.warningLight,
-    },
-    {
-        key: 'sports',
-        icon: '⚽',
-        label: 'Sports Club & Team',
-        description: 'Collect player dues, match fees, equipment funds, and tournament travel fees.',
-        color: colors.success,
-        bgColor: colors.successLight,
     },
     {
         key: 'custom',
