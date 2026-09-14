@@ -645,7 +645,11 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     reviewOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         borderWidth: 2,
         borderColor: 'rgba(37, 99, 235, 0.2)',
         borderRadius: 150,

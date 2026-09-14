@@ -215,63 +215,66 @@ const HomeScreen = ({
                   >
                     {isActive ? (
                       <>
-                        {item.cover_image ? (
-                          <Image
-                            source={{ uri: item.cover_image }}
-                            style={styles.coverImage}
-                            transition={200}
-                          />
-                        ) : (
-                          <View
-                            style={[styles.coverImage, { backgroundColor: "#e5e7eb" }]}
-                          />
-                        )}
-                        <View style={styles.cardContent}>
-                          <View style={styles.cardHeader}>
-                            <View style={{ flex: 1 }}>
-                              <Text style={styles.groupName}>{item.name}</Text>
-                              <Text style={styles.memberCount}>
-                                {item.total_members} members
-                              </Text>
-                            </View>
-                          </View>
+                        <View style={styles.bannerContainer}>
+                          {item.cover_image ? (
+                            <Image
+                              source={{ uri: item.cover_image }}
+                              style={styles.coverImage}
+                              transition={200}
+                            />
+                          ) : (
+                            <View
+                              style={[styles.coverImage, { backgroundColor: "#e5e7eb" }]}
+                            />
+                          )}
+                          {/* Text overlay on banner */}
+                          <LinearGradient
+                            colors={["transparent", "rgba(0,0,0,0.72)"]}
+                            style={styles.bannerOverlay}
+                          >
+                            <Text style={styles.bannerGroupName} numberOfLines={1}>
+                              {item.name}
+                            </Text>
+                            <Text style={styles.bannerMemberCount}>
+                              {item.total_members} members
+                            </Text>
+                            <Text style={styles.bannerDescription} numberOfLines={2}>
+                              {item.description || "No description available"}
+                            </Text>
+                          </LinearGradient>
+                        </View>
 
-                          <Text style={styles.description} numberOfLines={2}>
-                            {item.description || "No description available"}
-                          </Text>
-
-                          <View style={styles.actionRow}>
-                            <TouchableOpacity
+                        <View style={styles.actionRow}>
+                          <TouchableOpacity
+                            style={[
+                              styles.detailsButton,
+                              styles.selectedButton,
+                            ]}
+                            onPress={() => handleSelectGroup(item.id)}
+                          >
+                            <Text
                               style={[
-                                styles.detailsButton,
-                                styles.selectedButton,
+                                styles.detailsButtonText,
+                                styles.selectedButtonText,
                               ]}
-                              onPress={() => handleSelectGroup(item.id)}
                             >
-                              <Text
-                                style={[
-                                  styles.detailsButtonText,
-                                  styles.selectedButtonText,
-                                ]}
-                              >
-                                Selected
-                              </Text>
-                            </TouchableOpacity>
+                              Selected
+                            </Text>
+                          </TouchableOpacity>
 
-                            <TouchableOpacity
-                              style={styles.feedButton}
-                              onPress={() => onSelectGroup(item)}
-                            >
-                              <Text style={styles.feedButtonText}>Discussion Feed</Text>
-                              {item.unread_posts_count > 0 && (
-                                <View style={styles.notificationBadge}>
-                                  <Text style={styles.badgeText}>
-                                    {item.unread_posts_count}
-                                  </Text>
-                                </View>
-                              )}
-                            </TouchableOpacity>
-                          </View>
+                          <TouchableOpacity
+                            style={styles.feedButton}
+                            onPress={() => onSelectGroup(item)}
+                          >
+                            <Text style={styles.feedButtonText}>Discussion Feed</Text>
+                            {item.unread_posts_count > 0 && (
+                              <View style={styles.notificationBadge}>
+                                <Text style={styles.badgeText}>
+                                  {item.unread_posts_count}
+                                </Text>
+                              </View>
+                            )}
+                          </TouchableOpacity>
                         </View>
                       </>
                     ) : (
@@ -402,12 +405,48 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
+  bannerContainer: {
+    position: "relative",
+    width: "100%",
+  },
   coverImage: {
     width: "100%",
-    height: 140,
+    height: 160,
   },
-  cardContent: {
-    padding: 16,
+  bannerOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 14,
+    paddingTop: 28,
+    paddingBottom: 12,
+  },
+  bannerGroupName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#ffffff",
+    marginBottom: 2,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  bannerMemberCount: {
+    fontSize: 12,
+    color: "rgba(255,255,255,0.8)",
+    marginBottom: 4,
+  },
+  bannerDescription: {
+    fontSize: 13,
+    color: "rgba(255,255,255,0.85)",
+    lineHeight: 18,
+  },
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   groupName: {
     fontSize: 18,
@@ -426,11 +465,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 16,
   },
-  actionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
+
   feedButton: {
     backgroundColor: "#eff6ff",
     paddingHorizontal: 16,

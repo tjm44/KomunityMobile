@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 const LOCAL_API_URL = 'http://127.0.0.1:8000/api/v1/';
 
 // Dynamically get the Expo host IP for LAN connections
-let hostIp = '192.168.88.131'; // default fallback for this machine
+let hostIp = '192.168.88.210'; // default fallback for this machine
 
 if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hostname) {
     // When running in a web browser, talk to the same hostname (e.g. localhost or current machine IP)
@@ -48,6 +48,48 @@ const client = axios.create({
     // 'multipart/form-data; boundary=...' with the correct boundary.
     // Setting 'application/json' here would override that and break file uploads.
 });
+
+type AuthExpirationListener = (reason?: string) => void;
+let authExpirationListeners: AuthExpirationListener[] = [];
+
+export const onAuthExpired = (listener: AuthExpirationListener) => {
+    authExpirationListeners.push(listener);
+    return () => {
+        authExpirationListeners = authExpirationListeners.filter((l) => l !== listener);
+    };
+};
+
+export const triggerAuthExpired = (reason: string = 'session_expired') => {
+    authExpirationListeners.forEach((listener) => {
+        try {
+            listener(reason);
+        } catch (e) {
+            console.error('Error in auth expiration listener:', e);
+        }
+    });
+};
+
+// Interceptor for 401 auto-logout on expired session
+client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            const requestUrl = error.config?.url || '';
+            const isAuthEndpoint =
+                requestUrl.includes('auth/') ||
+                requestUrl.includes('login') ||
+                requestUrl.includes('check-phone') ||
+                requestUrl.includes('auth-token');
+
+            if (!isAuthEndpoint) {
+                console.warn('[Komunity API] 401 Session Expired on endpoint:', requestUrl);
+                await clearToken();
+                triggerAuthExpired('session_expired');
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 export const setAuthToken = (token: string | null) => {
     if (token) {
@@ -126,35 +168,78 @@ export const fetchFormData = async (
     formData: FormData,
 ): Promise<any> => {
     const url = `${API_BASE_URL}${path}`;
-
-    // Grab the auth token that was set via setAuthToken()
     const authHeader = client.defaults.headers.common['Authorization'] as string | undefined;
 
-    const headers: Record<string, string> = {};
-    if (authHeader) {
-        headers['Authorization'] = authHeader;
+    // Standard web fetch supports FormData natively in browsers
+    if (Platform.OS === 'web') {
+        const headers: Record<string, string> = {};
+        if (authHeader) {
+            headers['Authorization'] = authHeader;
+        }
+
+        const response = await fetch(url, { method, headers, body: formData });
+
+        let data: any = null;
+        const text = await response.text();
+        try {
+            data = text ? JSON.parse(text) : null;
+        } catch {
+            data = text;
+        }
+
+        if (!response.ok) {
+            const err: any = new Error(`HTTP ${response.status}`);
+            err.response = { status: response.status, data };
+            throw err;
+        }
+
+        return data;
     }
-    // DO NOT set Content-Type here — fetch will set it automatically with the
-    // correct boundary when the body is a FormData instance.
 
-    const response = await fetch(url, { method, headers, body: formData });
+    // On Native (Android & iOS):
+    // React Native 0.86+ / Expo SDK 57 global fetch throws:
+    // [Error: Unsupported FormDataPart implementation] when given a FormData object.
+    // XMLHttpRequest connects directly to React Native's native NetworkingModule,
+    // which natively supports multipart/form-data with strings and file URI parts.
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url);
 
-    let data: any = null;
-    const text = await response.text();
-    try {
-        data = text ? JSON.parse(text) : null;
-    } catch {
-        data = text;
-    }
+        if (authHeader) {
+            xhr.setRequestHeader('Authorization', authHeader);
+        }
 
-    if (!response.ok) {
-        // Match the shape of an axios error so callers don't need changes
-        const err: any = new Error(`HTTP ${response.status}`);
-        err.response = { status: response.status, data };
-        throw err;
-    }
+        xhr.onload = () => {
+            let data: any = null;
+            try {
+                data = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+            } catch {
+                data = xhr.responseText;
+            }
 
-    return data;
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(data);
+            } else {
+                const err: any = new Error(`HTTP ${xhr.status}`);
+                err.response = { status: xhr.status, data };
+                reject(err);
+            }
+        };
+
+        xhr.onerror = (e) => {
+            const err: any = new Error('Network request failed');
+            err.response = { status: xhr.status, data: xhr.responseText || e };
+            reject(err);
+        };
+
+        xhr.ontimeout = () => {
+            const err: any = new Error('Network request timed out');
+            err.response = { status: 408, data: 'Timeout' };
+            reject(err);
+        };
+
+        xhr.send(formData);
+    });
 };
 
 /**

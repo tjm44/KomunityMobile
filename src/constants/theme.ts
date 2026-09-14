@@ -101,8 +101,96 @@ export const shadows = {
   },
 };
 
+export const typography = {
+  fontFamilies: {
+    regular: 'Outfit-Regular',
+    bold: 'Outfit-Bold',
+  },
+  display: {
+    fontFamily: 'Outfit-Bold',
+    fontSize: 28,
+    lineHeight: 34,
+    letterSpacing: -0.5,
+  },
+  titleLarge: {
+    fontFamily: 'Outfit-Bold',
+    fontSize: 22,
+    lineHeight: 28,
+    letterSpacing: -0.3,
+  },
+  titleMedium: {
+    fontFamily: 'Outfit-Bold',
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: -0.2,
+  },
+  titleSmall: {
+    fontFamily: 'Outfit-Bold',
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  headline: {
+    fontFamily: 'Outfit-Bold',
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  bodyLarge: {
+    fontFamily: 'Outfit-Regular',
+    fontSize: 16,
+    lineHeight: 24,
+  },
+  bodyMedium: {
+    fontFamily: 'Outfit-Regular',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  bodySmall: {
+    fontFamily: 'Outfit-Regular',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  caption: {
+    fontFamily: 'Outfit-Regular',
+    fontSize: 11,
+    lineHeight: 14,
+    letterSpacing: 0.2,
+  },
+  currency: {
+    fontFamily: 'Outfit-Bold',
+    fontSize: 32,
+    lineHeight: 38,
+    letterSpacing: -0.5,
+  },
+};
+
+export const spacing = {
+  xxs: 2,
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+  huge: 48,
+};
+
+export const borderRadius = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  full: 9999,
+};
+
 export default {
   colors,
   gradients,
   shadows,
+  typography,
+  spacing,
+  borderRadius,
 };
+

@@ -21,6 +21,7 @@ import { colors, gradients } from '../constants/theme';
 interface PhoneAuthProps {
   onLoginSuccess: (isNewUser?: boolean) => void;
   onBack?: () => void;
+  sessionNotice?: string | null;
 }
 
 type AuthStep = 'phone' | 'pin' | 'otp' | 'create_pin';
@@ -37,7 +38,7 @@ const COUNTRY_CODES = [
   { code: '+44', label: '🇬🇧 UK (+44)' },
 ];
 
-const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
+const PhoneAuthScreen = ({ onLoginSuccess, onBack, sessionNotice }: PhoneAuthProps) => {
   const [step, setStep] = useState<AuthStep>('phone');
   const [countryCode, setCountryCode] = useState('+27');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -57,7 +58,7 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
   const pinInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (step === 'otp' && resendTimer > 0) {
       interval = setInterval(() => {
         setResendTimer((prev) => {
@@ -321,6 +322,13 @@ const PhoneAuthScreen = ({ onLoginSuccess, onBack }: PhoneAuthProps) => {
                   : `We sent a 6-digit SMS verification code to ${getFullPhone()}`}
               </Text>
             </View>
+
+            {sessionNotice ? (
+              <View style={styles.sessionNoticeBanner}>
+                <Ionicons name="shield-checkmark" size={18} color="#d97706" />
+                <Text style={styles.sessionNoticeText}>{sessionNotice}</Text>
+              </View>
+            ) : null}
 
             {/* Step 1: Phone Input */}
             {step === 'phone' && (
@@ -886,6 +894,25 @@ const styles = StyleSheet.create({
   },
   footerLinkDisabled: {
     color: colors.textMuted,
+  },
+  sessionNoticeBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  sessionNoticeText: {
+    flex: 1,
+    color: '#d97706',
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 18,
   },
 });
 

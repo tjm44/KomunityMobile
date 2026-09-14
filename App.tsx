@@ -53,7 +53,7 @@ import OrganisationPreviewScreen from "./src/screens/OrganisationPreviewScreen";
 import VerifyIdentityPromptScreen from "./src/screens/VerifyIdentityPromptScreen";
 import NotificationScreen from "./src/screens/NotificationScreen";
 import GroupDuesLedgerScreen from "./src/screens/GroupDuesLedgerScreen";
-import client, { setAuthToken, loadToken, clearToken } from "./src/api/client";
+import client, { setAuthToken, loadToken, clearToken, onAuthExpired } from "./src/api/client";
 import { colors, gradients } from "./src/constants/theme";
 
 export default function App() {
@@ -67,6 +67,7 @@ export default function App() {
   const [needsProfileSetup, setNeedsProfileSetup] = React.useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
   const [showWelcome, setShowWelcome] = React.useState(true);
+  const [sessionNotice, setSessionNotice] = React.useState<string | null>(null);
   const [userProfile, setUserProfile] = React.useState<any>(null);
   const [selectedGroup, setSelectedGroup] = React.useState<any>(null);
   const [selectedPost, setSelectedPost] = React.useState<any>(null);
@@ -332,6 +333,19 @@ export default function App() {
     tryAutoLogin();
   }, []);
 
+  // Listen for 401 token expiration and securely redirect to login
+  React.useEffect(() => {
+    const unsubscribe = onAuthExpired((reason) => {
+      setIsLoggedIn(false);
+      setUserProfile(null);
+      setShowWelcome(false);
+      if (reason === 'session_expired') {
+        setSessionNotice('🛡️ For your security, your session has expired due to inactivity. Please sign in again.');
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   const checkProfileStatus = async () => {
     try {
       const response = await client.get("profiles/me/");
@@ -438,8 +452,15 @@ export default function App() {
           ) : (
             <View style={{ flex: 1 }}>
               <PhoneAuthScreen
-                onLoginSuccess={handlePhoneAuthSuccess}
-                onBack={() => setShowWelcome(true)}
+                onLoginSuccess={(isNew) => {
+                  setSessionNotice(null);
+                  handlePhoneAuthSuccess(isNew);
+                }}
+                onBack={() => {
+                  setSessionNotice(null);
+                  setShowWelcome(true);
+                }}
+                sessionNotice={sessionNotice}
               />
               <DevScreenBadge id="MOB-04" />
             </View>
@@ -1068,6 +1089,13 @@ export default function App() {
               fetchUnreadNotificationCount();
             }}
             profilePicture={userProfile?.profile_picture}
+            userInitial={(
+              userProfile?.first_name?.[0] ||
+              userProfile?.full_name?.[0] ||
+              userProfile?.username?.[0] ||
+              userProfile?.phone?.[0] ||
+              'U'
+            ).toUpperCase()}
             unreadNotificationCount={unreadNotificationCount}
           />
           </LinearGradient>

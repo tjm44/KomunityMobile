@@ -12,6 +12,7 @@ import client, { getMediaUrl } from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
 import { validateAmount, validatePhone } from '../utils/validation';
 import { colors, gradients } from '../constants/theme';
+import PinModal from '../components/PinModal';
 
 const CAMPAIGN_TYPE_META: Record<string, { icon: string; color: string; label: string }> = {
     bereavement: { icon: '🕊️', color: colors.primary, label: 'Bereavement' },
@@ -106,6 +107,20 @@ const WalletScreen = ({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [topUpError, setTopUpError] = useState<string | null>(null);
 
+    // Saved Cards States
+    interface SavedCardItem {
+        id: number;
+        card_brand: string;
+        last4: string;
+        expiry_month: string;
+        expiry_year: string;
+        is_default: boolean;
+        created_at: string;
+    }
+    const [savedCards, setSavedCards] = useState<SavedCardItem[]>([]);
+    const [selectedCardId, setSelectedCardId] = useState<number | 'new'>('new');
+    const [saveCardForFuture, setSaveCardForFuture] = useState(true);
+
     // Send Money States
     const [showSendMoney, setShowSendMoney] = useState(false);
     const [sendAmount, setSendAmount] = useState('');
@@ -137,6 +152,16 @@ const WalletScreen = ({
     const [withdrawError, setWithdrawError] = useState<string | null>(null);
     const [isWithdrawing, setIsWithdrawing] = useState(false);
 
+    // PIN Verification Modal State
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pinModalTitle, setPinModalTitle] = useState('Confirm Security PIN');
+    const [pinModalDescription, setPinModalDescription] = useState('Please enter your 4-digit security PIN to authorize this transaction.');
+    const [pendingPinAction, setPendingPinAction] = useState<
+        | { type: 'send'; recipientId: number; amount: string; recipientName: string }
+        | { type: 'withdraw'; amount: string; channel: string; metadata: Record<string, string> }
+        | null
+    >(null);
+
     const [activeGroupOrOrg, setActiveGroupOrOrg] = useState<string | null>(null);
     const [activeGroupId, setActiveGroupId] = useState<number | null>(null);
 
@@ -152,6 +177,47 @@ const WalletScreen = ({
             onClearInitialCampaign?.();
         }
     }, [initialCampaign]);
+
+    const fetchSavedCards = async () => {
+        try {
+            const res = await client.get('wallets/saved_cards/');
+            const cards: SavedCardItem[] = res.data || [];
+            setSavedCards(cards);
+            if (cards.length > 0) {
+                const def = cards.find(c => c.is_default) || cards[0];
+                setSelectedCardId(def.id);
+            } else {
+                setSelectedCardId('new');
+            }
+        } catch (error) {
+            console.error('Error fetching saved cards:', error);
+        }
+    };
+
+    const handleDeleteSavedCard = (cardId: number) => {
+        Alert.alert(
+            'Remove Saved Card',
+            'Are you sure you want to remove this saved card?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Remove',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await client.post('wallets/delete_saved_card/', { card_id: cardId });
+                            setSavedCards(prev => prev.filter(c => c.id !== cardId));
+                            if (selectedCardId === cardId) {
+                                setSelectedCardId('new');
+                            }
+                        } catch (err: any) {
+                            Alert.alert('Error', err.response?.data?.error || 'Failed to remove saved card.');
+                        }
+                    }
+                }
+            ]
+        );
+    };
 
     const fetchData = async () => {
         try {
@@ -169,6 +235,7 @@ const WalletScreen = ({
             const targetGroupId = activeGroup ? activeGroup.id : null;
             setActiveGroupId(targetGroupId);
             fetchActiveCampaigns(targetGroupId);
+            fetchSavedCards();
         } catch (error) {
             console.error('Error fetching wallet data:', error);
         } finally {
@@ -180,55 +247,146 @@ const WalletScreen = ({
     const onRefresh = () => {
         setRefreshing(true);
         fetchData();
+        fetchSavedCards();
+    };
+
+    const validateCardDetails = (): string | null => {
+        const rawAmount = parseFloat(cardAmount);
+        if (isNaN(rawAmount) || rawAmount <= 0) {
+            return 'Please enter a valid amount greater than R0.';
+        }
+        if (rawAmount < 10) {
+            return 'Minimum card top-up amount is R10.00.';
+        }
+        const rawCard = cardNumber.replace(/\s+/g, '');
+        if (!rawCard) {
+            return 'Card number is required.';
+        }
+        if (rawCard.length < 15 || rawCard.length > 16 || !/^\d+$/.test(rawCard)) {
+            return 'Please enter a valid 15 or 16 digit card number.';
+        }
+        if (!cardExpiry) {
+            return 'Expiry date is required.';
+        }
+        const parts = cardExpiry.split('/');
+        const month = parseInt(parts[0]?.trim() || '0', 10);
+        let year = parseInt(parts[1]?.trim() || '0', 10);
+        if (year < 100) year += 2000;
+
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1;
+
+        if (!parts[0] || !parts[1] || month < 1 || month > 12) {
+            return 'Invalid month (01-12).';
+        }
+        if (year < currentYear || (year === currentYear && month < currentMonth)) {
+            return 'Card has expired.';
+        }
+
+        const rawCvv = cardCvv.trim();
+        if (!rawCvv) {
+            return 'CVV is required.';
+        }
+        if (rawCvv.length < 3 || rawCvv.length > 4 || !/^\d+$/.test(rawCvv)) {
+            return 'CVV must be 3 or 4 digits.';
+        }
+
+        return null;
     };
 
     const handleTopUp = async () => {
         setTopUpError(null);
-        setIsSubmitting(true);
-        try {
-            if (topUpMethod === 'voucher') {
-                if (!voucherPin.trim()) {
-                    setTopUpError('Please enter your 1Voucher PIN.');
-                    setIsSubmitting(false);
-                    return;
-                }
+        if (topUpMethod === 'voucher') {
+            if (!voucherPin.trim()) {
+                setTopUpError('Please enter your 1Voucher PIN.');
+                return;
+            }
+            setIsSubmitting(true);
+            try {
                 await client.post('wallets/top_up/', {
                     payment_method: 'voucher',
                     voucher_pin: voucherPin.trim()
                 });
                 Alert.alert('Success', 'Voucher redeemed successfully! Your balance has been updated.');
+                setShowTopUp(false);
+                setVoucherPin('');
+                fetchData();
+            } catch (error: any) {
+                console.error('Voucher top-up error:', error);
+                const errorMsg = error.response?.data?.error || 'Invalid or already redeemed voucher. Please verify your PIN and try again.';
+                setTopUpError(errorMsg);
+            } finally {
+                setIsSubmitting(false);
+            }
+        } else {
+            if (selectedCardId !== 'new') {
+                const rawAmount = parseFloat(cardAmount);
+                if (isNaN(rawAmount) || rawAmount <= 0) {
+                    setTopUpError('Please enter a valid amount greater than R0.');
+                    return;
+                }
+                if (rawAmount < 10) {
+                    setTopUpError('Minimum card top-up amount is R10.00.');
+                    return;
+                }
+
+                setIsSubmitting(true);
+                try {
+                    await client.post('wallets/top_up/', {
+                        payment_method: 'saved_card',
+                        saved_card_id: selectedCardId,
+                        amount: cardAmount,
+                    });
+                    Alert.alert('Success', 'Card payment processed successfully! Your balance has been updated.');
+                    setShowTopUp(false);
+                    setCardAmount('');
+                    fetchData();
+                } catch (error: any) {
+                    console.error('Saved card top up error:', error);
+                    const errorMsg = error.response?.data?.error || 'Card payment failed. Please check your details and try again.';
+                    setTopUpError(errorMsg);
+                } finally {
+                    setIsSubmitting(false);
+                }
             } else {
+                const cardValidationError = validateCardDetails();
+                if (cardValidationError) {
+                    setTopUpError(cardValidationError);
+                    return;
+                }
+
                 const parts = cardExpiry.split('/');
                 const expiry_month = parts[0]?.trim() || '';
                 const expiry_year = parts[1]?.trim() || '';
-                if (!cardAmount || !cardNumber || !expiry_month || !expiry_year || !cardCvv) {
-                    setTopUpError('All card fields are required.');
+
+                setIsSubmitting(true);
+                try {
+                    await client.post('wallets/top_up/', {
+                        payment_method: 'card',
+                        amount: cardAmount,
+                        card_number: cardNumber.replace(/\s+/g, ''),
+                        expiry_month,
+                        expiry_year,
+                        cvv: cardCvv,
+                        save_card: saveCardForFuture,
+                    });
+                    Alert.alert('Success', 'Card payment processed successfully! Your balance has been updated.');
+                    setShowTopUp(false);
+                    setCardAmount('');
+                    setCardNumber('');
+                    setCardExpiry('');
+                    setCardCvv('');
+                    fetchData();
+                    fetchSavedCards();
+                } catch (error: any) {
+                    console.error('Top up error:', error);
+                    const errorMsg = error.response?.data?.error || 'Card payment failed. Please check your details and try again.';
+                    setTopUpError(errorMsg);
+                } finally {
                     setIsSubmitting(false);
-                    return;
                 }
-                await client.post('wallets/top_up/', {
-                    payment_method: 'card',
-                    amount: cardAmount,
-                    card_number: cardNumber.replace(/\s+/g, ''),
-                    expiry_month,
-                    expiry_year,
-                    cvv: cardCvv
-                });
-                Alert.alert('Success', 'Card payment processed successfully! Your balance has been updated.');
             }
-            setShowTopUp(false);
-            setVoucherPin('');
-            setCardAmount('');
-            setCardNumber('');
-            setCardExpiry('');
-            setCardCvv('');
-            fetchData();
-        } catch (error: any) {
-            console.error('Top up error:', error);
-            const errorMsg = error.response?.data?.error || 'Top-up failed. Please check your details and try again.';
-            setTopUpError(errorMsg);
-        } finally {
-            setIsSubmitting(false);
         }
     };
 
@@ -256,40 +414,19 @@ const WalletScreen = ({
 
         setSendError(null);
 
-        // Authenticate before sending money
+        // Authenticate before requesting PIN
         const authenticated = await authenticateAction(`Authenticate to send ${formatCurrency(sendAmount)} to ${selectedRecipient.member_detail.full_name}`);
         if (!authenticated) return;
 
-        setIsSending(true);
-        try {
-            console.log('Selected recipient:', selectedRecipient);
-            console.log('Sending to user ID:', selectedRecipient.member_detail.user);
-
-            const payload = {
-                recipient_user_id: selectedRecipient.member_detail.user,
-                amount: sendAmount
-            };
-
-            console.log('Send money payload:', payload);
-
-            await client.post('wallets/send_money/', payload);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Alert.alert('Success', `Successfully sent ${formatCurrency(sendAmount)} to ${selectedRecipient.member_detail.full_name}`);
-            setShowSendMoney(false);
-            setShowWithdraw(false);
-            setSendAmount('');
-            setSelectedRecipient(null);
-            setSearchQuery('');
-            fetchData(); // Refresh balance and history
-        } catch (error: any) {
-            console.error('Send money error:', error);
-            console.error('Error response:', error.response?.data);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            const errorMsg = error.response?.data?.error || 'Failed to send money. Please try again.';
-            Alert.alert('Error', errorMsg);
-        } finally {
-            setIsSending(false);
-        }
+        setPinModalTitle('Authorize Money Transfer');
+        setPinModalDescription(`Please enter your 4-digit security PIN to send ${formatCurrency(sendAmount)} to ${selectedRecipient.member_detail.full_name}.`);
+        setPendingPinAction({
+            type: 'send',
+            recipientId: selectedRecipient.member_detail.user,
+            amount: sendAmount,
+            recipientName: selectedRecipient.member_detail.full_name,
+        });
+        setShowPinModal(true);
     };
 
     const handleWithdraw = async () => {
@@ -339,47 +476,86 @@ const WalletScreen = ({
         const authenticated = await authenticateAction(`Authenticate withdrawal of ${formatCurrency(withdrawAmount)}`);
         if (!authenticated) return;
 
-        setIsWithdrawing(true);
-        try {
-            const res = await client.post('wallets/withdraw/', {
-                amount: withdrawAmount,
-                channel: withdrawChannel,
-                metadata,
-                currency: 'ZAR'
-            });
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setPinModalTitle('Authorize Withdrawal');
+        setPinModalDescription(`Please enter your 4-digit security PIN to withdraw ${formatCurrency(withdrawAmount)} via ${withdrawChannel.replace(/_/g, ' ')}.`);
+        setPendingPinAction({
+            type: 'withdraw',
+            amount: withdrawAmount,
+            channel: withdrawChannel,
+            metadata,
+        });
+        setShowPinModal(true);
+    };
 
-            // If voucher withdrawal, show the voucher code prominently
-            if (res.data?.voucher_code) {
-                Alert.alert(
-                    '🎫 Voucher Ready!',
-                    `Withdrawal of ${formatCurrency(withdrawAmount)} successful!\n\n` +
-                    `Your Voucher Code:\n${res.data.voucher_code}\n\n` +
-                    `Redeem at: ${res.data.partner || withdrawPartner}\n\n` +
-                    `Present this code at your chosen retail partner to collect your cash.`,
-                    [{ text: 'OK', style: 'default' }]
-                );
-            } else {
-                Alert.alert('Success', `Withdrawal of ${formatCurrency(withdrawAmount)} requested successfully via ${withdrawChannel.replace(/_/g, ' ')}.`);
+    const handlePinConfirm = async (pin: string) => {
+        if (!pendingPinAction) return;
+
+        if (pendingPinAction.type === 'send') {
+            setIsSending(true);
+            try {
+                const payload = {
+                    recipient_user_id: pendingPinAction.recipientId,
+                    amount: pendingPinAction.amount,
+                    pin,
+                };
+                await client.post('wallets/send_money/', payload);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                Alert.alert('Success', `Successfully sent ${formatCurrency(pendingPinAction.amount)} to ${pendingPinAction.recipientName}`);
+                setShowSendMoney(false);
+                setShowWithdraw(false);
+                setSendAmount('');
+                setSelectedRecipient(null);
+                setSearchQuery('');
+                setPendingPinAction(null);
+                fetchData();
+            } catch (error: any) {
+                console.error('Send money error:', error);
+                throw error;
+            } finally {
+                setIsSending(false);
             }
+        } else if (pendingPinAction.type === 'withdraw') {
+            setIsWithdrawing(true);
+            try {
+                const res = await client.post('wallets/withdraw/', {
+                    amount: pendingPinAction.amount,
+                    channel: pendingPinAction.channel,
+                    metadata: pendingPinAction.metadata,
+                    currency: 'ZAR',
+                    pin,
+                });
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-            setShowWithdraw(false);
-            setWithdrawAmount('');
-            setWithdrawAccountNumber('');
-            setWithdrawBankCode('');
-            setWithdrawPhoneNumber('');
-            setWithdrawProvider('');
-            setWithdrawVoucherCode('');
-            setWithdrawPartner('');
-            setWithdrawError(null);
-            fetchData();
-        } catch (error: any) {
-            console.error('Withdraw error:', error);
-            const errorMsg = error.response?.data?.error || 'Failed to submit withdrawal request. Please try again.';
-            Alert.alert('Error', errorMsg);
-            setWithdrawError(errorMsg);
-        } finally {
-            setIsWithdrawing(false);
+                if (res.data?.voucher_code) {
+                    Alert.alert(
+                        '🎫 Voucher Ready!',
+                        `Withdrawal of ${formatCurrency(pendingPinAction.amount)} successful!\n\n` +
+                        `Your Voucher Code:\n${res.data.voucher_code}\n\n` +
+                        `Redeem at: ${res.data.partner || withdrawPartner}\n\n` +
+                        `Present this code at your chosen retail partner to collect your cash.`,
+                        [{ text: 'OK', style: 'default' }]
+                    );
+                } else {
+                    Alert.alert('Success', `Withdrawal of ${formatCurrency(pendingPinAction.amount)} requested successfully via ${pendingPinAction.channel.replace(/_/g, ' ')}.`);
+                }
+
+                setShowWithdraw(false);
+                setWithdrawAmount('');
+                setWithdrawAccountNumber('');
+                setWithdrawBankCode('');
+                setWithdrawPhoneNumber('');
+                setWithdrawProvider('');
+                setWithdrawVoucherCode('');
+                setWithdrawPartner('');
+                setWithdrawError(null);
+                setPendingPinAction(null);
+                fetchData();
+            } catch (error: any) {
+                console.error('Withdraw error:', error);
+                throw error;
+            } finally {
+                setIsWithdrawing(false);
+            }
         }
     };
 
@@ -763,71 +939,212 @@ const WalletScreen = ({
                                         placeholderTextColor="#9ca3af"
                                     />
                                 </View>
-                                <View>
-                                    <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Card Number</Text>
-                                    <TextInput
-                                        style={[styles.textInput, { fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', letterSpacing: 2 }]}
-                                        placeholder="5531 8866 5214 2950"
-                                        keyboardType="number-pad"
-                                        value={cardNumber}
-                                        onChangeText={(text) => {
-                                            const raw = text.replace(/\D/g, '').slice(0, 16);
-                                            const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
-                                            setCardNumber(formatted);
-                                            if (topUpError) setTopUpError(null);
-                                        }}
-                                        placeholderTextColor="#9ca3af"
-                                        maxLength={19}
-                                    />
-                                </View>
-                                <View style={{ flexDirection: 'row', gap: 12 }}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Expiry (MM/YY)</Text>
-                                        <TextInput
-                                            style={styles.textInput}
-                                            placeholder="09/32"
-                                            value={cardExpiry}
-                                            onChangeText={(text) => {
-                                                let val = text.replace(/\D/g, '').slice(0, 4);
-                                                if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
-                                                setCardExpiry(val);
-                                                if (topUpError) setTopUpError(null);
-                                            }}
-                                            placeholderTextColor="#9ca3af"
-                                            maxLength={5}
-                                        />
+
+                                {/* Saved Cards Selection */}
+                                {savedCards.length > 0 && (
+                                    <View>
+                                        <Text style={[styles.inputLabel, { marginBottom: 6 }]}>Select Card</Text>
+                                        <View style={{ gap: 8 }}>
+                                            {savedCards.map((card) => {
+                                                const isSelected = selectedCardId === card.id;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={card.id}
+                                                        style={{
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between',
+                                                            padding: 10,
+                                                            borderRadius: 8,
+                                                            borderWidth: 1,
+                                                            borderColor: isSelected ? colors.primaryLight : '#374151',
+                                                            backgroundColor: isSelected ? 'rgba(59, 130, 246, 0.15)' : colors.surfaceLight,
+                                                        }}
+                                                        onPress={() => setSelectedCardId(card.id)}
+                                                    >
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
+                                                            <View style={{
+                                                                width: 16,
+                                                                height: 16,
+                                                                borderRadius: 8,
+                                                                borderWidth: 2,
+                                                                borderColor: isSelected ? colors.primaryLight : '#6b7280',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                            }}>
+                                                                {isSelected && (
+                                                                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primaryLight }} />
+                                                                )}
+                                                            </View>
+                                                            <Text style={{ fontSize: 16 }}>💳</Text>
+                                                            <View>
+                                                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                                    <Text style={{ color: colors.white, fontWeight: '600', fontSize: 13 }}>
+                                                                        {card.card_brand} •••• {card.last4}
+                                                                    </Text>
+                                                                    {card.is_default && (
+                                                                        <View style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4 }}>
+                                                                            <Text style={{ color: '#22c55e', fontSize: 9, fontWeight: 'bold' }}>DEFAULT</Text>
+                                                                        </View>
+                                                                    )}
+                                                                </View>
+                                                                <Text style={{ color: colors.textSecondary, fontSize: 11 }}>
+                                                                    Exp {card.expiry_month}/{card.expiry_year}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                        <TouchableOpacity
+                                                            onPress={() => handleDeleteSavedCard(card.id)}
+                                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                                            style={{ padding: 4 }}
+                                                        >
+                                                            <Text style={{ fontSize: 14 }}>🗑️</Text>
+                                                        </TouchableOpacity>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+
+                                            <TouchableOpacity
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    alignItems: 'center',
+                                                    gap: 8,
+                                                    padding: 10,
+                                                    borderRadius: 8,
+                                                    borderWidth: 1,
+                                                    borderColor: selectedCardId === 'new' ? colors.primaryLight : '#374151',
+                                                    borderStyle: selectedCardId === 'new' ? 'solid' : 'dashed',
+                                                    backgroundColor: selectedCardId === 'new' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                                                }}
+                                                onPress={() => setSelectedCardId('new')}
+                                            >
+                                                <View style={{
+                                                    width: 16,
+                                                    height: 16,
+                                                    borderRadius: 8,
+                                                    borderWidth: 2,
+                                                    borderColor: selectedCardId === 'new' ? colors.primaryLight : '#6b7280',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                }}>
+                                                    {selectedCardId === 'new' && (
+                                                        <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primaryLight }} />
+                                                    )}
+                                                </View>
+                                                <Text style={{ color: colors.white, fontSize: 13, fontWeight: '500' }}>
+                                                    ➕ Use a new card
+                                                </Text>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[styles.inputLabel, { marginBottom: 4 }]}>CVV</Text>
-                                        <TextInput
-                                            style={styles.textInput}
-                                            placeholder="564"
-                                            keyboardType="number-pad"
-                                            secureTextEntry
-                                            value={cardCvv}
-                                            onChangeText={(text) => {
-                                                setCardCvv(text.replace(/\D/g, '').slice(0, 4));
-                                                if (topUpError) setTopUpError(null);
-                                            }}
-                                            placeholderTextColor="#9ca3af"
-                                            maxLength={4}
-                                        />
-                                    </View>
-                                </View>
+                                )}
+
+                                {/* New Card Fields */}
+                                {selectedCardId === 'new' && (
+                                    <>
+                                        <View>
+                                            <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Card Number</Text>
+                                            <TextInput
+                                                style={[styles.textInput, { fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', letterSpacing: 2 }]}
+                                                placeholder="5531 8866 5214 2950"
+                                                keyboardType="number-pad"
+                                                value={cardNumber}
+                                                onChangeText={(text) => {
+                                                    const raw = text.replace(/\D/g, '').slice(0, 16);
+                                                    const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                                                    setCardNumber(formatted);
+                                                    if (topUpError) setTopUpError(null);
+                                                }}
+                                                placeholderTextColor="#9ca3af"
+                                                maxLength={19}
+                                            />
+                                        </View>
+                                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={[styles.inputLabel, { marginBottom: 4 }]}>Expiry (MM/YY)</Text>
+                                                <TextInput
+                                                    style={styles.textInput}
+                                                    placeholder="09/32"
+                                                    value={cardExpiry}
+                                                    onChangeText={(text) => {
+                                                        let val = text.replace(/\D/g, '').slice(0, 4);
+                                                        if (val.length > 2) val = val.slice(0, 2) + '/' + val.slice(2);
+                                                        setCardExpiry(val);
+                                                        if (topUpError) setTopUpError(null);
+                                                    }}
+                                                    placeholderTextColor="#9ca3af"
+                                                    maxLength={5}
+                                                />
+                                            </View>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={[styles.inputLabel, { marginBottom: 4 }]}>CVV</Text>
+                                                <TextInput
+                                                    style={styles.textInput}
+                                                    placeholder="564"
+                                                    keyboardType="number-pad"
+                                                    secureTextEntry
+                                                    value={cardCvv}
+                                                    onChangeText={(text) => {
+                                                        setCardCvv(text.replace(/\D/g, '').slice(0, 4));
+                                                        if (topUpError) setTopUpError(null);
+                                                    }}
+                                                    placeholderTextColor="#9ca3af"
+                                                    maxLength={4}
+                                                />
+                                            </View>
+                                        </View>
+
+                                        {/* Save Card Checkbox */}
+                                        <TouchableOpacity
+                                            style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4, paddingVertical: 4 }}
+                                            onPress={() => setSaveCardForFuture(!saveCardForFuture)}
+                                            activeOpacity={0.8}
+                                        >
+                                            <View style={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 4,
+                                                borderWidth: 1.5,
+                                                borderColor: saveCardForFuture ? '#10b981' : '#4b5563',
+                                                backgroundColor: saveCardForFuture ? '#10b981' : 'transparent',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                            }}>
+                                                {saveCardForFuture && <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>✓</Text>}
+                                            </View>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={{ color: '#e5e7eb', fontSize: 13, fontWeight: '500' }}>
+                                                    Save this card securely for future payments
+                                                </Text>
+                                                <Text style={{ color: colors.textSecondary, fontSize: 11, marginTop: 2 }}>
+                                                    🔒 Encrypted tokenization. CVV is never stored.
+                                                </Text>
+                                            </View>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                             </View>
                         )}
                         {topUpError && <Text style={styles.errorText}>{topUpError}</Text>}
 
                         <TouchableOpacity
-                            style={[styles.submitButton, isSubmitting && styles.disabledButton, { marginTop: 20 }]}
+                            style={[
+                                styles.submitButton, 
+                                (isSubmitting || (topUpMethod === 'voucher' ? !voucherPin.trim() : (selectedCardId === 'new' ? (!cardAmount || !cardNumber || !cardExpiry || !cardCvv) : !cardAmount))) && styles.disabledButton, 
+                                { marginTop: 20 }
+                            ]}
                             onPress={handleTopUp}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || (topUpMethod === 'voucher' ? !voucherPin.trim() : (selectedCardId === 'new' ? (!cardAmount || !cardNumber || !cardExpiry || !cardCvv) : !cardAmount))}
                         >
                             {isSubmitting ? (
                                 <ActivityIndicator color="#ffffff" />
                             ) : (
                                 <Text style={styles.submitButtonText}>
-                                    {topUpMethod === 'voucher' ? 'Redeem Voucher' : 'Pay with Card'}
+                                    {topUpMethod === 'voucher' 
+                                        ? 'Redeem Voucher' 
+                                        : (selectedCardId !== 'new' 
+                                            ? `Top Up R${cardAmount || '0'} with Saved Card` 
+                                            : 'Pay with Card')}
                                 </Text>
                             )}
                         </TouchableOpacity>
@@ -1455,6 +1772,18 @@ const WalletScreen = ({
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
+
+            {/* ──────────────── SECURITY PIN STEP-UP MODAL ──────────────── */}
+            <PinModal
+                visible={showPinModal}
+                title={pinModalTitle}
+                description={pinModalDescription}
+                onClose={() => {
+                    setShowPinModal(false);
+                    setPendingPinAction(null);
+                }}
+                onConfirm={handlePinConfirm}
+            />
         </View>
     );
 };

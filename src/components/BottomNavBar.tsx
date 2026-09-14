@@ -14,6 +14,7 @@ interface BottomNavBarProps {
     onTabPress: (tab: TabName) => void;
     onBack?: () => void;
     profilePicture?: string | null;
+    userInitial?: string;
     unreadNotificationCount?: number;
 }
 
@@ -31,7 +32,7 @@ const TABS: Array<{
     { key: 'profile',     label: 'Profile',                          color: colors.primary },
 ];
 
-const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNotificationCount }: BottomNavBarProps) => {
+const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, userInitial, unreadNotificationCount }: BottomNavBarProps) => {
     const insets = useSafeAreaInsets();
 
     const handlePress = (tab: TabName) => {
@@ -70,6 +71,12 @@ const BottomNavBar = ({ activeTab, onTabPress, onBack, profilePicture, unreadNot
                                     style={[styles.profilePic, isActive && styles.activeProfilePic]}
                                     transition={200}
                                 />
+                            ) : userInitial ? (
+                                <View style={[styles.profilePlaceholder, isActive && styles.activeProfilePlaceholder, { backgroundColor: colors.surfaceTeal }]}>
+                                    <Text style={{ fontSize: 13, fontFamily: 'Outfit-Bold', color: colors.primary }}>
+                                        {userInitial}
+                                    </Text>
+                                </View>
                             ) : (
                                 <View style={[styles.profilePlaceholder, isActive && styles.activeProfilePlaceholder]}>
                                     <Feather name="user" size={16} color={tabColor} />

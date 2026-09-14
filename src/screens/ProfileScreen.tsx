@@ -10,7 +10,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import client, { fetchFormData, appendFileToFormData, getMediaUrl } from '../api/client';
 import { colors, gradients } from '../constants/theme';
-
+import PinModal from '../components/PinModal';
 
 interface Profile {
     id: number;
@@ -62,6 +62,7 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [showMenu, setShowMenu] = useState(false);
+    const [showPinModal, setShowPinModal] = useState(false);
 
     useEffect(() => {
         if (autoShowKyc) {
@@ -581,6 +582,34 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     </View>
                 )}
 
+                {/* Account Security & PIN */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Account Security</Text>
+                    <View style={styles.infoRow}>
+                        <View style={{ flex: 1, paddingRight: 12 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 }}>
+                                4-Digit Security PIN
+                            </Text>
+                            <Text style={{ fontSize: 12, color: colors.textSecondary, lineHeight: 16 }}>
+                                Used to authorize sensitive transactions such as wallet transfers, payouts, and disbursements.
+                            </Text>
+                        </View>
+                        <TouchableOpacity
+                            style={{
+                                backgroundColor: colors.primary,
+                                paddingHorizontal: 14,
+                                paddingVertical: 8,
+                                borderRadius: 10,
+                            }}
+                            onPress={() => setShowPinModal(true)}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={{ color: colors.white, fontSize: 13, fontWeight: '700' }}>
+                                Set / Change
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
 
             </ScrollView>
 
@@ -768,6 +797,19 @@ const ProfileScreen = ({ onBack, onLogout, onProfileUpdate, onViewOrganisationDe
                     </View>
                 </Pressable>
             </Modal>
+
+            {/* Security PIN Setup / Change Modal */}
+            <PinModal
+                visible={showPinModal}
+                title="Set 4-Digit Security PIN"
+                description="Enter a 4-digit security PIN to authorize sensitive wallet transfers, payouts, and disbursements."
+                onClose={() => setShowPinModal(false)}
+                onConfirm={async (newPin: string) => {
+                    await client.post('auth/set-pin/', { pin: newPin });
+                    Alert.alert('Security PIN Updated', 'Your 4-digit security PIN has been set successfully. You will use it to authorize transfers and withdrawals.');
+                    setShowPinModal(false);
+                }}
+            />
         </View>
     );
 };
@@ -1064,7 +1106,11 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     reviewOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         borderWidth: 2,
         borderColor: 'rgba(37, 99, 235, 0.2)',
         borderRadius: 140,

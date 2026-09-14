@@ -1,23 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     ScrollView, Alert, ActivityIndicator, Platform, KeyboardAvoidingView
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import client from '../api/client';
-import { colors, gradients } from '../constants/theme';
-
-interface Member {
-    id: number;
-    member: number;
-    member_detail: {
-        id: number;
-        full_name: string;
-        profile_picture?: string;
-    };
-}
+import { colors } from '../constants/theme';
 
 interface CreateCampaignScreenProps {
     group: any;
@@ -25,30 +14,14 @@ interface CreateCampaignScreenProps {
     onCreated: (campaign: any) => void;
 }
 
-const CAMPAIGN_TYPES = [
-    { key: 'bereavement', label: 'Bereavement', icon: '🕊️', color: colors.primary },
-    { key: 'excess',      label: 'Insurance Excess', icon: '🚗', color: colors.primaryLight },
-    { key: 'emergency',   label: 'Emergency', icon: '🆘', color: colors.danger },
-    { key: 'custom',      label: 'Custom Fund', icon: '✨', color: colors.primaryLight },
-    { key: 'church',      label: 'Church / Tithe / Pledge', icon: '⛪', color: colors.primaryLight },
-    { key: 'stokvel',     label: 'Stokvel Cycle Fund', icon: '💰', color: colors.success },
-    { key: 'student',     label: 'Student Event & Relief', icon: '🎓', color: colors.warning },
-    { key: 'sports',      label: 'Sports Kit & Dues', icon: '⚽', color: colors.success },
-];
-
 const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreenProps) => {
     const insets = useSafeAreaInsets();
-    const [campaignType, setCampaignType] = useState<string>(group?.purpose ?? 'custom');
     const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
     const [targetAmount, setTargetAmount] = useState('');
     const [deadlineDate, setDeadlineDate] = useState<Date | null>(null);
+    const [description, setDescription] = useState('');
     const [showDatePicker, setShowDatePicker] = useState(false);
-    const [beneficiaryId, setBeneficiaryId] = useState<number | null>(null);
-    const [members, setMembers] = useState<Member[]>([]);
-    const [loadingMembers, setLoadingMembers] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showMemberPicker, setShowMemberPicker] = useState(false);
 
     const onDateChange = (event: any, selectedDate?: Date) => {
         setShowDatePicker(false);
@@ -65,65 +38,50 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
         });
     };
 
-    const selectedMeta = CAMPAIGN_TYPES.find(t => t.key === campaignType)!;
-    const selectedBeneficiary = members.find(m => m.member_detail.id === beneficiaryId);
-
-    const isOrganisation = (group as any).is_organisation || !!(group as any).entity_type;
-
-    useEffect(() => {
-        if (!isOrganisation) {
-            fetchMembers();
-        }
-    }, [isOrganisation]);
-
-    const fetchMembers = async () => {
-        setLoadingMembers(true);
-        try {
-            const res = await client.get(`groups/${group.id}/members/`);
-            setMembers(res.data);
-        } catch (e) {
-            console.error('Error fetching members:', e);
-        } finally {
-            setLoadingMembers(false);
-        }
-    };
+    const isOrganisation = (group as any)?.is_organisation || !!(group as any)?.entity_type;
 
     const handleCreate = async () => {
         if (!title.trim()) {
             Alert.alert('Validation', 'Please enter a campaign title.');
             return;
         }
-        if ((campaignType === 'excess' || campaignType === 'bereavement') && !beneficiaryId) {
-            Alert.alert('Validation', 'Please select a beneficiary / claimant for this campaign.');
-            return;
-        }
 
         setLoading(true);
         try {
+            const validTypes = ['bereavement', 'excess', 'emergency', 'custom'];
+            const campaignType = validTypes.includes(group?.purpose) ? group.purpose : 'custom';
+
             const payload: any = {
-                campaign_type: campaignType,
                 title: title.trim(),
+                name: title.trim(),
                 description: description.trim(),
+                campaign_type: campaignType,
             };
             if (isOrganisation) {
                 payload.organisation = group.id;
             } else {
                 payload.group = group.id;
             }
-            if (beneficiaryId) payload.beneficiary = beneficiaryId;
-            if (targetAmount) payload.target_amount = parseFloat(targetAmount);
+            if (targetAmount && parseFloat(targetAmount) > 0) {
+                payload.target_amount = parseFloat(targetAmount);
+            }
             if (deadlineDate) {
                 payload.deadline = deadlineDate.toISOString().split('T')[0];
             }
 
             const res = await client.post('campaigns/', payload);
-            Alert.alert('✅ Campaign Created', `"${res.data.title}" is now active!`);
+            Alert.alert('✅ Campaign Created', `"${res.data.title || title}" is now active!`);
             onCreated(res.data);
         } catch (e: any) {
-            const msg = e?.response?.data?.non_field_errors?.[0]
+            let msg = e?.response?.data?.non_field_errors?.[0]
                 || e?.response?.data?.detail
-                || 'Failed to create campaign. Please try again.';
-            Alert.alert('Error', msg);
+                || e?.response?.data?.error;
+            if (!msg && e?.response?.data && typeof e.response.data === 'object') {
+                const firstKey = Object.keys(e.response.data)[0];
+                const firstVal = e.response.data[firstKey];
+                msg = Array.isArray(firstVal) ? `${firstKey}: ${firstVal[0]}` : `${firstKey}: ${firstVal}`;
+            }
+            Alert.alert('Error', msg || 'Failed to create campaign. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -134,108 +92,25 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
                 <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-                    {/* Campaign type selector */}
-                    <Text style={styles.sectionLabel}>Campaign Type</Text>
-                    <View style={styles.typeGrid}>
-                        {CAMPAIGN_TYPES.filter(t => {
-                            if ((group as any).is_organisation) {
-                                return t.key === 'emergency' || t.key === 'custom';
-                            }
-                            return t.key === group?.purpose;
-                        }).map(t => {
-                            const active = campaignType === t.key;
-                            return (
-                                <TouchableOpacity
-                                    key={t.key}
-                                    style={[styles.typeCard, active && { borderColor: t.color, backgroundColor: `${t.color}12` }]}
-                                    onPress={() => setCampaignType(t.key)}
-                                >
-                                    <Text style={styles.typeIcon}>{t.icon}</Text>
-                                    <Text style={[styles.typeLabel, active && { color: t.color }]}>{t.label}</Text>
-                                </TouchableOpacity>
-                            );
-                        })}
+                    {/* Group info header banner */}
+                    <View style={styles.groupCard}>
+                        <Text style={styles.groupNameText}>{group?.name || 'Community Group'}</Text>
+                        <Text style={styles.groupCategoryText}>
+                            Category: <Text style={{ color: colors.primary, fontFamily: 'Outfit-Bold' }}>{group?.purpose_display || group?.purpose || 'Community Fund'}</Text>
+                        </Text>
                     </View>
 
-                    {campaignType === 'emergency' && !(group as any).is_verified && (
-                        <View style={styles.warningBox}>
-                            <Text style={styles.warningText}>
-                                ⚠️ Emergency Fundraisers require a verified NGO or Church account.
-                                Submit a verification request in settings.
-                            </Text>
-                        </View>
-                    )}
-
-                    {/* Title */}
+                    {/* 1. Campaign Title */}
                     <Text style={styles.sectionLabel}>Campaign Title *</Text>
                     <TextInput
                         style={styles.input}
-                        placeholder={campaignType === 'excess'
-                            ? 'e.g. Help John with insurance excess after accident'
-                            : 'Campaign title...'}
+                        placeholder="e.g. Emergency Support Fund, Annual Event..."
                         value={title}
                         onChangeText={setTitle}
                         maxLength={200}
                     />
 
-                    {/* Description */}
-                    <Text style={styles.sectionLabel}>Description</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        placeholder="Describe the situation and how the funds will be used..."
-                        value={description}
-                        onChangeText={setDescription}
-                        multiline
-                        numberOfLines={4}
-                    />
-
-                    {/* Beneficiary / Claimant */}
-                    {(campaignType === 'excess' || campaignType === 'bereavement') && (
-                        <>
-                            <Text style={styles.sectionLabel}>
-                                {campaignType === 'excess' ? 'Claimant (Member) *' : 'Beneficiary *'}
-                            </Text>
-                            <TouchableOpacity
-                                style={styles.pickerBtn}
-                                onPress={() => setShowMemberPicker(!showMemberPicker)}
-                            >
-                                <Text style={[styles.pickerBtnText, !selectedBeneficiary && { color: colors.textMuted }]}>
-                                    {selectedBeneficiary
-                                        ? `👤 ${selectedBeneficiary.member_detail.full_name}`
-                                        : 'Select a member...'}
-                                </Text>
-                                <Text style={styles.pickerArrow}>{showMemberPicker ? '▲' : '▼'}</Text>
-                            </TouchableOpacity>
-
-                            {showMemberPicker && (
-                                <View style={styles.memberList}>
-                                    {loadingMembers
-                                        ? <ActivityIndicator color="#2563eb" style={{ padding: 12 }} />
-                                        : members.map(m => (
-                                            <TouchableOpacity
-                                                key={m.id}
-                                                style={[
-                                                    styles.memberRow,
-                                                    beneficiaryId === m.member_detail.id && styles.memberRowSelected,
-                                                ]}
-                                                onPress={() => {
-                                                    setBeneficiaryId(m.member_detail.id);
-                                                    setShowMemberPicker(false);
-                                                }}
-                                            >
-                                                <Text style={styles.memberName}>{m.member_detail.full_name}</Text>
-                                                {beneficiaryId === m.member_detail.id && (
-                                                    <Text style={styles.memberCheck}>✓</Text>
-                                                )}
-                                            </TouchableOpacity>
-                                        ))
-                                    }
-                                </View>
-                            )}
-                        </>
-                    )}
-
-                    {/* Target amount */}
+                    {/* 2. Target Amount (Optional) */}
                     <Text style={styles.sectionLabel}>Target Amount (optional)</Text>
                     <TextInput
                         style={styles.input}
@@ -245,7 +120,7 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                         keyboardType="numeric"
                     />
 
-                    {/* Deadline */}
+                    {/* 3. Deadline */}
                     <Text style={styles.sectionLabel}>Deadline (optional)</Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity 
@@ -253,7 +128,7 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                             onPress={() => setShowDatePicker(true)}
                         >
                             <Text style={deadlineDate ? { color: colors.textPrimary, fontFamily: 'Outfit-Regular', fontSize: 15 } : { color: colors.textMuted, fontFamily: 'Outfit-Regular', fontSize: 15 }}>
-                                {deadlineDate ? formatDate(deadlineDate) : "Select a deadline date"}
+                                {deadlineDate ? formatDate(deadlineDate) : "Select deadline date"}
                             </Text>
                         </TouchableOpacity>
                         {deadlineDate && (
@@ -276,26 +151,28 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
                         />
                     )}
 
-                    {campaignType === 'emergency' && (
-                        <View style={styles.infoBox}>
-                            <Text style={styles.infoText}>
-                                🌍 This campaign will be publicly visible to all Komunity users in the Fundraisers tab
-                                until it is manually closed.
-                            </Text>
-                        </View>
-                    )}
+                    {/* 4. Description */}
+                    <Text style={styles.sectionLabel}>Description</Text>
+                    <TextInput
+                        style={[styles.input, styles.textArea]}
+                        placeholder="Describe the cause, goals, and how funds will be used..."
+                        value={description}
+                        onChangeText={setDescription}
+                        multiline
+                        numberOfLines={4}
+                    />
 
                 </ScrollView>
 
                 <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
                     <TouchableOpacity
-                        style={[styles.createBtn, { backgroundColor: selectedMeta.color }, loading && { opacity: 0.6 }]}
+                        style={[styles.createBtn, loading && { opacity: 0.6 }]}
                         onPress={handleCreate}
-                        disabled={loading}
+                        disabled={loading || !title.trim()}
                     >
                         {loading
                             ? <ActivityIndicator color="#fff" />
-                            : <Text style={styles.createBtnText}>Launch Campaign {selectedMeta.icon}</Text>
+                            : <Text style={styles.createBtnText}>🚀 Launch Campaign</Text>
                         }
                     </TouchableOpacity>
                     <TouchableOpacity onPress={onBack} style={styles.cancelBtn}>
@@ -310,6 +187,25 @@ const CreateCampaignScreen = ({ group, onBack, onCreated }: CreateCampaignScreen
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     scroll: { padding: 20, paddingBottom: 24 },
+    groupCard: {
+        backgroundColor: colors.white,
+        borderRadius: 14,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginBottom: 8,
+    },
+    groupNameText: {
+        fontSize: 17,
+        fontFamily: 'Outfit-Bold',
+        color: colors.textPrimary,
+        marginBottom: 4,
+    },
+    groupCategoryText: {
+        fontSize: 13,
+        fontFamily: 'Outfit-Regular',
+        color: colors.textMuted,
+    },
     sectionLabel: {
         fontSize: 14,
         fontWeight: '700',
@@ -318,19 +214,6 @@ const styles = StyleSheet.create({
         marginTop: 16,
         fontFamily: 'Outfit-Bold',
     },
-    typeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-    typeCard: {
-        width: '47%',
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: colors.border,
-        backgroundColor: '#fff',
-        padding: 12,
-        alignItems: 'center',
-        gap: 6,
-    },
-    typeIcon: { fontSize: 26 },
-    typeLabel: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, fontFamily: 'Outfit-Bold', textAlign: 'center' },
     input: {
         backgroundColor: colors.white,
         borderWidth: 1,
@@ -342,50 +225,8 @@ const styles = StyleSheet.create({
         fontFamily: 'Outfit-Regular',
     },
     textArea: { height: 110, textAlignVertical: 'top' },
-    pickerBtn: {
-        backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: 12,
-        padding: 14,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    pickerBtnText: { fontSize: 15, color: colors.textPrimary, fontFamily: 'Outfit-Regular' },
-    pickerArrow: { fontSize: 12, color: colors.textMuted },
-    memberList: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginTop: 4,
-        overflow: 'hidden',
-    },
-    memberRow: { padding: 14, borderBottomWidth: 1, borderBottomColor: colors.borderLight, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    memberRowSelected: { backgroundColor: colors.surfaceLight, borderWidth: 1, borderColor: colors.accentLight },
-    memberName: { fontSize: 15, color: colors.textPrimary, fontFamily: 'Outfit-Regular' },
-    memberCheck: { fontSize: 16, color: colors.primary },
-    warningBox: {
-        backgroundColor: colors.warningLight,
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: colors.warningLight,
-        marginTop: 8,
-    },
-    warningText: { fontSize: 13, color: colors.warning, lineHeight: 18, fontFamily: 'Outfit-Regular' },
-    infoBox: {
-        backgroundColor: colors.surfaceLight,
-        borderRadius: 12,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: colors.accentLight,
-        marginTop: 12,
-    },
-    infoText: { fontSize: 13, color: colors.primary, lineHeight: 18, fontFamily: 'Outfit-Regular' },
     footer: { padding: 20, paddingTop: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: colors.surfaceLight },
-    createBtn: { borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 10 },
+    createBtn: { borderRadius: 14, padding: 16, alignItems: 'center', marginBottom: 10, backgroundColor: colors.primary },
     createBtnText: { color: '#fff', fontSize: 17, fontWeight: '800', fontFamily: 'Outfit-Bold' },
     cancelBtn: { alignItems: 'center', padding: 10 },
     cancelBtnText: { fontSize: 15, color: colors.textSecondary, fontFamily: 'Outfit-Regular' },

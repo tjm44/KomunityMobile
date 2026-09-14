@@ -31,6 +31,20 @@ interface Organisation {
     registration_number: string;
 }
 
+const PURPOSE_FILTERS: Array<{ id: string; label: string; icon: string }> = [
+    { id: 'all', label: 'All', icon: '🌐' },
+    { id: 'bereavement', label: 'Bereavement', icon: '🕊️' },
+    { id: 'savings', label: 'Savings', icon: '💰' },
+    { id: 'grocery', label: 'Grocery', icon: '🛒' },
+    { id: 'education', label: 'Education', icon: '🎓' },
+    { id: 'stokvel', label: 'Stokvel', icon: '🤝' },
+    { id: 'investment', label: 'Investment', icon: '📈' },
+    { id: 'emergency', label: 'Emergency', icon: '🆘' },
+    { id: 'sports', label: 'Sports', icon: '⚽' },
+    { id: 'religious', label: 'Faith', icon: '🙏' },
+    { id: 'other', label: 'Other', icon: '✨' },
+];
+
 interface DiscoveryScreenProps {
     onBack: () => void;
     onGroupJoined: () => void;
@@ -54,6 +68,14 @@ const DiscoveryScreen = ({
     const [searchVisible, setSearchVisible] = useState(false);
     const [joiningId, setJoiningId] = useState<number | null>(null);
     const [activeTab, setActiveTab] = useState<'communities' | 'organisations'>('communities');
+
+    // Discovery Category & Search State
+    const [selectedPurpose, setSelectedPurpose] = useState<string>('all');
+    const [discoverSearch, setDiscoverSearch] = useState<string>('');
+    const [page, setPage] = useState<number>(1);
+    const [hasMore, setHasMore] = useState<boolean>(false);
+    const [loadingMore, setLoadingMore] = useState<boolean>(false);
+    const [totalCount, setTotalCount] = useState<number>(0);
 
     // Bereavement Modal State
     const [showBereavementModal, setShowBereavementModal] = useState(false);
@@ -80,18 +102,63 @@ const DiscoveryScreen = ({
     const [vLicense, setVLicense] = useState('');
     const [excessJoinMsg, setExcessJoinMsg] = useState('');
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    const fetchGroupsData = async (
+        targetPage: number = 1,
+        purpose: string = selectedPurpose,
+        search: string = discoverSearch,
+        append: boolean = false
+    ) => {
+        try {
+            if (append) {
+                setLoadingMore(true);
+            }
+            const params: Record<string, any> = { page: targetPage };
+            if (purpose && purpose !== 'all') {
+                params.purpose = purpose;
+            }
+            if (search && search.trim()) {
+                params.search = search.trim();
+            }
+
+            const res = await client.get('groups/discover/', { params });
+            let fetchedList: Group[] = [];
+            let total = 0;
+            let nextUrl: string | null = null;
+
+            if (res.data && Array.isArray(res.data.results)) {
+                fetchedList = res.data.results;
+                total = res.data.count || 0;
+                nextUrl = res.data.next;
+            } else if (Array.isArray(res.data)) {
+                fetchedList = res.data;
+                total = res.data.length;
+            }
+
+            setTotalCount(total);
+            setHasMore(!!nextUrl);
+            setPage(targetPage);
+
+            if (append) {
+                setGroups((prev) => [...prev, ...fetchedList]);
+            } else {
+                setGroups(fetchedList);
+            }
+        } catch (error) {
+            console.error('Error fetching discover groups:', error);
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     const fetchData = async () => {
         try {
-            const [groupsRes, orgsRes] = await Promise.all([
-                client.get('groups/discover/'),
-                client.get('organisations/discover/'),
+            const [_, orgsRes] = await Promise.all([
+                fetchGroupsData(1, selectedPurpose, discoverSearch, false),
+                client.get('organisations/discover/').catch(() => ({ data: [] })),
             ]);
-            setGroups(groupsRes.data);
-            setOrganisations(orgsRes.data);
+            if (orgsRes && orgsRes.data) {
+                setOrganisations(Array.isArray(orgsRes.data) ? orgsRes.data : orgsRes.data.results || []);
+            }
         } catch (error) {
             console.error('Error fetching discovery data:', error);
         } finally {
@@ -99,6 +166,10 @@ const DiscoveryScreen = ({
             setRefreshing(false);
         }
     };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
 
     const handleShareGroup = async (group: Group) => {
         try {
@@ -321,17 +392,94 @@ const DiscoveryScreen = ({
             </View>
 
             {activeTab === 'communities' ? (
-                <FlatList
-                    data={groups}
-                    keyExtractor={(item) => `group-${item.id}`}
-                    contentContainerStyle={styles.listContent}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryLight]} tintColor="#2563eb" />
-                    }
-                    renderItem={({ item }) => {
-                        const btn = getButtonConfig(item);
-                        return (
-                            <TouchableOpacity onPress={() => onViewGroupDetails?.(item)} activeOpacity={0.85}>
+                <>
+                    {/* Inline Search Bar */}
+                    <View style={styles.searchBarContainer}>
+                        <Text style={styles.searchBarIcon}>🔍</Text>
+                        <TextInput
+                            style={styles.searchBarInput}
+                            placeholder="Search communities by name or keyword…"
+                            placeholderTextColor={colors.textMuted}
+                            value={discoverSearch}
+                            onChangeText={(text) => {
+                                setDiscoverSearch(text);
+                                fetchGroupsData(1, selectedPurpose, text, false);
+                            }}
+                        />
+                        {discoverSearch.length > 0 && (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setDiscoverSearch('');
+                                    fetchGroupsData(1, selectedPurpose, '', false);
+                                }}
+                                style={{ padding: 4 }}
+                            >
+                                <Text style={{ color: colors.textMuted, fontSize: 16 }}>✕</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {/* Category Purpose Filter Chips */}
+                    <View style={{ marginBottom: 8 }}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.filterChipsScroll}
+                        >
+                            {PURPOSE_FILTERS.map((filter) => {
+                                const isSelected = selectedPurpose === filter.id;
+                                return (
+                                    <TouchableOpacity
+                                        key={filter.id}
+                                        style={[
+                                            styles.filterChip,
+                                            isSelected && styles.filterChipActive,
+                                        ]}
+                                        onPress={() => {
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                            setSelectedPurpose(filter.id);
+                                            fetchGroupsData(1, filter.id, discoverSearch, false);
+                                        }}
+                                    >
+                                        <Text style={styles.filterChipIcon}>{filter.icon}</Text>
+                                        <Text
+                                            style={[
+                                                styles.filterChipText,
+                                                isSelected && styles.filterChipTextActive,
+                                            ]}
+                                        >
+                                            {filter.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </ScrollView>
+                    </View>
+
+                    <FlatList
+                        data={groups}
+                        keyExtractor={(item) => `group-${item.id}`}
+                        contentContainerStyle={styles.listContent}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primaryLight]} tintColor="#2563eb" />
+                        }
+                        onEndReached={() => {
+                            if (!loadingMore && hasMore) {
+                                fetchGroupsData(page + 1, selectedPurpose, discoverSearch, true);
+                            }
+                        }}
+                        onEndReachedThreshold={0.4}
+                        ListFooterComponent={
+                            loadingMore ? (
+                                <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+                                    <ActivityIndicator size="small" color={colors.primary} />
+                                </View>
+                            ) : null
+                        }
+                        renderItem={({ item }) => {
+                            const btn = getButtonConfig(item);
+                            return (
+                                <TouchableOpacity onPress={() => onViewGroupDetails?.(item)} activeOpacity={0.85}>
                                 <LinearGradient colors={[colors.white, colors.borderLight]} style={styles.groupCard}>
                                     {item.cover_image ? (
                                         <Image source={{ uri: item.cover_image }} style={styles.coverImage} transition={200} />
@@ -413,10 +561,19 @@ const DiscoveryScreen = ({
                     }}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <Text style={styles.emptyText}>No new communities found at the moment.</Text>
+                            <Text style={{ fontSize: 36, marginBottom: 10 }}>🔍</Text>
+                            <Text style={[styles.emptyText, { fontFamily: 'Outfit-Bold', color: colors.textPrimary, marginBottom: 4 }]}>
+                                No Communities Found
+                            </Text>
+                            <Text style={styles.emptyText}>
+                                {discoverSearch
+                                    ? `No communities matching "${discoverSearch}".`
+                                    : "No communities in this category right now."}
+                            </Text>
                         </View>
                     }
                 />
+            </>
             ) : (
                 <FlatList
                     data={organisations}
@@ -1098,6 +1255,61 @@ const styles = StyleSheet.create({
         color: colors.white,
         fontWeight: '700',
         fontSize: 15,
+    },
+    searchBarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.cardBackground,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        marginHorizontal: 16,
+        marginBottom: 10,
+        gap: 8,
+    },
+    searchBarIcon: {
+        fontSize: 16,
+    },
+    searchBarInput: {
+        flex: 1,
+        fontSize: 14,
+        color: colors.textPrimary,
+        paddingVertical: 0,
+    },
+    filterChipsScroll: {
+        paddingHorizontal: 16,
+        gap: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    filterChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 20,
+        backgroundColor: colors.cardBackground,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    filterChipActive: {
+        backgroundColor: colors.primary,
+        borderColor: colors.primary,
+    },
+    filterChipIcon: {
+        fontSize: 13,
+    },
+    filterChipText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: colors.textSecondary,
+    },
+    filterChipTextActive: {
+        color: colors.white,
+        fontFamily: 'Outfit-Bold',
     },
 });
 

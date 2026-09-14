@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import client, { getMediaUrl } from '../api/client';
 import { authenticateAction } from '../utils/biometrics';
 import { colors, gradients } from '../constants/theme';
+import PinModal from '../components/PinModal';
 
 interface Member {
     id: number;
@@ -85,6 +86,16 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
 
     // Beneficiary selection state
     const [isAssigningBeneficiary, setIsAssigningBeneficiary] = useState<number | null>(null);
+
+    // Security PIN Modal State
+    const [showPinModal, setShowPinModal] = useState(false);
+    const [pinModalTitle, setPinModalTitle] = useState('Confirm Security PIN');
+    const [pinModalDescription, setPinModalDescription] = useState('Please enter your 4-digit security PIN to authorize this action.');
+    const [pendingPinAction, setPendingPinAction] = useState<
+        | { type: 'disburse'; deceasedId: number; amount: string; recipientName: string }
+        | { type: 'transfer'; payload: any }
+        | null
+    >(null);
 
     useEffect(() => {
         fetchData();
@@ -175,39 +186,32 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
         }
 
         setTransferError(null);
-        setProcessingId(-1);
-        try {
-            const payload: any = {
-                recipient_profile: selectedRecipientId,
-                amount: amountValue,
-            };
 
-            if (selectedCampaignKey) {
-                const [type, idStr] = selectedCampaignKey.split('_');
-                const campaignId = parseInt(idStr, 10);
-                if (type === 'deceased') {
-                    payload.deceased_contribution = campaignId;
-                } else if (type === 'generic') {
-                    payload.fund_campaign = campaignId;
-                }
+        const payload: any = {
+            recipient_profile: selectedRecipientId,
+            amount: amountValue,
+        };
+
+        if (selectedCampaignKey) {
+            const [type, idStr] = selectedCampaignKey.split('_');
+            const campaignId = parseInt(idStr, 10);
+            if (type === 'deceased') {
+                payload.deceased_contribution = campaignId;
+            } else if (type === 'generic') {
+                payload.fund_campaign = campaignId;
             }
-
-            const response = await client.post(`groups/${group.id}/request_wallet_transfer/`, payload);
-            setTransferRequests((prev) => [response.data, ...prev]);
-            setShowTransferModal(false);
-            setTransferAmount('');
-            setSelectedRecipientId(null);
-            setSelectedCampaignKey(null);
-            setShowMemberPicker(false);
-            setShowCampaignPicker(false);
-            Alert.alert('Transfer Request Created', 'A wallet transfer request has been created and awaits admin approvals.');
-        } catch (error: any) {
-            console.error('Error creating transfer request:', error);
-            const msg = error.response?.data?.error || 'Failed to create transfer request.';
-            setTransferError(msg);
-        } finally {
-            setProcessingId(null);
         }
+
+        const recipientMember = activeMembers.find(m => m.id === selectedRecipientId || m.member_detail?.id === selectedRecipientId);
+        const recipientName = recipientMember?.member_detail?.full_name || 'Member';
+
+        setPinModalTitle('Authorize Wallet Transfer');
+        setPinModalDescription(`Please enter your 4-digit security PIN to request a wallet transfer of $${amountValue.toFixed(2)} to ${recipientName}.`);
+        setPendingPinAction({
+            type: 'transfer',
+            payload,
+        });
+        setShowPinModal(true);
     };
 
     const handleApproveTransferRequest = async (requestId: number) => {
@@ -273,26 +277,65 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                     text: 'Disburse',
                     style: 'destructive',
                     onPress: async () => {
-                        // Biometric verification for disbursement
                         const authenticated = await authenticateAction(`Authenticate to disburse $${deceased.balance} to ${deceased.beneficiary_detail?.full_name}`);
                         if (!authenticated) return;
 
-                        setProcessingId(deceasedId);
-                        try {
-                            await client.post(`deceased/${deceasedId}/disburse_funds/`);
-                            Alert.alert('Success', 'Funds have been disbursed to the beneficiary.');
-                            fetchData();
-                        } catch (error: any) {
-                            console.error('Disbursement error:', error);
-                            const msg = error.response?.data?.error || 'Failed to disburse funds.';
-                            Alert.alert('Error', msg);
-                        } finally {
-                            setProcessingId(null);
-                        }
+                        setPinModalTitle('Authorize Disbursement');
+                        setPinModalDescription(`Please enter your 4-digit security PIN to disburse $${deceased.balance} to ${deceased.beneficiary_detail?.full_name}.`);
+                        setPendingPinAction({
+                            type: 'disburse',
+                            deceasedId,
+                            amount: deceased.balance,
+                            recipientName: deceased.beneficiary_detail?.full_name || 'Beneficiary',
+                        });
+                        setShowPinModal(true);
                     }
                 }
             ]
         );
+    };
+
+    const handlePinConfirm = async (pin: string) => {
+        if (!pendingPinAction) return;
+
+        if (pendingPinAction.type === 'disburse') {
+            setProcessingId(pendingPinAction.deceasedId);
+            try {
+                await client.post(`deceased/${pendingPinAction.deceasedId}/disburse_funds/`, { pin });
+                Alert.alert('Success', 'Funds have been disbursed to the beneficiary.');
+                setPendingPinAction(null);
+                setShowPinModal(false);
+                fetchData();
+            } catch (error: any) {
+                console.error('Disbursement error:', error);
+                throw error;
+            } finally {
+                setProcessingId(null);
+            }
+        } else if (pendingPinAction.type === 'transfer') {
+            setProcessingId(-1);
+            try {
+                const response = await client.post(`groups/${group.id}/request_wallet_transfer/`, {
+                    ...pendingPinAction.payload,
+                    pin,
+                });
+                setTransferRequests((prev) => [response.data, ...prev]);
+                setShowTransferModal(false);
+                setTransferAmount('');
+                setSelectedRecipientId(null);
+                setSelectedCampaignKey(null);
+                setShowMemberPicker(false);
+                setShowCampaignPicker(false);
+                setPendingPinAction(null);
+                setShowPinModal(false);
+                Alert.alert('Transfer Request Created', 'A wallet transfer request has been created and awaits admin approvals.');
+            } catch (error: any) {
+                console.error('Error creating transfer request:', error);
+                throw error;
+            } finally {
+                setProcessingId(null);
+            }
+        }
     };
 
     const handleAssignBeneficiary = async (deceasedId: number, profileId: number) => {
@@ -927,6 +970,18 @@ const GroupManagementScreen = ({ group, onBack, onSelectMember, onViewWallet, on
                     </View>
                 </View>
             )}
+
+            {/* Security PIN Verification Modal */}
+            <PinModal
+                visible={showPinModal}
+                title={pinModalTitle}
+                description={pinModalDescription}
+                onClose={() => {
+                    setShowPinModal(false);
+                    setPendingPinAction(null);
+                }}
+                onConfirm={handlePinConfirm}
+            />
         </View>
     );
 };

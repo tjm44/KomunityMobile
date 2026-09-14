@@ -1,75 +1,77 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Platform } from 'react-native';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import client from '../api/client';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-if (!isExpoGo) {
-    Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: false,
-            shouldShowBanner: true,
-            shouldShowList: true,
-        }),
-    });
+let Notifications: typeof import('expo-notifications') | null = null;
+
+if (!isExpoGo && Platform.OS !== 'web') {
+    try {
+        Notifications = require('expo-notifications');
+        Notifications?.setNotificationHandler({
+            handleNotification: async () => ({
+                shouldShowAlert: true,
+                shouldPlaySound: true,
+                shouldSetBadge: false,
+                shouldShowBanner: true,
+                shouldShowList: true,
+            }),
+        });
+    } catch (e) {
+        console.warn('Push notifications module not available:', e);
+    }
 }
 
 async function registerForPushNotificationsAsync() {
-    if (isExpoGo) {
-        console.log('Skipping push notification registration in Expo Go');
+    if (isExpoGo || Platform.OS === 'web' || !Notifications) {
+        console.log('Skipping push notification registration in Expo Go or Web');
         return;
     }
 
-    let token;
-
-    if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-        });
-    }
-
-    if (Device.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-        if (existingStatus !== 'granted') {
-            const { status } = await Notifications.requestPermissionsAsync();
-            finalStatus = status;
-        }
-        if (finalStatus !== 'granted') {
-            console.log('Failed to get push token for push notification!');
-            return;
+    try {
+        if (Platform.OS === 'android') {
+            await Notifications.setNotificationChannelAsync('default', {
+                name: 'default',
+                importance: Notifications.AndroidImportance.MAX,
+                vibrationPattern: [0, 250, 250, 250],
+                lightColor: '#FF231F7C',
+            });
         }
 
-        // Get the project ID (optional but recommended for EAS)
-        const projectId =
-            Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+        if (Device.isDevice) {
+            const { status: existingStatus } = await Notifications.getPermissionsAsync();
+            let finalStatus = existingStatus;
+            if (existingStatus !== 'granted') {
+                const { status } = await Notifications.requestPermissionsAsync();
+                finalStatus = status;
+            }
+            if (finalStatus !== 'granted') {
+                console.log('Failed to get push token for push notification!');
+                return;
+            }
 
-        // If no projectId is found, we can't reliably get an Expo push token
-        if (!projectId) {
-            console.log('No projectId found in app config. Skipping token registration.');
-            return;
-        }
+            const projectId =
+                Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
 
-        try {
+            if (!projectId) {
+                console.log('No projectId found in app config. Skipping token registration.');
+                return;
+            }
+
             const pushTokenString = (
                 await Notifications.getExpoPushTokenAsync({
                     projectId,
                 })
             ).data;
             return pushTokenString;
-        } catch (e: unknown) {
-            console.warn('Push notifications: Failed to get push token.', e);
+        } else {
+            console.log('Must use physical device for Push Notifications');
         }
-    } else {
-        console.log('Must use physical device for Push Notifications');
+    } catch (e: unknown) {
+        console.warn('Push notifications: Failed to register push token.', e);
     }
 }
 
@@ -77,21 +79,22 @@ export const usePushNotifications = () => {
     const [expoPushToken, setExpoPushToken] = useState<string | undefined>('');
 
     const registerToken = async () => {
-        const token = await registerForPushNotificationsAsync();
-        if (token) {
-            setExpoPushToken(token);
-            try {
-                // Send to backend
+        try {
+            const token = await registerForPushNotificationsAsync();
+            if (token) {
+                setExpoPushToken(token);
                 await client.post('device-tokens/register/', {
                     token: token,
                     platform: Platform.OS
                 });
                 console.log('Push token registered successfully:', token);
-            } catch (error) {
-                console.error('Error registering push token on backend:', error);
             }
+        } catch (error) {
+            console.error('Error registering push token on backend:', error);
         }
     };
 
     return { registerToken, expoPushToken };
-}
+};
+
+

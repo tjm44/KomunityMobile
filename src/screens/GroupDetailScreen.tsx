@@ -4,8 +4,10 @@ import {
     TouchableOpacity, Dimensions, ActivityIndicator, Alert, RefreshControl
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import client from '../api/client';
 import { colors } from '../constants/theme';
+import { shareToWhatsApp } from '../utils/whatsappShare';
 
 const { width } = Dimensions.get('window');
 
@@ -87,6 +89,14 @@ const GroupDetailScreen = ({
         setRefreshing(true);
         fetchMembers();
     };
+
+    const handleWhatsAppInvite = async () => {
+        await shareToWhatsApp({
+            groupName: group.name,
+            inviteCodeOrLink: `https://komunity.app/group/${group.id}/join`
+        });
+    };
+
 
     const handleLeaveGroup = () => {
         Alert.alert(
@@ -204,6 +214,16 @@ const GroupDetailScreen = ({
                                     </View>
                                 </TouchableOpacity>
                             )}
+
+                            <TouchableOpacity
+                                style={styles.bannerSecondaryButton}
+                                onPress={handleWhatsAppInvite}
+                                accessibilityLabel="Invite via WhatsApp"
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: '#25D366', borderColor: '#22c55e' }]}>
+                                    <Ionicons name="logo-whatsapp" size={18} color="#FFFFFF" />
+                                </View>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
