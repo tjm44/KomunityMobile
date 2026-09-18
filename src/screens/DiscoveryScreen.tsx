@@ -69,9 +69,8 @@ const DiscoveryScreen = ({
     const [joiningId, setJoiningId] = useState<number | null>(null);
     const [activeTab, setActiveTab] = useState<'communities' | 'organisations'>('communities');
 
-    // Discovery Category & Search State
+    // Discovery Category Filter State
     const [selectedPurpose, setSelectedPurpose] = useState<string>('all');
-    const [discoverSearch, setDiscoverSearch] = useState<string>('');
     const [page, setPage] = useState<number>(1);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [loadingMore, setLoadingMore] = useState<boolean>(false);
@@ -105,7 +104,6 @@ const DiscoveryScreen = ({
     const fetchGroupsData = async (
         targetPage: number = 1,
         purpose: string = selectedPurpose,
-        search: string = discoverSearch,
         append: boolean = false
     ) => {
         try {
@@ -115,9 +113,6 @@ const DiscoveryScreen = ({
             const params: Record<string, any> = { page: targetPage };
             if (purpose && purpose !== 'all') {
                 params.purpose = purpose;
-            }
-            if (search && search.trim()) {
-                params.search = search.trim();
             }
 
             const res = await client.get('groups/discover/', { params });
@@ -153,7 +148,7 @@ const DiscoveryScreen = ({
     const fetchData = async () => {
         try {
             const [_, orgsRes] = await Promise.all([
-                fetchGroupsData(1, selectedPurpose, discoverSearch, false),
+                fetchGroupsData(1, selectedPurpose, false),
                 client.get('organisations/discover/').catch(() => ({ data: [] })),
             ]);
             if (orgsRes && orgsRes.data) {
@@ -393,34 +388,8 @@ const DiscoveryScreen = ({
 
             {activeTab === 'communities' ? (
                 <>
-                    {/* Inline Search Bar */}
-                    <View style={styles.searchBarContainer}>
-                        <Text style={styles.searchBarIcon}>🔍</Text>
-                        <TextInput
-                            style={styles.searchBarInput}
-                            placeholder="Search communities by name or keyword…"
-                            placeholderTextColor={colors.textMuted}
-                            value={discoverSearch}
-                            onChangeText={(text) => {
-                                setDiscoverSearch(text);
-                                fetchGroupsData(1, selectedPurpose, text, false);
-                            }}
-                        />
-                        {discoverSearch.length > 0 && (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    setDiscoverSearch('');
-                                    fetchGroupsData(1, selectedPurpose, '', false);
-                                }}
-                                style={{ padding: 4 }}
-                            >
-                                <Text style={{ color: colors.textMuted, fontSize: 16 }}>✕</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-
                     {/* Category Purpose Filter Chips */}
-                    <View style={{ marginBottom: 8 }}>
+                    <View style={{ marginVertical: 10 }}>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
@@ -438,7 +407,7 @@ const DiscoveryScreen = ({
                                         onPress={() => {
                                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                             setSelectedPurpose(filter.id);
-                                            fetchGroupsData(1, filter.id, discoverSearch, false);
+                                            fetchGroupsData(1, filter.id, false);
                                         }}
                                     >
                                         <Text style={styles.filterChipIcon}>{filter.icon}</Text>
@@ -465,7 +434,7 @@ const DiscoveryScreen = ({
                         }
                         onEndReached={() => {
                             if (!loadingMore && hasMore) {
-                                fetchGroupsData(page + 1, selectedPurpose, discoverSearch, true);
+                                fetchGroupsData(page + 1, selectedPurpose, true);
                             }
                         }}
                         onEndReachedThreshold={0.4}
@@ -480,65 +449,65 @@ const DiscoveryScreen = ({
                             const btn = getButtonConfig(item);
                             return (
                                 <TouchableOpacity onPress={() => onViewGroupDetails?.(item)} activeOpacity={0.85}>
-                                <LinearGradient colors={[colors.white, colors.borderLight]} style={styles.groupCard}>
-                                    {item.cover_image ? (
-                                        <Image source={{ uri: item.cover_image }} style={styles.coverImage} transition={200} />
-                                    ) : (
-                                        <View style={[styles.coverImage, { backgroundColor: colors.border }]} />
-                                    )}
-                                    <View style={styles.cardContent}>
-                                        <Text style={styles.groupName}>{item.name}</Text>
+                                    <LinearGradient colors={[colors.white, colors.borderLight]} style={styles.groupCard}>
+                                        <View style={styles.bannerContainer}>
+                                            {item.cover_image ? (
+                                                <Image source={{ uri: item.cover_image }} style={styles.coverImage} transition={200} />
+                                            ) : (
+                                                <LinearGradient
+                                                    colors={[colors.primaryDark, colors.primary, colors.primaryLight]}
+                                                    style={[styles.coverImage, { justifyContent: 'center', alignItems: 'center' }]}
+                                                    start={{ x: 0, y: 0 }}
+                                                    end={{ x: 1, y: 1 }}
+                                                >
+                                                    <Text style={{ fontSize: 36, opacity: 0.3 }}>👥</Text>
+                                                </LinearGradient>
+                                            )}
 
-                                        <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginVertical: 4 }}>
-                                            {item.purpose && (
-                                                <View style={[
-                                                    styles.cardPurposePill,
-                                                    {
-                                                        backgroundColor:
-                                                            item.purpose === 'excess' ? colors.surfaceLight :
-                                                            item.purpose === 'emergency' ? colors.dangerLight :
-                                                            item.purpose === 'custom' ? colors.successLight : colors.surfaceLight,
-                                                        borderColor:
-                                                            item.purpose === 'excess' ? colors.accentLight :
-                                                            item.purpose === 'emergency' ? colors.dangerLight :
-                                                            item.purpose === 'custom' ? '#bbf7d0' : '#ddd6fe',
-                                                        marginVertical: 0,
-                                                    }
-                                                ]}>
-                                                    <Text style={[
-                                                        styles.cardPurposeText,
-                                                        {
-                                                            color:
-                                                                item.purpose === 'excess' ? colors.primaryLight :
-                                                                item.purpose === 'emergency' ? colors.danger :
-                                                                item.purpose === 'custom' ? colors.success : colors.primary
-                                                        }
-                                                    ]}>
-                                                        {({
-                                                            'bereavement': '🕊️ Bereavement Fund',
-                                                            'excess': '🚗 Insurance Excess',
-                                                            'emergency': '🆘 Emergency Fundraiser',
-                                                            'custom': '✨ Custom Fund',
-                                                            'church': '⛪ Church Group',
-                                                            'stokvel': '💰 Stokvel & Savings',
-                                                            'student': '🎓 Student Body',
-                                                        } as any)[item.purpose] ?? item.purpose}
-                                                    </Text>
+                                            {/* Badges on top of cover image */}
+                                            {(item.purpose || item.verified_members_only) && (
+                                                <View style={styles.coverBadgesRow}>
+                                                    {item.purpose && (
+                                                        <View style={styles.coverPurposePill}>
+                                                            <Text style={styles.coverPurposeText}>
+                                                                {({
+                                                                    'bereavement': '🕊️ Bereavement Fund',
+                                                                    'excess': '🚗 Insurance Excess',
+                                                                    'emergency': '🆘 Emergency Fundraiser',
+                                                                    'custom': '✨ Custom Fund',
+                                                                    'church': '⛪ Church Group',
+                                                                    'stokvel': '💰 Stokvel & Savings',
+                                                                    'student': '🎓 Student Body',
+                                                                } as any)[item.purpose] ?? item.purpose}
+                                                            </Text>
+                                                        </View>
+                                                    )}
+                                                    {item.verified_members_only && (
+                                                        <View style={styles.coverVerifiedPill}>
+                                                            <Text style={styles.coverVerifiedText}>🛡️ Verified Only</Text>
+                                                        </View>
+                                                    )}
                                                 </View>
                                             )}
-                                            {item.verified_members_only && (
-                                                <View style={[styles.cardPurposePill, { backgroundColor: colors.dangerLight, borderColor: colors.dangerLight, marginVertical: 0 }]}>
-                                                    <Text style={[styles.cardPurposeText, { color: colors.danger, fontWeight: 'bold' }]}>🛡️ Verified Only</Text>
-                                                </View>
-                                            )}
+
+                                            {/* Text overlay on cover image */}
+                                            <LinearGradient
+                                                colors={['transparent', 'rgba(0, 0, 0, 0.45)', 'rgba(0, 0, 0, 0.88)']}
+                                                style={styles.bannerOverlay}
+                                            >
+                                                <Text style={styles.bannerGroupName} numberOfLines={1}>
+                                                    {item.name}
+                                                </Text>
+                                                <Text style={styles.bannerMemberCount}>
+                                                    👥 {item.total_members} {item.total_members === 1 ? 'member' : 'members'}
+                                                </Text>
+                                                <Text style={styles.bannerDescription} numberOfLines={2}>
+                                                    {item.description || 'Connecting community members together.'}
+                                                </Text>
+                                            </LinearGradient>
                                         </View>
 
-                                        <Text style={styles.memberCount}>{item.total_members} members</Text>
-                                        <Text style={styles.description} numberOfLines={3}>
-                                            {item.description || 'Connecting community members together.'}
-                                        </Text>
-
-                                        <View style={styles.actionRow}>
+                                        <View style={styles.actionRowContainer}>
                                             <TouchableOpacity
                                                 style={[btn.style, joiningId === item.id && styles.buttonLoading, { flex: 4 }]}
                                                 onPress={() => handleJoinGroup(item)}
@@ -554,21 +523,18 @@ const DiscoveryScreen = ({
                                                 <Text style={styles.shareIconText}>🚀</Text>
                                             </TouchableOpacity>
                                         </View>
-                                    </View>
-                                </LinearGradient>
-                            </TouchableOpacity>
-                        );
-                    }}
+                                    </LinearGradient>
+                                </TouchableOpacity>
+                            );
+                        }}
                     ListEmptyComponent={
                         <View style={styles.emptyContainer}>
-                            <Text style={{ fontSize: 36, marginBottom: 10 }}>🔍</Text>
+                            <Text style={{ fontSize: 36, marginBottom: 10 }}>🌐</Text>
                             <Text style={[styles.emptyText, { fontFamily: 'Outfit-Bold', color: colors.textPrimary, marginBottom: 4 }]}>
                                 No Communities Found
                             </Text>
                             <Text style={styles.emptyText}>
-                                {discoverSearch
-                                    ? `No communities matching "${discoverSearch}".`
-                                    : "No communities in this category right now."}
+                                No communities in this category right now.
                             </Text>
                         </View>
                     }
@@ -585,29 +551,48 @@ const DiscoveryScreen = ({
                     renderItem={({ item: org }) => (
                         <TouchableOpacity onPress={() => onViewOrganisationPreview?.(org)} activeOpacity={0.85}>
                             <LinearGradient colors={[...gradients.screenBackground]} style={[styles.groupCard, { borderColor: colors.accentLight, borderWidth: 1.5 }]}>
-                                {org.cover_image ? (
-                                    <Image source={{ uri: org.cover_image }} style={styles.coverImage} transition={200} />
-                                ) : (
-                                    <LinearGradient colors={[colors.primaryDark, colors.primaryDark, colors.primary]} style={styles.coverImage} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} />
-                                )}
-                                <View style={styles.cardContent}>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 2 }}>
-                                        <Text style={styles.groupName}>{org.name}</Text>
-                                        {org.is_verified && (
-                                            <View style={styles.verifiedBadge}>
-                                                <Text style={styles.verifiedBadgeText}>🛡️ Official Org</Text>
+                                <View style={styles.bannerContainer}>
+                                    {org.cover_image ? (
+                                        <Image source={{ uri: org.cover_image }} style={styles.coverImage} transition={200} />
+                                    ) : (
+                                        <LinearGradient
+                                            colors={[colors.primaryDark, colors.primaryDark, colors.primary]}
+                                            style={[styles.coverImage, { justifyContent: 'center', alignItems: 'center' }]}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                        >
+                                            <Text style={{ fontSize: 36, opacity: 0.3 }}>🏢</Text>
+                                        </LinearGradient>
+                                    )}
+
+                                    {org.is_verified && (
+                                        <View style={styles.coverBadgesRow}>
+                                            <View style={styles.coverVerifiedPill}>
+                                                <Text style={styles.coverVerifiedText}>🛡️ Official Org</Text>
                                             </View>
-                                        )}
-                                    </View>
-                                    <Text style={styles.orgMetaText}>
-                                        🏢 {({'ngo': 'NGO', 'church': 'Church/Religious Org', 'npo': 'NPO/Charity', 'corporate': 'Corporate', 'other': 'Organisation'}[org.entity_type] ?? org.entity_type)}
-                                        {org.registration_number ? ` · Reg: ${org.registration_number}` : ''}
-                                    </Text>
-                                    <Text style={styles.description} numberOfLines={3}>
-                                        {org.description || 'A formal organisation on the Komunity platform.'}
-                                    </Text>
+                                        </View>
+                                    )}
+
+                                    <LinearGradient
+                                        colors={['transparent', 'rgba(0, 0, 0, 0.45)', 'rgba(0, 0, 0, 0.88)']}
+                                        style={styles.bannerOverlay}
+                                    >
+                                        <Text style={styles.bannerGroupName} numberOfLines={1}>
+                                            {org.name}
+                                        </Text>
+                                        <Text style={styles.bannerMemberCount}>
+                                            🏢 {({'ngo': 'NGO', 'church': 'Church/Religious Org', 'npo': 'NPO/Charity', 'corporate': 'Corporate', 'other': 'Organisation'}[org.entity_type] ?? org.entity_type)}
+                                            {org.registration_number ? ` · Reg: ${org.registration_number}` : ''}
+                                        </Text>
+                                        <Text style={styles.bannerDescription} numberOfLines={2}>
+                                            {org.description || 'A formal organisation on the Komunity platform.'}
+                                        </Text>
+                                    </LinearGradient>
+                                </View>
+
+                                <View style={styles.actionRowContainer}>
                                     <TouchableOpacity
-                                        style={[styles.joinButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
+                                        style={[styles.joinButton, { backgroundColor: colors.primary, shadowColor: colors.primary, flex: 1 }]}
                                         onPress={() => onViewOrganisationPreview?.(org)}
                                     >
                                         <Text style={styles.joinButtonText}>Explore Organisation →</Text>
@@ -957,42 +942,93 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
     },
+    bannerContainer: {
+        position: 'relative',
+        width: '100%',
+        backgroundColor: colors.border,
+    },
     coverImage: {
         width: '100%',
-        height: 140,
+        height: 180,
     },
-    cardContent: {
-        padding: 16,
+    coverBadgesRow: {
+        position: 'absolute',
+        top: 10,
+        left: 10,
+        right: 10,
+        flexDirection: 'row',
+        gap: 6,
+        flexWrap: 'wrap',
+        zIndex: 2,
     },
-    groupName: {
-        fontSize: 20,
+    coverPurposePill: {
+        backgroundColor: 'rgba(15, 23, 42, 0.75)',
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.25)',
+    },
+    coverPurposeText: {
+        color: '#ffffff',
+        fontSize: 11,
+        fontWeight: '700',
+    },
+    coverVerifiedPill: {
+        backgroundColor: 'rgba(239, 68, 68, 0.85)',
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    coverVerifiedText: {
+        color: '#ffffff',
+        fontSize: 11,
         fontWeight: 'bold',
-        color: colors.textPrimary,
-        marginBottom: 4,
     },
-    memberCount: {
-        fontSize: 14,
-        color: colors.primaryLight,
+    bannerOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        paddingHorizontal: 14,
+        paddingTop: 32,
+        paddingBottom: 10,
+        justifyContent: 'flex-end',
+    },
+    bannerGroupName: {
+        fontSize: 19,
+        fontWeight: 'bold',
+        fontFamily: 'Outfit-Bold',
+        color: '#ffffff',
+        marginBottom: 2,
+        textShadowColor: 'rgba(0,0,0,0.6)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 3,
+    },
+    bannerMemberCount: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.9)',
         fontWeight: '600',
-        marginBottom: 8,
+        marginBottom: 3,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
-    viewDetailsLink: {
-        marginBottom: 12,
+    bannerDescription: {
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.85)',
+        lineHeight: 18,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
-    viewDetailsText: {
-        fontSize: 14,
-        color: colors.primaryLight,
-        fontWeight: '600',
-    },
-    description: {
-        fontSize: 14,
-        color: colors.textSecondary,
-        marginBottom: 16,
-        lineHeight: 20,
-    },
-    actionRow: {
+    actionRowContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 12,
     },
     shareIconBtn: {
         flex: 1,
@@ -1255,28 +1291,6 @@ const styles = StyleSheet.create({
         color: colors.white,
         fontWeight: '700',
         fontSize: 15,
-    },
-    searchBarContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.cardBackground,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        marginHorizontal: 16,
-        marginBottom: 10,
-        gap: 8,
-    },
-    searchBarIcon: {
-        fontSize: 16,
-    },
-    searchBarInput: {
-        flex: 1,
-        fontSize: 14,
-        color: colors.textPrimary,
-        paddingVertical: 0,
     },
     filterChipsScroll: {
         paddingHorizontal: 16,

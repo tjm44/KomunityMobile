@@ -5,39 +5,50 @@ import { Platform } from 'react-native';
 
 import Constants from 'expo-constants';
 
-const LOCAL_API_URL = 'http://127.0.0.1:8000/api/v1/';
+// ---------------------------------------------------------------------------
+// API Base URL resolution (priority order):
+//
+//   1. EXPO_PUBLIC_API_URL env var — set this in .env for production builds
+//      e.g.  EXPO_PUBLIC_API_URL=https://api.komunity.co.za/api/v1/
+//
+//   2. Expo dev server auto-detected LAN IP — works automatically for local
+//      development via `npx expo start`. No manual IP changes ever needed.
+//
+//   3. localhost fallback — for web browser or emulator dev.
+// ---------------------------------------------------------------------------
 
-// Dynamically get the Expo host IP for LAN connections
-let hostIp = '192.168.88.210'; // default fallback for this machine
+const ENV_API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hostname) {
-    // When running in a web browser, talk to the same hostname (e.g. localhost or current machine IP)
-    hostIp = window.location.hostname;
-} else if (Constants.expoConfig?.hostUri) {
-    const ip = Constants.expoConfig.hostUri.split(':')[0];
-    if (ip) {
-        hostIp = ip;
+function resolveApiBaseUrl(): string {
+    // 1. Explicit environment variable always wins (production / staging builds)
+    if (ENV_API_URL) {
+        return ENV_API_URL.endsWith('/') ? ENV_API_URL : `${ENV_API_URL}/`;
     }
-} else if (Constants.manifest?.debuggerHost) {
-    const ip = Constants.manifest.debuggerHost.split(':')[0];
-    if (ip) {
-        hostIp = ip;
+
+    // 2. Auto-detect Expo dev server host IP (LAN — works for physical devices)
+    let hostIp: string | null = null;
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hostname) {
+        hostIp = window.location.hostname;
+    } else if (Constants.expoConfig?.hostUri) {
+        hostIp = Constants.expoConfig.hostUri.split(':')[0] || null;
+    } else if ((Constants as any).manifest?.debuggerHost) {
+        hostIp = (Constants as any).manifest.debuggerHost.split(':')[0] || null;
+    } else if ((Constants as any).manifest2?.extra?.expoGo?.debuggerHost) {
+        hostIp = (Constants as any).manifest2.extra.expoGo.debuggerHost.split(':')[0] || null;
     }
-} else if ((Constants as any).manifest2?.extra?.expoGo?.debuggerHost) {
-    const ip = (Constants as any).manifest2.extra.expoGo.debuggerHost.split(':')[0];
-    if (ip) {
-        hostIp = ip;
+
+    if (hostIp) {
+        return `http://${hostIp}:8000/api/v1/`;
     }
+
+    // 3. Final fallback — localhost (web browser / Android emulator)
+    return 'http://127.0.0.1:8000/api/v1/';
 }
 
-const LAN_API_URL = `http://${hostIp}:8000/api/v1/`;
-// Replace this with your new Railway production URL once deployed (e.g., https://komunity-production.up.railway.app/api/v1/)
-const PROD_API_URL = 'https://<your-railway-app>.up.railway.app/api/v1/';
-
-// Use LAN API URL for local development to connect to the Django backend
-const API_BASE_URL = LAN_API_URL;
+const API_BASE_URL = resolveApiBaseUrl();
 
 console.log('[Komunity API] Using base URL:', API_BASE_URL);
+
 
 const TOKEN_KEY = 'komunity_auth_token';
 
